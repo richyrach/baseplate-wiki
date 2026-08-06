@@ -195,6 +195,8 @@ def favicon_links(up):
         out.append(f'<link rel="icon" sizes="any" href="{up}favicon.ico">')
     if "apple-touch-icon.png" in have:
         out.append(f'<link rel="apple-touch-icon" href="{up}apple-touch-icon.png">')
+    if "site.webmanifest" in have:
+        out.append(f'<link rel="manifest" href="{up}site.webmanifest">')
     out.append('<meta name="theme-color" content="#16191d">')
     return "\n".join(out)
 

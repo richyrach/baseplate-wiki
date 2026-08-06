@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"
+     role="img" aria-label="Baseplate Wiki">
+  <!--
+    Isometric baseplate, drawn as vectors rather than downscaled from the PNG.
+    A rendered image collapses into a blue smudge at 16px; flat shapes with no
+    gradients or soft edges stay legible all the way down.
+
+    The plate deliberately fills most of the frame. The source PNG had a lot of
+    breathing room, which looks good at 512px and makes the shape almost
+    invisible in a browser tab.
+
+    Geometry: top face is a rhombus centred at (32,26), iso axes u = (14.5, 9)
+    and v = (-14.5, 9). The studs sit at +/-0.5u +/-0.5v so they land on the
+    plate's own grid rather than a flat 2x2 pasted on top.
+  -->
+  <rect width="64" height="64" rx="13" fill="#16191d"/>
+
+  <!-- left side wall -->
+  <path d="M3 26 32 44v10L3 36z" fill="#2f6ca3"/>
+  <!-- right side wall, darker so the near corner reads -->
+  <path d="M61 26 32 44v10l29-18z" fill="#26588a"/>
+  <!-- top face -->
+  <path d="M32 8 61 26 32 44 3 26z" fill="#4d9fe6"/>
+
+  <!-- studs, squashed to match the isometric projection -->
+  <g fill="#eef2f6">
+    <ellipse cx="32"   cy="17" rx="7.2" ry="4.2"/>
+    <ellipse cx="46.5" cy="26" rx="7.2" ry="4.2"/>
+    <ellipse cx="17.5" cy="26" rx="7.2" ry="4.2"/>
+    <ellipse cx="32"   cy="35" rx="7.2" ry="4.2"/>
+  </g>
+</svg>
