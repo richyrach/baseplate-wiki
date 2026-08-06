@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://richyrach.github.io/baseplate-wiki/sitemap.xml

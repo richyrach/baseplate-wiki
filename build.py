@@ -793,6 +793,15 @@ def main():
         if src.exists():
             shutil.copy(src, SITE / "assets" / name)
 
+    # Anything in static/ is copied to the site root verbatim. This is where
+    # ownership-verification files, robots.txt and CNAME live, so they survive
+    # a rebuild instead of having to be dropped back into docs/ by hand.
+    static_dir = ROOT / "static"
+    if static_dir.exists():
+        for item in static_dir.iterdir():
+            if item.is_file():
+                shutil.copy(item, SITE / item.name)
+
     words = sum(len(strip_tags(g["body"]).split()) for g in guides)
     print(f"built {len(guides)} guides (~{words} words), "
           f"{len(glossary)} reference entries, {indexed} search entries -> docs/")
