@@ -474,15 +474,31 @@ main {
 .rail a:hover { color: var(--accent); }
 
 @media (min-width: 78rem) {
-  /* park the contents in the right margin so it stops interrupting the read */
-  .has-rail main { padding-right: calc(var(--rail-w) + 3rem); position: relative; }
-  .has-rail .rail {
-    position: absolute;
-    top: 2rem;
-    right: 2.25rem;
-    width: var(--rail-w);
+  /* Two-column grid rather than absolute positioning. The earlier version
+     positioned the rail against .doc's content box while reserving space on
+     main's padding box -- the two disagreed and the rail landed on the text.
+     With a grid the column is real, so overlap cannot happen. */
+  .has-rail .doc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--rail-w);
+    column-gap: 3rem;
+    align-items: start;
+  }
+
+  .has-rail .doc > * { grid-column: 1; min-width: 0; }
+
+  .has-rail .doc > .rail {
+    grid-column: 2;
+    /* `1 / -1` would resolve against the EXPLICIT grid, and only columns are
+       declared here -- so it collapsed to row 1 and stretched that row to the
+       rail's full height, leaving a large gap above the title. A big explicit
+       span reaches into the implicit rows instead. */
+    grid-row: 1 / span 999;
+    align-self: start;
+    position: sticky;
+    top: 4.75rem;
     margin: 0;
-    max-height: calc(100vh - 7rem);
+    max-height: calc(100vh - 6.5rem);
     overflow-y: auto;
   }
 }
@@ -663,9 +679,23 @@ main {
 
 /* ------------------------------------------------------------------- narrow */
 
+/* Shown only in the mobile drawer; on desktop these live in the top bar. */
+.side-more { display: none; }
+
 @media (max-width: 60rem) {
   .menu { display: block; }
   .shell { grid-template-columns: minmax(0, 1fr); }
+  .side-more { display: block; }
+
+  /* The top bar was wrapping to three ragged rows and eating a third of a
+     phone screen. Two tidy rows: brand + controls, then the tabs. About and
+     Contribute move into the drawer rather than fighting for width here. */
+  .top { flex-wrap: wrap; height: auto; padding: 0.45rem 0.85rem 0; gap: 0.55rem; }
+  .top-links { display: none; }
+  .menu { order: 1; }
+  .brand { order: 2; font-size: 0.98rem; }
+  .theme { order: 3; margin-left: auto; }
+  .tabs { order: 4; width: 100%; margin: 0 -0.85rem; padding: 0 0.85rem 0.2rem; }
 
   .side {
     display: none;
@@ -722,9 +752,18 @@ main {
   box-shadow: inset 0 -2px 0 var(--accent);
 }
 
-/* full-width article view: no sidebar, centred column */
+/* Full-width article view. The sidebar is present in the markup but hidden at
+   desktop width -- on a phone it is still reachable via the Menu drawer, which
+   is the only way to search from an article page. */
 .shell-wide { grid-template-columns: minmax(0, 1fr); }
 .shell-wide main { max-width: 62rem; margin: 0 auto; width: 100%; }
+
+/* Desktop only. Unscoped, this had the same specificity as `.side.open` and,
+   being later in the file, beat it -- so the mobile drawer refused to open on
+   article pages. */
+@media (min-width: 60.01rem) {
+  .shell-wide > .side { display: none; }
+}
 
 /* ------------------------------------------------------------------- ads */
 
@@ -850,10 +889,32 @@ main {
 }
 
 @media (max-width: 34rem) {
-  .top { flex-wrap: wrap; height: auto; padding: 0.5rem 0.85rem; }
-  .tabs { order: 3; width: 100%; margin: 0.3rem 0 0.1rem; }
-  .top-links { font-size: 0.78rem; }
   .term-list code { min-width: 0; }
+
+  /* Tighten everything: the default spacing is generous for a monitor and
+     wastes most of a phone screen before any content appears. */
+  main { padding: 1.1rem 1rem 2.5rem; }
+  .hero { padding: 0.25rem 0 1.1rem; }
+  .hero h1 { font-size: 1.6rem; }
+  .lede { font-size: 0.97rem; }
+  .page-head { padding-bottom: 1rem; }
+  .page-head h1 { font-size: 1.4rem; }
+  .h-label { margin: 1.4rem 0 0.5rem; }
+
+  .picks { gap: 0.55rem; }
+  .picks a { padding: 0.8rem 0.9rem; }
+  .picks h3 { font-size: 1rem; }
+  .picks p { font-size: 0.87rem; }
+  .pick-meta { font-size: 0.66rem; }
+
+  .row a { padding: 0.7rem 0.5rem; }
+  .row h3 { font-size: 0.96rem; }
+  .row p { font-size: 0.86rem; }
+
+  .doc h1 { font-size: 1.4rem; }
+  .doc .lede { font-size: 0.97rem; }
+  .rail { padding: 0.7rem 0.85rem; }
+  .rail li { font-size: 0.85rem; }
 }
 
 /* ==========================================================================

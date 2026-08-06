@@ -308,6 +308,14 @@ def sidebar(depth, active_url="", active_cat="", guides=None):
   <nav class="side-nav">
     <p class="side-label">Categories</p>
     <ul class="side-list side-cats">{''.join(cats)}</ul>
+    <div class="side-more">
+      <p class="side-label">More</p>
+      <ul class="side-list">
+        <li><a href="{up}about.html"><span>About</span></a></li>
+        <li><a href="{up}contribute.html"><span>Contribute</span></a></li>
+        <li><a href="{up}contact.html"><span>Contact</span></a></li>
+      </ul>
+    </div>
   </nav>
 </aside>"""
 
@@ -317,8 +325,13 @@ def page(title, description, body, depth=0, active_url="", active_cat="",
     """chrome=False drops the sidebar -- used for articles, which read better
     full width and leave room for an ad rail."""
     up = "../" * depth
-    shell = (f'<div class="shell">{sidebar(depth, active_url, active_cat, guides)}'
-             if chrome else '<div class="shell shell-wide">')
+    # The sidebar is always rendered. On article pages it is hidden at desktop
+    # width (so the article runs full width) but still reachable from the mobile
+    # drawer -- otherwise a reader arriving from a search engine has no way to
+    # search the site at all.
+    shell_class = "shell" if chrome else "shell shell-wide"
+    shell = (f'<div class="{shell_class}">'
+             f'{sidebar(depth, active_url, active_cat, guides)}')
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -343,7 +356,7 @@ def page(title, description, body, depth=0, active_url="", active_cat="",
 <body data-base="{up}" class="{extra_class}">
 <a class="skip" href="#main">Skip to content</a>
 <header class="top">
-  {'<button class="menu" aria-expanded="false" aria-controls="side">Menu</button>' if chrome else ''}
+  <button class="menu" aria-expanded="false" aria-controls="side">Menu</button>
   <a class="brand" href="{up}index.html">{SITE_SHORT}<span>Wiki</span></a>
   {tabs(depth, active_tab)}
   <nav class="top-links">
