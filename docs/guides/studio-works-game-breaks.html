@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your script works in Studio but breaks in the real game. Here&#x27;s why. — Baseplate Wiki</title>
 <meta name="description" content="Studio runs the server and client in one process, so client-server bugs stay invisible until you publish. The five that catch everyone, and how to catch them before players do.">
-<link rel="stylesheet" href="../assets/style.css?v=05566cb2">
+<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<meta name="theme-color" content="#16191d">
 <script>
 /* Runs before first paint: without this the page renders in the OS theme and
    then snaps to the saved one, which is a visible flash on every navigation. */
@@ -22,31 +23,25 @@
 <body data-base="../" class="has-rail">
 <a class="skip" href="#main">Skip to content</a>
 <header class="top">
-  <button class="menu" aria-expanded="false" aria-controls="side">Menu</button>
+  <button class="menu" aria-expanded="false" aria-controls="side" aria-label="Menu">
+    <svg class="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 6.6h16.8"/><path d="M3.6 12h16.8"/><path d="M3.6 17.4h16.8"/></svg><svg class="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.8 5.8 18.2 18.2"/><path d="M18.2 5.8 5.8 18.2"/></svg>
+  </button>
   <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
-  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="tabs"><a class="tab on" href="../learn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.9 4.9h6.1c1.1 0 1.9.8 1.9 1.9v12.3c0-.9-.8-1.5-1.8-1.5H3.9z"/><path d="M20.1 4.9H14c-1.1 0-1.9.8-1.9 1.9v12.3c0-.9.8-1.5 1.8-1.5h6.2z"/></svg><span>Learn</span></a><a class="tab" href="../recipes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 6.4h11.1"/><path d="M9.2 12h11.1"/><path d="M9.2 17.6h11.1"/><path d="M3.7 6.1 4.9 7.3 7.1 4.9"/><path d="M3.7 11.7 4.9 12.9 7.1 10.5"/><path d="M3.7 17.3 4.9 18.5 7.1 16.1"/></svg><span>Recipes</span></a><a class="tab" href="../terms/index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.6 3.9h10.8v16.2l-5.4-3.9-5.4 3.9z"/></svg><span>Reference</span></a></nav>
   <nav class="top-links">
     <a href="../about.html">About</a>
     <a href="../contribute.html">Contribute</a>
   </nav>
   <button class="theme" type="button" aria-label="Switch between light and dark"
           title="Switch theme">
-    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="4.2"/>
-      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
-    </svg>
-    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-         aria-hidden="true">
-      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
-    </svg>
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.6v2.3"/><path d="M12 19.1v2.3"/><path d="M4.4 4.4 6 6"/><path d="M18 18 19.6 19.6"/><path d="M2.6 12h2.3"/><path d="M19.1 12h2.3"/><path d="M4.4 19.6 6 18"/><path d="M18 6 19.6 4.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8.3 8.3 0 0 1 9.8 4a8.3 8.3 0 1 0 10.2 10.2z"/></svg>
   </button>
 </header>
 <div class="shell shell-wide"><aside class="side" id="side">
   <form class="search" role="search" onsubmit="return false">
     <label class="sr" for="q">Search the wiki</label>
-    <input id="q" type="search" placeholder="Search&hellip;  /"
+    <svg class="search-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.3"/><path d="M15.3 15.3 20.4 20.4"/></svg>
+    <input id="q" type="search" placeholder="Search&hellip;"
            autocomplete="off" spellcheck="false">
     <div id="results" class="results" hidden></div>
   </form>
@@ -56,9 +51,9 @@
     <div class="side-more">
       <p class="side-label">More</p>
       <ul class="side-list">
-        <li><a href="../about.html"><span>About</span></a></li>
-        <li><a href="../contribute.html"><span>Contribute</span></a></li>
-        <li><a href="../contact.html"><span>Contact</span></a></li>
+        <li><a href="../about.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 11.2v5.3"/><path d="M12 7.7v.9"/></svg><span>About</span></a></li>
+        <li><a href="../contribute.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.3 4.5 19.5 7.7 9.2 18H6v-3.2z"/><path d="M14.3 6.5l3.2 3.2"/></svg><span>Contribute</span></a></li>
+        <li><a href="../contact.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.7" width="17" height="12.6" rx="1.9"/><path d="M3.9 6.7 12 12.6l8.1-5.9"/></svg><span>Contact</span></a></li>
       </ul>
     </div>
   </nav>
@@ -67,14 +62,14 @@
 <article class="doc">
   <p class="crumbs">
     <a href="../learn.html">Learn</a>
-    <span aria-hidden="true">/</span>
+    <svg class="crumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.6 5.6 16 12l-6.4 6.4"/></svg>
     <a href="../c/scripting.html">Scripting</a>
   </p>
   <h1>Your script works in Studio but breaks in the real game. Here&#x27;s why.</h1>
   <p class="lede">Studio runs the server and client in one process, so client-server bugs stay invisible until you publish. The five that catch everyone, and how to catch them before players do.</p>
   <p class="doc-meta"><span>Scripting</span><span>Beginner</span><span>9 min read</span></p>
   <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
-  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#why-studio-lies">Why Studio lies</a></li><li><a href="#1-localscripts-that-aren-t-running-at-all">1. LocalScripts that aren&#x27;t running at all</a></li><li><a href="#2-waiting-for-things-that-don-t-exist-yet">2. Waiting for things that don&#x27;t exist yet</a></li><li><a href="#3-trusting-the-client-with-anything-that-matters">3. Trusting the client with anything that matters</a></li><li><a href="#4-changes-on-the-client-that-never-reach-anyone-else">4. Changes on the client that never reach anyone else</a></li><li><a href="#5-remoteevents-connected-on-the-wrong-side">5. RemoteEvents connected on the wrong side</a></li><li><a href="#a-checklist-before-you-publish">A checklist before you publish</a></li><li><a href="#what-to-read-next">What to read next</a></li></ul></aside>
+  <aside class="rail"><p class="rail-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 6.6h14.8"/><path d="M4.6 12h14.8"/><path d="M4.6 17.4h8.9"/></svg>On this page</p><ul><li><a href="#why-studio-lies">Why Studio lies</a></li><li><a href="#1-localscripts-that-aren-t-running-at-all">1. LocalScripts that aren&#x27;t running at all</a></li><li><a href="#2-waiting-for-things-that-don-t-exist-yet">2. Waiting for things that don&#x27;t exist yet</a></li><li><a href="#3-trusting-the-client-with-anything-that-matters">3. Trusting the client with anything that matters</a></li><li><a href="#4-changes-on-the-client-that-never-reach-anyone-else">4. Changes on the client that never reach anyone else</a></li><li><a href="#5-remoteevents-connected-on-the-wrong-side">5. RemoteEvents connected on the wrong side</a></li><li><a href="#a-checklist-before-you-publish">A checklist before you publish</a></li><li><a href="#what-to-read-next">What to read next</a></li></ul></aside>
   <div class="prose">
 <p>You test in Studio. Everything works. You publish, join the live game, and the thing you just spent two hours on does nothing at all — no error, no output, just silence.</p>
 <p>This is the single most common wall new Roblox developers hit, and it is almost never a bug in your logic. It is that <strong>Studio lies to you about where your code is running.</strong></p>
@@ -90,11 +85,11 @@
 <p><strong>Check:</strong> put a <code>print("alive")</code> as line 1 of every script that "isn't working." If you don't see it in the output, the script never ran and nothing after line 1 matters.</p>
 <h2 id="2-waiting-for-things-that-don-t-exist-yet">2. Waiting for things that don't exist yet<a class="anchor" href="#2-waiting-for-things-that-don-t-exist-yet" aria-label="Link to this section">#</a></h2>
 <p>This is the big one. In Studio, everything loads instantly. In the live game, your client starts running scripts while assets are still streaming in.</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- Breaks in the live game, works in Studio</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- Breaks in the live game, works in Studio</span>
 <span class="t-key">local</span> gui = <span class="t-glob">game</span>.<span class="t-prop">Players</span>.<span class="t-prop">LocalPlayer</span>.<span class="t-prop">PlayerGui</span>.<span class="t-prop">MainMenu</span>
 <span class="t-key">local</span> button = gui.<span class="t-prop">PlayButton</span></code></pre></div>
 <p>If <code>MainMenu</code> hasn't replicated to the client yet, that first line throws <code>MainMenu is not a valid member of PlayerGui</code>. Written the safe way:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
 <span class="t-key">local</span> player = Players.<span class="t-prop">LocalPlayer</span>
 
 <span class="t-key">local</span> gui = player:<span class="t-fn">WaitForChild</span>(<span class="t-str">"PlayerGui"</span>):<span class="t-fn">WaitForChild</span>(<span class="t-str">"MainMenu"</span>)
@@ -104,14 +99,14 @@
 <p>Use <code>WaitForChild</code> on the <strong>client</strong> for things the server created. You generally do <em>not</em> need it on the server for things that exist in the published place file.</p>
 <h2 id="3-trusting-the-client-with-anything-that-matters">3. Trusting the client with anything that matters<a class="anchor" href="#3-trusting-the-client-with-anything-that-matters" aria-label="Link to this section">#</a></h2>
 <p>A <code>LocalScript</code> runs on the player's machine. The player controls that machine. Anything you calculate there, an exploiter can change.</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- LocalScript: an exploiter can set this to whatever they want</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- LocalScript: an exploiter can set this to whatever they want</span>
 <span class="t-key">local</span> coins = <span class="t-num">0</span>
 <span class="t-key">local</span> <span class="t-key">function</span> onCoinTouched()
     coins += <span class="t-num">1</span>
     coinsChanged:<span class="t-fn">FireServer</span>(coins)   <span class="t-com">-- server believes a number from the client</span>
 <span class="t-key">end</span></code></pre></div>
 <p>The server must own every value that matters — currency, health, inventory, scores. The client's job is to <em>ask</em>, and the server's job is to <em>decide</em>:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- ServerScriptService</span>
 <span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
 <span class="t-key">local</span> collectCoin = ReplicatedStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"CollectCoin"</span>)
 
@@ -134,7 +129,7 @@ collectCoin.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect
 <p>Note the shape: the client sends <em>which coin</em>, never <em>how many coins I now have</em>. Every <code>OnServerEvent</code> handler receives <code>player</code> as its first argument automatically, and that argument is the one thing on the whole call you can actually trust — Roblox fills it in, not the client.</p>
 <h2 id="4-changes-on-the-client-that-never-reach-anyone-else">4. Changes on the client that never reach anyone else<a class="anchor" href="#4-changes-on-the-client-that-never-reach-anyone-else" aria-label="Link to this section">#</a></h2>
 <p>If a <code>LocalScript</code> moves a part, changes a colour, or deletes something in <code>Workspace</code>, only that one player sees it. It does not replicate upward. In Studio's shared process this distinction blurs and it can look like it worked.</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- LocalScript: only this player ever sees the door open</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- LocalScript: only this player ever sees the door open</span>
 <span class="t-glob">workspace</span>.<span class="t-prop">Door</span>.<span class="t-prop">CFrame</span> = <span class="t-glob">workspace</span>.<span class="t-prop">Door</span>.<span class="t-prop">CFrame</span> * <span class="t-glob">CFrame</span>.<span class="t-fn">Angles</span>(<span class="t-num">0</span>, <span class="t-glob">math</span>.<span class="t-fn">rad</span>(<span class="t-num">90</span>), <span class="t-num">0</span>)</code></pre></div>
 <p>If every player should see it, the <strong>server</strong> has to do it. Fire a <a class="term-link" href="../terms/remoteevent.html" title="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvent</a> to the server and let the server make the change.</p>
 <p>The reverse also holds and is genuinely useful: client-only changes are how you build things like a local preview or a per-player highlight without touching anyone else's game.</p>
@@ -168,6 +163,6 @@ collectCoin.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=059bbcd3" defer></script>
+<script src="../assets/search.js?v=7bf74429" defer></script>
 </body>
 </html>

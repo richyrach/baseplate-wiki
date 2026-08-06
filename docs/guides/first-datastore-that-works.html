@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your first DataStore that doesn&#x27;t lose player data — Baseplate Wiki</title>
 <meta name="description" content="A save system that handles failures, retries, and server shutdown — the three things a naive DataStore script gets wrong.">
-<link rel="stylesheet" href="../assets/style.css?v=05566cb2">
+<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<meta name="theme-color" content="#16191d">
 <script>
 /* Runs before first paint: without this the page renders in the OS theme and
    then snaps to the saved one, which is a visible flash on every navigation. */
@@ -22,31 +23,25 @@
 <body data-base="../" class="has-rail">
 <a class="skip" href="#main">Skip to content</a>
 <header class="top">
-  <button class="menu" aria-expanded="false" aria-controls="side">Menu</button>
+  <button class="menu" aria-expanded="false" aria-controls="side" aria-label="Menu">
+    <svg class="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 6.6h16.8"/><path d="M3.6 12h16.8"/><path d="M3.6 17.4h16.8"/></svg><svg class="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.8 5.8 18.2 18.2"/><path d="M18.2 5.8 5.8 18.2"/></svg>
+  </button>
   <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
-  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="tabs"><a class="tab on" href="../learn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.9 4.9h6.1c1.1 0 1.9.8 1.9 1.9v12.3c0-.9-.8-1.5-1.8-1.5H3.9z"/><path d="M20.1 4.9H14c-1.1 0-1.9.8-1.9 1.9v12.3c0-.9.8-1.5 1.8-1.5h6.2z"/></svg><span>Learn</span></a><a class="tab" href="../recipes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 6.4h11.1"/><path d="M9.2 12h11.1"/><path d="M9.2 17.6h11.1"/><path d="M3.7 6.1 4.9 7.3 7.1 4.9"/><path d="M3.7 11.7 4.9 12.9 7.1 10.5"/><path d="M3.7 17.3 4.9 18.5 7.1 16.1"/></svg><span>Recipes</span></a><a class="tab" href="../terms/index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.6 3.9h10.8v16.2l-5.4-3.9-5.4 3.9z"/></svg><span>Reference</span></a></nav>
   <nav class="top-links">
     <a href="../about.html">About</a>
     <a href="../contribute.html">Contribute</a>
   </nav>
   <button class="theme" type="button" aria-label="Switch between light and dark"
           title="Switch theme">
-    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="4.2"/>
-      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
-    </svg>
-    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-         aria-hidden="true">
-      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
-    </svg>
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.6v2.3"/><path d="M12 19.1v2.3"/><path d="M4.4 4.4 6 6"/><path d="M18 18 19.6 19.6"/><path d="M2.6 12h2.3"/><path d="M19.1 12h2.3"/><path d="M4.4 19.6 6 18"/><path d="M18 6 19.6 4.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8.3 8.3 0 0 1 9.8 4a8.3 8.3 0 1 0 10.2 10.2z"/></svg>
   </button>
 </header>
 <div class="shell shell-wide"><aside class="side" id="side">
   <form class="search" role="search" onsubmit="return false">
     <label class="sr" for="q">Search the wiki</label>
-    <input id="q" type="search" placeholder="Search&hellip;  /"
+    <svg class="search-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.3"/><path d="M15.3 15.3 20.4 20.4"/></svg>
+    <input id="q" type="search" placeholder="Search&hellip;"
            autocomplete="off" spellcheck="false">
     <div id="results" class="results" hidden></div>
   </form>
@@ -56,9 +51,9 @@
     <div class="side-more">
       <p class="side-label">More</p>
       <ul class="side-list">
-        <li><a href="../about.html"><span>About</span></a></li>
-        <li><a href="../contribute.html"><span>Contribute</span></a></li>
-        <li><a href="../contact.html"><span>Contact</span></a></li>
+        <li><a href="../about.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 11.2v5.3"/><path d="M12 7.7v.9"/></svg><span>About</span></a></li>
+        <li><a href="../contribute.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.3 4.5 19.5 7.7 9.2 18H6v-3.2z"/><path d="M14.3 6.5l3.2 3.2"/></svg><span>Contribute</span></a></li>
+        <li><a href="../contact.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.7" width="17" height="12.6" rx="1.9"/><path d="M3.9 6.7 12 12.6l8.1-5.9"/></svg><span>Contact</span></a></li>
       </ul>
     </div>
   </nav>
@@ -67,17 +62,17 @@
 <article class="doc">
   <p class="crumbs">
     <a href="../learn.html">Learn</a>
-    <span aria-hidden="true">/</span>
+    <svg class="crumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.6 5.6 16 12l-6.4 6.4"/></svg>
     <a href="../c/data.html">Data</a>
   </p>
   <h1>Your first DataStore that doesn&#x27;t lose player data</h1>
   <p class="lede">A save system that handles failures, retries, and server shutdown — the three things a naive DataStore script gets wrong.</p>
   <p class="doc-meta"><span>Data</span><span>Intermediate</span><span>13 min read</span></p>
   <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
-  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#turn-the-api-access-on-first">Turn the API access on first</a></li><li><a href="#wrap-every-call">Wrap every call</a></li><li><a href="#load-with-a-default-and-a-failure-flag">Load, with a default and a failure flag</a></li><li><a href="#save-refusing-when-the-load-failed">Save, refusing when the load failed</a></li><li><a href="#handle-server-shutdown">Handle server shutdown</a></li><li><a href="#autosave">Autosave</a></li><li><a href="#the-limits-you-will-hit">The limits you will hit</a></li><li><a href="#what-to-store">What to store</a></li><li><a href="#verifying-it-actually-works">Verifying it actually works</a></li></ul></aside>
+  <aside class="rail"><p class="rail-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 6.6h14.8"/><path d="M4.6 12h14.8"/><path d="M4.6 17.4h8.9"/></svg>On this page</p><ul><li><a href="#turn-the-api-access-on-first">Turn the API access on first</a></li><li><a href="#wrap-every-call">Wrap every call</a></li><li><a href="#load-with-a-default-and-a-failure-flag">Load, with a default and a failure flag</a></li><li><a href="#save-refusing-when-the-load-failed">Save, refusing when the load failed</a></li><li><a href="#handle-server-shutdown">Handle server shutdown</a></li><li><a href="#autosave">Autosave</a></li><li><a href="#the-limits-you-will-hit">The limits you will hit</a></li><li><a href="#what-to-store">What to store</a></li><li><a href="#verifying-it-actually-works">Verifying it actually works</a></li></ul></aside>
   <div class="prose">
 <p>Most first DataStore scripts look like this:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> DataStoreService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"DataStoreService"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> DataStoreService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"DataStoreService"</span>)
 <span class="t-key">local</span> store = DataStoreService:<span class="t-fn">GetDataStore</span>(<span class="t-str">"PlayerData"</span>)
 
 <span class="t-glob">game</span>.<span class="t-prop">Players</span>.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
@@ -100,7 +95,7 @@
 <p>Also note that DataStores do not work at all in an unpublished place. Publish once before testing.</p>
 <h2 id="wrap-every-call">Wrap every call<a class="anchor" href="#wrap-every-call" aria-label="Link to this section">#</a></h2>
 <p>Every DataStore call goes over the network and can fail. <code>pcall</code> is not optional here:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> DataStoreService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"DataStoreService"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> DataStoreService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"DataStoreService"</span>)
 <span class="t-key">local</span> store = DataStoreService:<span class="t-fn">GetDataStore</span>(<span class="t-str">"PlayerData_v1"</span>)
 
 <span class="t-key">local</span> <span class="t-key">function</span> safeCall(fn, ...)
@@ -119,7 +114,7 @@
 <p>The doubling wait is deliberate. Retrying immediately usually fails again for the same reason; backing off gives a transient problem time to clear.</p>
 <aside class="note note-note"><p class="note-label">note</p><p>Note the <code>_v1</code> in the store name. When you eventually change your data format in a way old saves cannot handle, bumping to <code>_v2</code> is far easier than writing a migration. Decide this on day one — renaming later abandons everyone's progress.</p></aside>
 <h2 id="load-with-a-default-and-a-failure-flag">Load, with a default and a failure flag<a class="anchor" href="#load-with-a-default-and-a-failure-flag" aria-label="Link to this section">#</a></h2>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> DEFAULT_DATA = {
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> DEFAULT_DATA = {
 	Coins = <span class="t-num">0</span>,
 	Level = <span class="t-num">1</span>,
 	Inventory = {},
@@ -163,7 +158,7 @@
 <span class="t-key">end</span></code></pre></div>
 <p>That <code>dataFailed</code> flag is the most important part of this whole guide. <strong>A failed load must disable saving for that session.</strong> Otherwise the sequence is: load fails → player gets defaults → player leaves → defaults get saved → their real progress is gone forever. This single check prevents the worst class of data loss.</p>
 <h2 id="save-refusing-when-the-load-failed">Save, refusing when the load failed<a class="anchor" href="#save-refusing-when-the-load-failed" aria-label="Link to this section">#</a></h2>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> saveData(player)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> <span class="t-key">function</span> saveData(player)
 	<span class="t-key">local</span> userId = player.<span class="t-prop">UserId</span>
 	<span class="t-key">local</span> data = cache[userId]
 
@@ -186,7 +181,7 @@
 <h2 id="handle-server-shutdown">Handle server shutdown<a class="anchor" href="#handle-server-shutdown" aria-label="Link to this section">#</a></h2>
 <p><code>PlayerRemoving</code> fires when one player leaves. When the whole server shuts down — which happens constantly, on updates and when a server empties — it may not fire for everyone before the process ends.</p>
 <p><code>game:BindToClose</code> is the hook for that. Roblox gives the server a short window (around 30 seconds) to finish up:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
 
 Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(loadData)
 Players.<span class="t-prop">PlayerRemoving</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
@@ -205,7 +200,7 @@ Players.<span class="t-prop">PlayerRemoving</span>:<span class="t-fn">Connect</s
 <aside class="note note-warning"><p class="note-label">warning</p><p><code>BindToClose</code> does <strong>not</strong> run in Studio when you stop a playtest with the stop button, so you cannot verify it there. Test it in a real server by joining, earning something, and closing the client — then rejoin and check.</p></aside>
 <h2 id="autosave">Autosave<a class="anchor" href="#autosave" aria-label="Link to this section">#</a></h2>
 <p>Even with both hooks, a server crash loses everything since the last save. Autosave puts a floor on how much:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-glob">task</span>.<span class="t-fn">spawn</span>(<span class="t-key">function</span>()
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-glob">task</span>.<span class="t-fn">spawn</span>(<span class="t-key">function</span>()
 	<span class="t-key">while</span> <span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">120</span>) <span class="t-key">do</span>
 		<span class="t-key">for</span> _, player <span class="t-key">in</span> <span class="t-glob">ipairs</span>(Players:<span class="t-fn">GetPlayers</span>()) <span class="t-key">do</span>
 			saveData(player)
@@ -215,7 +210,7 @@ Players.<span class="t-prop">PlayerRemoving</span>:<span class="t-fn">Connect</s
 <p>Two minutes is a reasonable starting point. Do not go much below 60 seconds — you will run into request limits.</p>
 <h2 id="the-limits-you-will-hit">The limits you will hit<a class="anchor" href="#the-limits-you-will-hit" aria-label="Link to this section">#</a></h2>
 <p>Roblox caps how many DataStore requests a server may make. The budget scales with player count, and exceeding it queues your requests rather than failing them, which looks like the game hanging.</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> budget = DataStoreService:<span class="t-fn">GetRequestBudgetForRequestType</span>(
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> budget = DataStoreService:<span class="t-fn">GetRequestBudgetForRequestType</span>(
 	<span class="t-glob">Enum</span>.<span class="t-prop">DataStoreRequestType</span>.<span class="t-prop">SetIncrementAsync</span>
 )
 <span class="t-glob">print</span>(<span class="t-str">"remaining save budget:"</span>, budget)</code></pre></div>
@@ -224,7 +219,7 @@ Players.<span class="t-prop">PlayerRemoving</span>:<span class="t-fn">Connect</s
 <h2 id="what-to-store">What to store<a class="anchor" href="#what-to-store" aria-label="Link to this section">#</a></h2>
 <p>Store plain data: numbers, strings, booleans, and tables of those.</p>
 <p>You cannot store instances, <code>Vector3</code>, <code>CFrame</code>, <code>Color3</code>, or functions. Convert them:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- instead of storing a CFrame</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- instead of storing a CFrame</span>
 data.<span class="t-prop">SpawnPosition</span> = { pos.<span class="t-prop">X</span>, pos.<span class="t-prop">Y</span>, pos.<span class="t-prop">Z</span> }
 
 <span class="t-com">-- reading it back</span>
@@ -252,6 +247,6 @@ data.<span class="t-prop">SpawnPosition</span> = { pos.<span class="t-prop">X</s
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=059bbcd3" defer></script>
+<script src="../assets/search.js?v=7bf74429" defer></script>
 </body>
 </html>

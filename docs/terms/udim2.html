@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>UDim2 — Baseplate Wiki reference</title>
 <meta name="description" content="The two-part size and position type for GUI objects. Scale is a fraction of the parent, Offset is fixed pixels.">
-<link rel="stylesheet" href="../assets/style.css?v=05566cb2">
+<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<meta name="theme-color" content="#16191d">
 <script>
 /* Runs before first paint: without this the page renders in the OS theme and
    then snaps to the saved one, which is a visible flash on every navigation. */
@@ -22,31 +23,25 @@
 <body data-base="../" class="">
 <a class="skip" href="#main">Skip to content</a>
 <header class="top">
-  <button class="menu" aria-expanded="false" aria-controls="side">Menu</button>
+  <button class="menu" aria-expanded="false" aria-controls="side" aria-label="Menu">
+    <svg class="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 6.6h16.8"/><path d="M3.6 12h16.8"/><path d="M3.6 17.4h16.8"/></svg><svg class="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.8 5.8 18.2 18.2"/><path d="M18.2 5.8 5.8 18.2"/></svg>
+  </button>
   <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
-  <nav class="tabs"><a href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a class="on" href="../terms/index.html">Reference</a></nav>
+  <nav class="tabs"><a class="tab" href="../learn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.9 4.9h6.1c1.1 0 1.9.8 1.9 1.9v12.3c0-.9-.8-1.5-1.8-1.5H3.9z"/><path d="M20.1 4.9H14c-1.1 0-1.9.8-1.9 1.9v12.3c0-.9.8-1.5 1.8-1.5h6.2z"/></svg><span>Learn</span></a><a class="tab" href="../recipes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 6.4h11.1"/><path d="M9.2 12h11.1"/><path d="M9.2 17.6h11.1"/><path d="M3.7 6.1 4.9 7.3 7.1 4.9"/><path d="M3.7 11.7 4.9 12.9 7.1 10.5"/><path d="M3.7 17.3 4.9 18.5 7.1 16.1"/></svg><span>Recipes</span></a><a class="tab on" href="../terms/index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.6 3.9h10.8v16.2l-5.4-3.9-5.4 3.9z"/></svg><span>Reference</span></a></nav>
   <nav class="top-links">
     <a href="../about.html">About</a>
     <a href="../contribute.html">Contribute</a>
   </nav>
   <button class="theme" type="button" aria-label="Switch between light and dark"
           title="Switch theme">
-    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="4.2"/>
-      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
-    </svg>
-    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-         aria-hidden="true">
-      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
-    </svg>
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.6v2.3"/><path d="M12 19.1v2.3"/><path d="M4.4 4.4 6 6"/><path d="M18 18 19.6 19.6"/><path d="M2.6 12h2.3"/><path d="M19.1 12h2.3"/><path d="M4.4 19.6 6 18"/><path d="M18 6 19.6 4.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8.3 8.3 0 0 1 9.8 4a8.3 8.3 0 1 0 10.2 10.2z"/></svg>
   </button>
 </header>
 <div class="shell shell-wide"><aside class="side" id="side">
   <form class="search" role="search" onsubmit="return false">
     <label class="sr" for="q">Search the wiki</label>
-    <input id="q" type="search" placeholder="Search&hellip;  /"
+    <svg class="search-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.3"/><path d="M15.3 15.3 20.4 20.4"/></svg>
+    <input id="q" type="search" placeholder="Search&hellip;"
            autocomplete="off" spellcheck="false">
     <div id="results" class="results" hidden></div>
   </form>
@@ -56,9 +51,9 @@
     <div class="side-more">
       <p class="side-label">More</p>
       <ul class="side-list">
-        <li><a href="../about.html"><span>About</span></a></li>
-        <li><a href="../contribute.html"><span>Contribute</span></a></li>
-        <li><a href="../contact.html"><span>Contact</span></a></li>
+        <li><a href="../about.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 11.2v5.3"/><path d="M12 7.7v.9"/></svg><span>About</span></a></li>
+        <li><a href="../contribute.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.3 4.5 19.5 7.7 9.2 18H6v-3.2z"/><path d="M14.3 6.5l3.2 3.2"/></svg><span>Contribute</span></a></li>
+        <li><a href="../contact.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.7" width="17" height="12.6" rx="1.9"/><path d="M3.9 6.7 12 12.6l8.1-5.9"/></svg><span>Contact</span></a></li>
       </ul>
     </div>
   </nav>
@@ -72,20 +67,20 @@
   <!-- ad slot 'term-top': paste AdSense code here AFTER approval -->
   <div class="prose">
 <p>Every <code>Size</code> and <code>Position</code> on a GUI object is a <code>UDim2</code>, and it carries two numbers per axis:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(xScale, xOffset, yScale, yOffset)</code></pre></div>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(xScale, xOffset, yScale, yOffset)</code></pre></div>
 <ul><li><strong>Scale</strong> — a fraction of the parent. <code>0.5</code> is half the parent's width, whatever</li></ul>
 <p>  that happens to be.</p>
 <ul><li><strong>Offset</strong> — pixels. <code>400</code> is 400 pixels on every screen.</li></ul>
 <p>The distinction is the single biggest cause of UI that works on a monitor and breaks on a phone. A 400-pixel panel is a fifth of a 1920px screen and wider than a 360px one.</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>frame.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">400</span>, <span class="t-num">0</span>, <span class="t-num">300</span>)      <span class="t-com">-- fixed: breaks on small screens</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>frame.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">400</span>, <span class="t-num">0</span>, <span class="t-num">300</span>)      <span class="t-com">-- fixed: breaks on small screens</span>
 frame.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0.5</span>, <span class="t-num">0</span>, <span class="t-num">0.3</span>, <span class="t-num">0</span>)      <span class="t-com">-- proportional: adapts</span></code></pre></div>
 <h2 id="the-shorthand-constructors">The shorthand constructors<a class="anchor" href="#the-shorthand-constructors" aria-label="Link to this section">#</a></h2>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">0.3</span>)     <span class="t-com">-- scale only</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">0.3</span>)     <span class="t-com">-- scale only</span>
 <span class="t-glob">UDim2</span>.<span class="t-fn">fromOffset</span>(<span class="t-num">400</span>, <span class="t-num">300</span>)    <span class="t-com">-- pixels only</span></code></pre></div>
 <p>Prefer these when you are using only one system — they say which one you meant, so a reader does not have to count zeroes.</p>
 <h2 id="mixing-them-is-normal">Mixing them is normal<a class="anchor" href="#mixing-them-is-normal" aria-label="Link to this section">#</a></h2>
 <p>Combining both on one axis is usually the right answer, not a compromise:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- 80% of the parent's width minus a 20px margin, fixed 44px tall</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- 80% of the parent's width minus a 20px margin, fixed 44px tall</span>
 frame.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0.8</span>, -<span class="t-num">20</span>, <span class="t-num">0</span>, <span class="t-num">44</span>)</code></pre></div>
 <p>Width adapts to the screen; height stays a comfortable tap target. Negative offsets are valid and are the standard way to express a margin.</p>
 <h2 id="rules-of-thumb">Rules of thumb<a class="anchor" href="#rules-of-thumb" aria-label="Link to this section">#</a></h2>
@@ -93,19 +88,19 @@ frame.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span
 <p>Use <strong>Offset</strong> for anything that should stay a fixed physical size: borders, small icons, minimum tap heights, padding of a few pixels.</p>
 <h2 id="position-is-measured-from-the-top-left">Position is measured from the top-left<a class="anchor" href="#position-is-measured-from-the-top-left" aria-label="Link to this section">#</a></h2>
 <p>By default <code>Position</code> places an object's <strong>top-left corner</strong>, so this does not centre anything:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>frame.<span class="t-prop">Position</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">0.5</span>)   <span class="t-com">-- corner at centre</span></code></pre></div>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>frame.<span class="t-prop">Position</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">0.5</span>)   <span class="t-com">-- corner at centre</span></code></pre></div>
 <p><code>AnchorPoint</code> changes which point of the object is being positioned:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>frame.<span class="t-prop">AnchorPoint</span> = <span class="t-glob">Vector2</span>.<span class="t-fn">new</span>(<span class="t-num">0.5</span>, <span class="t-num">0.5</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>frame.<span class="t-prop">AnchorPoint</span> = <span class="t-glob">Vector2</span>.<span class="t-fn">new</span>(<span class="t-num">0.5</span>, <span class="t-num">0.5</span>)
 frame.<span class="t-prop">Position</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">0.5</span>)   <span class="t-com">-- actually centred</span></code></pre></div>
 <p>Note that <code>AnchorPoint</code> is a <code>Vector2</code>, not a <code>UDim2</code> — it is always a fraction.</p>
 <h2 id="arithmetic">Arithmetic<a class="anchor" href="#arithmetic" aria-label="Link to this section">#</a></h2>
 <p><code>UDim2</code> values add and subtract, which is handy for tween targets:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> hidden = <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">1.2</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> hidden = <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">1.2</span>)
 <span class="t-key">local</span> shown = hidden - <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0</span>, <span class="t-num">0.5</span>)</code></pre></div>
 <p>Each component adds independently, so scale adds to scale and offset to offset — they do not convert into each other.</p>
 <h2 id="related">Related<a class="anchor" href="#related" aria-label="Link to this section">#</a></h2>
 <p><code>UDim</code> is the single-axis version, used by <code>UIPadding</code>, <code>UICorner</code> and layout constraints:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> padding = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"UIPadding"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> padding = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"UIPadding"</span>)
 padding.<span class="t-prop">PaddingLeft</span> = <span class="t-glob">UDim</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">12</span>)     <span class="t-com">-- 12 fixed pixels</span></code></pre></div>
 <p><code>UIAspectRatioConstraint</code> is what stops Scale on both axes distorting an element, and <code>TextScaled</code> with a <code>UITextSizeConstraint</code> is the equivalent problem for text.</p>
   </div>
@@ -124,6 +119,6 @@ padding.<span class="t-prop">PaddingLeft</span> = <span class="t-glob">UDim</spa
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=059bbcd3" defer></script>
+<script src="../assets/search.js?v=7bf74429" defer></script>
 </body>
 </html>

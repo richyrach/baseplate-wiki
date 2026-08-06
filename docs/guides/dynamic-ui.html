@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dynamic UI: one function that draws your interface from state — Baseplate Wiki</title>
 <meta name="description" content="Stop scattering Visible and Text assignments through twenty event handlers. Keep the state in one table and redraw from it.">
-<link rel="stylesheet" href="../assets/style.css?v=05566cb2">
+<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<meta name="theme-color" content="#16191d">
 <script>
 /* Runs before first paint: without this the page renders in the OS theme and
    then snaps to the saved one, which is a visible flash on every navigation. */
@@ -22,31 +23,25 @@
 <body data-base="../" class="has-rail">
 <a class="skip" href="#main">Skip to content</a>
 <header class="top">
-  <button class="menu" aria-expanded="false" aria-controls="side">Menu</button>
+  <button class="menu" aria-expanded="false" aria-controls="side" aria-label="Menu">
+    <svg class="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 6.6h16.8"/><path d="M3.6 12h16.8"/><path d="M3.6 17.4h16.8"/></svg><svg class="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.8 5.8 18.2 18.2"/><path d="M18.2 5.8 5.8 18.2"/></svg>
+  </button>
   <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
-  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="tabs"><a class="tab on" href="../learn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.9 4.9h6.1c1.1 0 1.9.8 1.9 1.9v12.3c0-.9-.8-1.5-1.8-1.5H3.9z"/><path d="M20.1 4.9H14c-1.1 0-1.9.8-1.9 1.9v12.3c0-.9.8-1.5 1.8-1.5h6.2z"/></svg><span>Learn</span></a><a class="tab" href="../recipes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 6.4h11.1"/><path d="M9.2 12h11.1"/><path d="M9.2 17.6h11.1"/><path d="M3.7 6.1 4.9 7.3 7.1 4.9"/><path d="M3.7 11.7 4.9 12.9 7.1 10.5"/><path d="M3.7 17.3 4.9 18.5 7.1 16.1"/></svg><span>Recipes</span></a><a class="tab" href="../terms/index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.6 3.9h10.8v16.2l-5.4-3.9-5.4 3.9z"/></svg><span>Reference</span></a></nav>
   <nav class="top-links">
     <a href="../about.html">About</a>
     <a href="../contribute.html">Contribute</a>
   </nav>
   <button class="theme" type="button" aria-label="Switch between light and dark"
           title="Switch theme">
-    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="4.2"/>
-      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
-    </svg>
-    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-         aria-hidden="true">
-      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
-    </svg>
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.6v2.3"/><path d="M12 19.1v2.3"/><path d="M4.4 4.4 6 6"/><path d="M18 18 19.6 19.6"/><path d="M2.6 12h2.3"/><path d="M19.1 12h2.3"/><path d="M4.4 19.6 6 18"/><path d="M18 6 19.6 4.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8.3 8.3 0 0 1 9.8 4a8.3 8.3 0 1 0 10.2 10.2z"/></svg>
   </button>
 </header>
 <div class="shell shell-wide"><aside class="side" id="side">
   <form class="search" role="search" onsubmit="return false">
     <label class="sr" for="q">Search the wiki</label>
-    <input id="q" type="search" placeholder="Search&hellip;  /"
+    <svg class="search-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.3"/><path d="M15.3 15.3 20.4 20.4"/></svg>
+    <input id="q" type="search" placeholder="Search&hellip;"
            autocomplete="off" spellcheck="false">
     <div id="results" class="results" hidden></div>
   </form>
@@ -56,9 +51,9 @@
     <div class="side-more">
       <p class="side-label">More</p>
       <ul class="side-list">
-        <li><a href="../about.html"><span>About</span></a></li>
-        <li><a href="../contribute.html"><span>Contribute</span></a></li>
-        <li><a href="../contact.html"><span>Contact</span></a></li>
+        <li><a href="../about.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 11.2v5.3"/><path d="M12 7.7v.9"/></svg><span>About</span></a></li>
+        <li><a href="../contribute.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.3 4.5 19.5 7.7 9.2 18H6v-3.2z"/><path d="M14.3 6.5l3.2 3.2"/></svg><span>Contribute</span></a></li>
+        <li><a href="../contact.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.7" width="17" height="12.6" rx="1.9"/><path d="M3.9 6.7 12 12.6l8.1-5.9"/></svg><span>Contact</span></a></li>
       </ul>
     </div>
   </nav>
@@ -67,17 +62,17 @@
 <article class="doc">
   <p class="crumbs">
     <a href="../learn.html">Learn</a>
-    <span aria-hidden="true">/</span>
+    <svg class="crumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.6 5.6 16 12l-6.4 6.4"/></svg>
     <a href="../c/ui.html">UI</a>
   </p>
   <h1>Dynamic UI: one function that draws your interface from state</h1>
   <p class="lede">Stop scattering Visible and Text assignments through twenty event handlers. Keep the state in one table and redraw from it.</p>
   <p class="doc-meta"><span>UI</span><span>Intermediate</span><span>12 min read</span></p>
   <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
-  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#state-in-one-table-one-function-to-draw-it">State in one table, one function to draw it</a></li><li><a href="#why-this-is-worth-the-ceremony">Why this is worth the ceremony</a></li><li><a href="#driving-it-from-the-server">Driving it from the server</a></li><li><a href="#animating-transitions">Animating transitions</a></li><li><a href="#building-lists-from-data">Building lists from data</a></li><li><a href="#keeping-render-cheap">Keeping render cheap</a></li><li><a href="#converting-existing-ui">Converting existing UI</a></li></ul></aside>
+  <aside class="rail"><p class="rail-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 6.6h14.8"/><path d="M4.6 12h14.8"/><path d="M4.6 17.4h8.9"/></svg>On this page</p><ul><li><a href="#state-in-one-table-one-function-to-draw-it">State in one table, one function to draw it</a></li><li><a href="#why-this-is-worth-the-ceremony">Why this is worth the ceremony</a></li><li><a href="#driving-it-from-the-server">Driving it from the server</a></li><li><a href="#animating-transitions">Animating transitions</a></li><li><a href="#building-lists-from-data">Building lists from data</a></li><li><a href="#keeping-render-cheap">Keeping render cheap</a></li><li><a href="#converting-existing-ui">Converting existing UI</a></li></ul></aside>
   <div class="prose">
 <p>Most Roblox UI code starts like this and then grows for six months:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>buyButton.<span class="t-prop">MouseButton1Click</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>buyButton.<span class="t-prop">MouseButton1Click</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
 	shopFrame.<span class="t-prop">Visible</span> = <span class="t-key">false</span>
 	inventoryFrame.<span class="t-prop">Visible</span> = <span class="t-key">true</span>
 	coinLabel.<span class="t-prop">Text</span> = coins
@@ -87,7 +82,7 @@
 <p>Every handler pokes at half a dozen properties. Add a fourth panel and you have to remember which of the previous three to hide, from every place that opens it. The bugs are always the same: a frame that stays visible when it should not, a label showing a stale number, two panels open at once.</p>
 <p>The fix is not more careful handlers. It is one place that decides what everything looks like.</p>
 <h2 id="state-in-one-table-one-function-to-draw-it">State in one table, one function to draw it<a class="anchor" href="#state-in-one-table-one-function-to-draw-it" aria-label="Link to this section">#</a></h2>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- StarterPlayerScripts/Hud.client.lua</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- StarterPlayerScripts/Hud.client.lua</span>
 <span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
 <span class="t-key">local</span> player = Players.<span class="t-prop">LocalPlayer</span>
 
@@ -127,7 +122,7 @@
 	render()
 <span class="t-key">end</span></code></pre></div>
 <p>Now every handler is one line and cannot forget anything:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>gui.<span class="t-prop">OpenShopButton</span>.<span class="t-prop">Activated</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>gui.<span class="t-prop">OpenShopButton</span>.<span class="t-prop">Activated</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
 	setState({ screen = <span class="t-str">"shop"</span> })
 <span class="t-key">end</span>)
 
@@ -145,7 +140,7 @@ gui.<span class="t-prop">InventoryTab</span>.<span class="t-prop">Activated</spa
 <p><strong>Debugging is one print.</strong> <code>print(state)</code> tells you everything about what the UI should be showing. Compare with the twenty-handler version, where the truth is spread across every property of every object.</p>
 <h2 id="driving-it-from-the-server">Driving it from the server<a class="anchor" href="#driving-it-from-the-server" aria-label="Link to this section">#</a></h2>
 <p>Server values feed the same state table:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> coinsValue = player:<span class="t-fn">WaitForChild</span>(<span class="t-str">"leaderstats"</span>):<span class="t-fn">WaitForChild</span>(<span class="t-str">"Coins"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> coinsValue = player:<span class="t-fn">WaitForChild</span>(<span class="t-str">"leaderstats"</span>):<span class="t-fn">WaitForChild</span>(<span class="t-str">"Coins"</span>)
 
 coinsValue.<span class="t-prop">Changed</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
 	setState({ coins = coinsValue.<span class="t-prop">Value</span> })
@@ -153,13 +148,13 @@ coinsValue.<span class="t-prop">Changed</span>:<span class="t-fn">Connect</span>
 
 setState({ coins = coinsValue.<span class="t-prop">Value</span> })     <span class="t-com">-- initial</span></code></pre></div>
 <p>Or with attributes, which is tidier for anything that is not a leaderboard stat:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>player:<span class="t-fn">GetAttributeChangedSignal</span>(<span class="t-str">"CoinMultiplier"</span>):<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>player:<span class="t-fn">GetAttributeChangedSignal</span>(<span class="t-str">"CoinMultiplier"</span>):<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
 	setState({ multiplier = player:<span class="t-fn">GetAttribute</span>(<span class="t-str">"CoinMultiplier"</span>) <span class="t-key">or</span> <span class="t-num">1</span> })
 <span class="t-key">end</span>)</code></pre></div>
 <p>The client renders; the server decides. <code>state</code> is a mirror of server truth plus local-only concerns like which panel is open.</p>
 <h2 id="animating-transitions">Animating transitions<a class="anchor" href="#animating-transitions" aria-label="Link to this section">#</a></h2>
 <p><code>render()</code> sets things instantly. For movement, tween toward the state rather than setting position directly:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> TweenService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"TweenService"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> TweenService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"TweenService"</span>)
 
 <span class="t-key">local</span> SHOWN = <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">0.5</span>)
 <span class="t-key">local</span> HIDDEN = <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">1.4</span>)
@@ -194,7 +189,7 @@ setState({ coins = coinsValue.<span class="t-prop">Value</span> })     <span cla
 <p>Check <code>playbackState</code> — <code>Completed</code> also fires on a cancel, and hiding the frame after a cancelled show-tween makes the panel vanish mid-animation.</p>
 <h2 id="building-lists-from-data">Building lists from data<a class="anchor" href="#building-lists-from-data" aria-label="Link to this section">#</a></h2>
 <p>Anything list-shaped — inventory, shop, scoreboard — should be generated, not hand-placed:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> template = gui.<span class="t-prop">InventoryFrame</span>.<span class="t-prop">ItemTemplate</span>      <span class="t-com">-- Visible = false in Studio</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> template = gui.<span class="t-prop">InventoryFrame</span>.<span class="t-prop">ItemTemplate</span>      <span class="t-com">-- Visible = false in Studio</span>
 <span class="t-key">local</span> container = gui.<span class="t-prop">InventoryFrame</span>.<span class="t-prop">List</span>
 
 <span class="t-key">local</span> <span class="t-key">function</span> renderList(items)
@@ -224,7 +219,7 @@ setState({ coins = coinsValue.<span class="t-prop">Value</span> })     <span cla
 <h2 id="keeping-render-cheap">Keeping render cheap<a class="anchor" href="#keeping-render-cheap" aria-label="Link to this section">#</a></h2>
 <p><code>render()</code> runs on every state change, so it must not do anything expensive: no <code><a class="term-link" href="../terms/waitforchild.html" title="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a></code>, no DataStore calls, no <code>FindFirstChild</code> walking the tree. Resolve all your references once at the top of the script.</p>
 <p>If you find yourself calling <code>setState</code> many times per frame, batch instead:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> dirty = <span class="t-key">false</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> dirty = <span class="t-key">false</span>
 
 <span class="t-key">local</span> <span class="t-key">function</span> requestRender()
 	<span class="t-key">if</span> dirty <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-key">end</span>
@@ -256,6 +251,6 @@ setState({ coins = coinsValue.<span class="t-prop">Value</span> })     <span cla
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=059bbcd3" defer></script>
+<script src="../assets/search.js?v=7bf74429" defer></script>
 </body>
 </html>

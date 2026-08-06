@@ -44,56 +44,56 @@
   if (menu && side) {
     menu.addEventListener("click", function () {
       var open = side.classList.toggle("open");
+      menu.classList.toggle("is-open", open);
       menu.setAttribute("aria-expanded", open ? "true" : "false");
     });
   }
 
   /* -------------------------------------------------------- copy buttons */
 
-  document.querySelectorAll(".code").forEach(function (block) {
-    var pre = block.querySelector("pre");
+  /* The button is rendered server-side inside the code bar, so there is no
+     layout shift and it still exists with JS disabled (it just does nothing
+     until this runs). */
+  document.querySelectorAll(".code .copy").forEach(function (btn) {
+    var block = btn.closest(".code");
+    var pre = block && block.querySelector("pre");
     if (!pre) return;
 
-    var btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "copy";
-    btn.textContent = "Copy";
-    btn.setAttribute("aria-label", "Copy code to clipboard");
+    var label = btn.querySelector(".copy-text");
+
+    function flash(text) {
+      btn.classList.add("done");
+      if (label) label.textContent = text;
+      setTimeout(function () {
+        btn.classList.remove("done");
+        if (label) label.textContent = "Copy";
+      }, 1600);
+    }
+
+    function fallback(text) {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); flash("Copied"); }
+      catch (e) { if (label) label.textContent = "Ctrl+C"; }
+      document.body.removeChild(ta);
+    }
 
     btn.addEventListener("click", function () {
       var text = pre.innerText;
-
-      function ok() {
-        btn.textContent = "Copied";
-        btn.classList.add("done");
-        setTimeout(function () {
-          btn.textContent = "Copy";
-          btn.classList.remove("done");
-        }, 1600);
-      }
-
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(ok, fallback);
+        navigator.clipboard.writeText(text).then(
+          function () { flash("Copied"); },
+          function () { fallback(text); }
+        );
       } else {
-        fallback();
-      }
-
-      /* clipboard API needs https; plain http (a LAN preview) falls back */
-      function fallback() {
-        var ta = document.createElement("textarea");
-        ta.value = text;
-        ta.setAttribute("readonly", "");
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.select();
-        try { document.execCommand("copy"); ok(); }
-        catch (e) { btn.textContent = "Press Ctrl+C"; }
-        document.body.removeChild(ta);
+        fallback(text);
       }
     });
-
-    block.appendChild(btn);
   });
 
   /* ------------------------------------------------------------- search */

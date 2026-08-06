@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Moving a model without it exploding: PrimaryPart and PivotTo — Baseplate Wiki</title>
 <meta name="description" content="Setting a model&#x27;s position part by part tears welded assemblies apart. Move the whole thing at once instead.">
-<link rel="stylesheet" href="../assets/style.css?v=05566cb2">
+<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<meta name="theme-color" content="#16191d">
 <script>
 /* Runs before first paint: without this the page renders in the OS theme and
    then snaps to the saved one, which is a visible flash on every navigation. */
@@ -22,31 +23,25 @@
 <body data-base="../" class="has-rail">
 <a class="skip" href="#main">Skip to content</a>
 <header class="top">
-  <button class="menu" aria-expanded="false" aria-controls="side">Menu</button>
+  <button class="menu" aria-expanded="false" aria-controls="side" aria-label="Menu">
+    <svg class="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 6.6h16.8"/><path d="M3.6 12h16.8"/><path d="M3.6 17.4h16.8"/></svg><svg class="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.8 5.8 18.2 18.2"/><path d="M18.2 5.8 5.8 18.2"/></svg>
+  </button>
   <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
-  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="tabs"><a class="tab" href="../learn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.9 4.9h6.1c1.1 0 1.9.8 1.9 1.9v12.3c0-.9-.8-1.5-1.8-1.5H3.9z"/><path d="M20.1 4.9H14c-1.1 0-1.9.8-1.9 1.9v12.3c0-.9.8-1.5 1.8-1.5h6.2z"/></svg><span>Learn</span></a><a class="tab on" href="../recipes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 6.4h11.1"/><path d="M9.2 12h11.1"/><path d="M9.2 17.6h11.1"/><path d="M3.7 6.1 4.9 7.3 7.1 4.9"/><path d="M3.7 11.7 4.9 12.9 7.1 10.5"/><path d="M3.7 17.3 4.9 18.5 7.1 16.1"/></svg><span>Recipes</span></a><a class="tab" href="../terms/index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.6 3.9h10.8v16.2l-5.4-3.9-5.4 3.9z"/></svg><span>Reference</span></a></nav>
   <nav class="top-links">
     <a href="../about.html">About</a>
     <a href="../contribute.html">Contribute</a>
   </nav>
   <button class="theme" type="button" aria-label="Switch between light and dark"
           title="Switch theme">
-    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="4.2"/>
-      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
-    </svg>
-    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-         aria-hidden="true">
-      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
-    </svg>
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.6v2.3"/><path d="M12 19.1v2.3"/><path d="M4.4 4.4 6 6"/><path d="M18 18 19.6 19.6"/><path d="M2.6 12h2.3"/><path d="M19.1 12h2.3"/><path d="M4.4 19.6 6 18"/><path d="M18 6 19.6 4.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8.3 8.3 0 0 1 9.8 4a8.3 8.3 0 1 0 10.2 10.2z"/></svg>
   </button>
 </header>
 <div class="shell shell-wide"><aside class="side" id="side">
   <form class="search" role="search" onsubmit="return false">
     <label class="sr" for="q">Search the wiki</label>
-    <input id="q" type="search" placeholder="Search&hellip;  /"
+    <svg class="search-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.3"/><path d="M15.3 15.3 20.4 20.4"/></svg>
+    <input id="q" type="search" placeholder="Search&hellip;"
            autocomplete="off" spellcheck="false">
     <div id="results" class="results" hidden></div>
   </form>
@@ -56,9 +51,9 @@
     <div class="side-more">
       <p class="side-label">More</p>
       <ul class="side-list">
-        <li><a href="../about.html"><span>About</span></a></li>
-        <li><a href="../contribute.html"><span>Contribute</span></a></li>
-        <li><a href="../contact.html"><span>Contact</span></a></li>
+        <li><a href="../about.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 11.2v5.3"/><path d="M12 7.7v.9"/></svg><span>About</span></a></li>
+        <li><a href="../contribute.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.3 4.5 19.5 7.7 9.2 18H6v-3.2z"/><path d="M14.3 6.5l3.2 3.2"/></svg><span>Contribute</span></a></li>
+        <li><a href="../contact.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.7" width="17" height="12.6" rx="1.9"/><path d="M3.9 6.7 12 12.6l8.1-5.9"/></svg><span>Contact</span></a></li>
       </ul>
     </div>
   </nav>
@@ -67,21 +62,21 @@
 <article class="doc">
   <p class="crumbs">
     <a href="../recipes.html">Recipes</a>
-    <span aria-hidden="true">/</span>
+    <svg class="crumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.6 5.6 16 12l-6.4 6.4"/></svg>
     <a href="../c/building.html">Building</a>
   </p>
   <h1>Moving a model without it exploding: PrimaryPart and PivotTo</h1>
   <p class="lede">Setting a model&#x27;s position part by part tears welded assemblies apart. Move the whole thing at once instead.</p>
   <p class="doc-meta"><span>Building</span><span>Intermediate</span><span>8 min read</span></p>
   <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
-  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-answer">The answer</a></li><li><a href="#set-a-primarypart-first">Set a PrimaryPart first</a></li><li><a href="#order-matters-multiplication-is-not-commutative">Order matters: multiplication is not commutative</a></li><li><a href="#moveto-is-a-different-tool">MoveTo is a different tool</a></li><li><a href="#moving-smoothly">Moving smoothly</a></li><li><a href="#anchored-unanchored-and-which-to-use">Anchored, unanchored, and which to use</a></li><li><a href="#if-the-model-still-comes-apart">If the model still comes apart</a></li></ul></aside>
+  <aside class="rail"><p class="rail-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 6.6h14.8"/><path d="M4.6 12h14.8"/><path d="M4.6 17.4h8.9"/></svg>On this page</p><ul><li><a href="#the-answer">The answer</a></li><li><a href="#set-a-primarypart-first">Set a PrimaryPart first</a></li><li><a href="#order-matters-multiplication-is-not-commutative">Order matters: multiplication is not commutative</a></li><li><a href="#moveto-is-a-different-tool">MoveTo is a different tool</a></li><li><a href="#moving-smoothly">Moving smoothly</a></li><li><a href="#anchored-unanchored-and-which-to-use">Anchored, unanchored, and which to use</a></li><li><a href="#if-the-model-still-comes-apart">If the model still comes apart</a></li></ul></aside>
   <div class="prose">
 <p>You have a model — a car, a door, a platform — and you need to move it in a script. You try the obvious thing:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>model.<span class="t-prop">Position</span> = <span class="t-glob">Vector3</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">10</span>, <span class="t-num">0</span>)</code></pre></div>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>model.<span class="t-prop">Position</span> = <span class="t-glob">Vector3</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">10</span>, <span class="t-num">0</span>)</code></pre></div>
 <p>That errors, because a <code>Model</code> has no <code>Position</code> property. So you loop over the parts and move each one, and the model arrives at its destination in pieces.</p>
 <p>The fix is to move the model as a single unit.</p>
 <h2 id="the-answer">The answer<a class="anchor" href="#the-answer" aria-label="Link to this section">#</a></h2>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> model = <span class="t-glob">workspace</span>.<span class="t-prop">Door</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> model = <span class="t-glob">workspace</span>.<span class="t-prop">Door</span>
 
 <span class="t-com">-- absolute placement</span>
 model:<span class="t-fn">PivotTo</span>(<span class="t-glob">CFrame</span>.<span class="t-fn">new</span>(<span class="t-num">10</span>, <span class="t-num">5</span>, -<span class="t-num">20</span>))
@@ -95,24 +90,24 @@ model:<span class="t-fn">PivotTo</span>(model:<span class="t-fn">GetPivot</span>
 <h2 id="set-a-primarypart-first">Set a PrimaryPart first<a class="anchor" href="#set-a-primarypart-first" aria-label="Link to this section">#</a></h2>
 <p>A model's pivot is the CFrame of its <code>PrimaryPart</code>. If <code>PrimaryPart</code> is <code>nil</code>, Roblox falls back to the centre of the model's bounding box — which shifts if you add or remove parts, and is rarely where you actually want the origin.</p>
 <p>Set it explicitly:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>model.<span class="t-prop">PrimaryPart</span> = model:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Base"</span>)</code></pre></div>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>model.<span class="t-prop">PrimaryPart</span> = model:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Base"</span>)</code></pre></div>
 <p>You can set it in Studio too: select the model, and in Properties click the <code>PrimaryPart</code> field, then click the part you want in the viewport.</p>
 <p>Pick something meaningful. For a car, the chassis base. For a door, the hinge edge — then rotating the pivot rotates the door around its hinge rather than its middle, which is almost always what you wanted.</p>
 <aside class="note note-note"><p class="note-label">note</p><p><code>Model:GetPivot()</code> returns the current pivot CFrame, and <code>PivotTo</code> sets it. They are a matched pair, and <code>GetPivot() * offset</code> is the idiom for "move relative to where it is now."</p></aside>
 <h2 id="order-matters-multiplication-is-not-commutative">Order matters: multiplication is not commutative<a class="anchor" href="#order-matters-multiplication-is-not-commutative" aria-label="Link to this section">#</a></h2>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> pivot = model:<span class="t-fn">GetPivot</span>()
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> pivot = model:<span class="t-fn">GetPivot</span>()
 
 model:<span class="t-fn">PivotTo</span>(pivot * <span class="t-glob">CFrame</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, -<span class="t-num">10</span>))   <span class="t-com">-- 10 studs along the model's OWN forward</span>
 model:<span class="t-fn">PivotTo</span>(<span class="t-glob">CFrame</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, -<span class="t-num">10</span>) * pivot)   <span class="t-com">-- 10 studs along the WORLD's -Z</span></code></pre></div>
 <p><code>pivot * offset</code> applies the offset in the model's local space. <code>offset * pivot</code> applies it in world space. Getting these the wrong way round produces a model that moves in a strange direction when rotated, and is worth checking first when movement looks almost-but-not-quite right.</p>
 <h2 id="moveto-is-a-different-tool">MoveTo is a different tool<a class="anchor" href="#moveto-is-a-different-tool" aria-label="Link to this section">#</a></h2>
-<div class="code"><span class="code-lang">Luau</span><pre><code>model:<span class="t-fn">MoveTo</span>(<span class="t-glob">Vector3</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-num">0</span>))</code></pre></div>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>model:<span class="t-fn">MoveTo</span>(<span class="t-glob">Vector3</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-num">0</span>))</code></pre></div>
 <p><code>MoveTo</code> places the model's centre at a position, but it also shifts the model <strong>upward</strong> if something is already there, to avoid overlapping. That makes it handy for dropping something onto terrain and unusable when you need an exact position.</p>
 <p>If a model keeps ending up higher than you asked, <code>MoveTo</code> is why. Use <code>PivotTo</code>.</p>
 <aside class="note note-warning"><p class="note-label">warning</p><p><code>Model:SetPrimaryPartCFrame()</code> appears in a lot of older tutorials. It is deprecated in favour of <code>PivotTo</code>, and it had rounding behaviour that could drift a model slightly over many calls. New code should use <code>PivotTo</code>.</p></aside>
 <h2 id="moving-smoothly">Moving smoothly<a class="anchor" href="#moving-smoothly" aria-label="Link to this section">#</a></h2>
 <p><code>PivotTo</code> is instant. For animated movement, tween a value and apply it each frame:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> RunService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"RunService"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> RunService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"RunService"</span>)
 
 <span class="t-key">local</span> <span class="t-key">function</span> slideModel(model, targetCFrame, seconds)
 	<span class="t-key">local</span> startCFrame = model:<span class="t-fn">GetPivot</span>()
@@ -158,6 +153,6 @@ slideModel(<span class="t-glob">workspace</span>.<span class="t-prop">Platform</
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=059bbcd3" defer></script>
+<script src="../assets/search.js?v=7bf74429" defer></script>
 </body>
 </html>

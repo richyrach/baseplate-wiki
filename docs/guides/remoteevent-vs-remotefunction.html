@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RemoteEvent vs RemoteFunction: which one to use, and when the difference bites — Baseplate Wiki</title>
 <meta name="description" content="Choosing between the two without freezing scripts, trusting the client, or making networking harder than it needs to be.">
-<link rel="stylesheet" href="../assets/style.css?v=05566cb2">
+<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<meta name="theme-color" content="#16191d">
 <script>
 /* Runs before first paint: without this the page renders in the OS theme and
    then snaps to the saved one, which is a visible flash on every navigation. */
@@ -22,31 +23,25 @@
 <body data-base="../" class="has-rail">
 <a class="skip" href="#main">Skip to content</a>
 <header class="top">
-  <button class="menu" aria-expanded="false" aria-controls="side">Menu</button>
+  <button class="menu" aria-expanded="false" aria-controls="side" aria-label="Menu">
+    <svg class="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 6.6h16.8"/><path d="M3.6 12h16.8"/><path d="M3.6 17.4h16.8"/></svg><svg class="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.8 5.8 18.2 18.2"/><path d="M18.2 5.8 5.8 18.2"/></svg>
+  </button>
   <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
-  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="tabs"><a class="tab on" href="../learn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.9 4.9h6.1c1.1 0 1.9.8 1.9 1.9v12.3c0-.9-.8-1.5-1.8-1.5H3.9z"/><path d="M20.1 4.9H14c-1.1 0-1.9.8-1.9 1.9v12.3c0-.9.8-1.5 1.8-1.5h6.2z"/></svg><span>Learn</span></a><a class="tab" href="../recipes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 6.4h11.1"/><path d="M9.2 12h11.1"/><path d="M9.2 17.6h11.1"/><path d="M3.7 6.1 4.9 7.3 7.1 4.9"/><path d="M3.7 11.7 4.9 12.9 7.1 10.5"/><path d="M3.7 17.3 4.9 18.5 7.1 16.1"/></svg><span>Recipes</span></a><a class="tab" href="../terms/index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.6 3.9h10.8v16.2l-5.4-3.9-5.4 3.9z"/></svg><span>Reference</span></a></nav>
   <nav class="top-links">
     <a href="../about.html">About</a>
     <a href="../contribute.html">Contribute</a>
   </nav>
   <button class="theme" type="button" aria-label="Switch between light and dark"
           title="Switch theme">
-    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="4.2"/>
-      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
-    </svg>
-    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-         aria-hidden="true">
-      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
-    </svg>
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.6v2.3"/><path d="M12 19.1v2.3"/><path d="M4.4 4.4 6 6"/><path d="M18 18 19.6 19.6"/><path d="M2.6 12h2.3"/><path d="M19.1 12h2.3"/><path d="M4.4 19.6 6 18"/><path d="M18 6 19.6 4.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8.3 8.3 0 0 1 9.8 4a8.3 8.3 0 1 0 10.2 10.2z"/></svg>
   </button>
 </header>
 <div class="shell shell-wide"><aside class="side" id="side">
   <form class="search" role="search" onsubmit="return false">
     <label class="sr" for="q">Search the wiki</label>
-    <input id="q" type="search" placeholder="Search&hellip;  /"
+    <svg class="search-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.3"/><path d="M15.3 15.3 20.4 20.4"/></svg>
+    <input id="q" type="search" placeholder="Search&hellip;"
            autocomplete="off" spellcheck="false">
     <div id="results" class="results" hidden></div>
   </form>
@@ -56,9 +51,9 @@
     <div class="side-more">
       <p class="side-label">More</p>
       <ul class="side-list">
-        <li><a href="../about.html"><span>About</span></a></li>
-        <li><a href="../contribute.html"><span>Contribute</span></a></li>
-        <li><a href="../contact.html"><span>Contact</span></a></li>
+        <li><a href="../about.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 11.2v5.3"/><path d="M12 7.7v.9"/></svg><span>About</span></a></li>
+        <li><a href="../contribute.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.3 4.5 19.5 7.7 9.2 18H6v-3.2z"/><path d="M14.3 6.5l3.2 3.2"/></svg><span>Contribute</span></a></li>
+        <li><a href="../contact.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.7" width="17" height="12.6" rx="1.9"/><path d="M3.9 6.7 12 12.6l8.1-5.9"/></svg><span>Contact</span></a></li>
       </ul>
     </div>
   </nav>
@@ -67,14 +62,14 @@
 <article class="doc">
   <p class="crumbs">
     <a href="../learn.html">Learn</a>
-    <span aria-hidden="true">/</span>
+    <svg class="crumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.6 5.6 16 12l-6.4 6.4"/></svg>
     <a href="../c/scripting.html">Scripting</a>
   </p>
   <h1>RemoteEvent vs RemoteFunction: which one to use, and when the difference bites</h1>
   <p class="lede">Choosing between the two without freezing scripts, trusting the client, or making networking harder than it needs to be.</p>
   <p class="doc-meta"><span>Scripting</span><span>Intermediate</span><span>14 min read</span></p>
   <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
-  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-rule-i-actually-use">The rule I actually use</a></li><li><a href="#remoteevent-send-it-and-keep-going">RemoteEvent: send it and keep going</a></li><li><a href="#sending-an-event-back-to-the-client">Sending an event back to the client</a></li><li><a href="#remotefunction-send-a-request-and-wait-for-the-result">RemoteFunction: send a request and wait for the result</a></li><li><a href="#protecting-an-invocation-with-pcall">Protecting an invocation with pcall</a></li><li><a href="#when-remotefunction-is-the-correct-choice">When RemoteFunction is the correct choice</a></li><li><a href="#when-remotefunction-is-the-wrong-choice">When RemoteFunction is the wrong choice</a></li><li><a href="#the-difference-bites-when-everything-works-in-studio">The difference bites when everything works in Studio</a></li><li><a href="#long-work-should-not-hold-a-remotefunction-open">Long work should not hold a RemoteFunction open</a></li><li><a href="#be-careful-with-invokeclient">Be careful with InvokeClient</a></li><li><a href="#neither-remote-type-makes-client-data-trustworthy">Neither remote type makes client data trustworthy</a></li><li><a href="#common-mistakes">Common mistakes</a></li><li><a href="#a-simple-decision-checklist">A simple decision checklist</a></li><li><a href="#final-pattern">Final pattern</a></li></ul></aside>
+  <aside class="rail"><p class="rail-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 6.6h14.8"/><path d="M4.6 12h14.8"/><path d="M4.6 17.4h8.9"/></svg>On this page</p><ul><li><a href="#the-rule-i-actually-use">The rule I actually use</a></li><li><a href="#remoteevent-send-it-and-keep-going">RemoteEvent: send it and keep going</a></li><li><a href="#sending-an-event-back-to-the-client">Sending an event back to the client</a></li><li><a href="#remotefunction-send-a-request-and-wait-for-the-result">RemoteFunction: send a request and wait for the result</a></li><li><a href="#protecting-an-invocation-with-pcall">Protecting an invocation with pcall</a></li><li><a href="#when-remotefunction-is-the-correct-choice">When RemoteFunction is the correct choice</a></li><li><a href="#when-remotefunction-is-the-wrong-choice">When RemoteFunction is the wrong choice</a></li><li><a href="#the-difference-bites-when-everything-works-in-studio">The difference bites when everything works in Studio</a></li><li><a href="#long-work-should-not-hold-a-remotefunction-open">Long work should not hold a RemoteFunction open</a></li><li><a href="#be-careful-with-invokeclient">Be careful with InvokeClient</a></li><li><a href="#neither-remote-type-makes-client-data-trustworthy">Neither remote type makes client data trustworthy</a></li><li><a href="#common-mistakes">Common mistakes</a></li><li><a href="#a-simple-decision-checklist">A simple decision checklist</a></li><li><a href="#final-pattern">Final pattern</a></li></ul></aside>
   <div class="prose">
 <p><code><a class="term-link" href="../terms/remoteevent.html" title="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvent</a></code> and <code>RemoteFunction</code> both move information between the client and server, so they can look interchangeable at first.</p>
 <p>They are not.</p>
@@ -88,7 +83,7 @@
 <p>The last row matters more than it looks. The server should not depend on a client returning an important result.</p>
 <h2 id="remoteevent-send-it-and-keep-going">RemoteEvent: send it and keep going<a class="anchor" href="#remoteevent-send-it-and-keep-going" aria-label="Link to this section">#</a></h2>
 <p>A <code>RemoteEvent</code> does not return a value. From a <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a>, you use <code>FireServer()</code>:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
 <span class="t-key">local</span> remotes = ReplicatedStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Remotes"</span>)
 <span class="t-key">local</span> equipItem = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"EquipItem"</span>)
 
@@ -96,7 +91,7 @@ equipItem:<span class="t-fn">FireServer</span>(<span class="t-str">"WoodenSword"
 <span class="t-glob">print</span>(<span class="t-str">"The request was sent"</span>)</code></pre></div>
 <p>The <code>print()</code> runs immediately after the request is sent. It does not wait for the server to equip the item.</p>
 <p>On the server, you listen through <code>OnServerEvent</code>:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
 <span class="t-key">local</span> remotes = ReplicatedStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Remotes"</span>)
 <span class="t-key">local</span> equipItem = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"EquipItem"</span>)
 
@@ -122,29 +117,29 @@ equipItem.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</
 <span class="t-key">end</span>)</code></pre></div>
 <p>When a client fires a RemoteEvent, Roblox automatically passes that client's <code>Player</code> object as the first argument of <code>OnServerEvent</code>. The client does not need to send its own player object.</p>
 <p>This is wrong:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>equipItem:<span class="t-fn">FireServer</span>(<span class="t-glob">game</span>.<span class="t-prop">Players</span>.<span class="t-prop">LocalPlayer</span>, <span class="t-str">"WoodenSword"</span>)</code></pre></div>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>equipItem:<span class="t-fn">FireServer</span>(<span class="t-glob">game</span>.<span class="t-prop">Players</span>.<span class="t-prop">LocalPlayer</span>, <span class="t-str">"WoodenSword"</span>)</code></pre></div>
 <p>It would cause the server to receive two player-related arguments:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>equipItem.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(realPlayer, sentPlayer, itemName)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>equipItem.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(realPlayer, sentPlayer, itemName)
 	<span class="t-com">-- realPlayer was added by Roblox</span>
 	<span class="t-com">-- sentPlayer was manually sent by the client</span>
 <span class="t-key">end</span>)</code></pre></div>
 <p>Just send the information that the server needs to inspect.</p>
 <h2 id="sending-an-event-back-to-the-client">Sending an event back to the client<a class="anchor" href="#sending-an-event-back-to-the-client" aria-label="Link to this section">#</a></h2>
 <p>RemoteEvents are one-way per call, but they can communicate in either direction. The server can send information to one client with <code>FireClient()</code>:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> equipmentChanged = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"EquipmentChanged"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> equipmentChanged = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"EquipmentChanged"</span>)
 equipmentChanged:<span class="t-fn">FireClient</span>(player, itemName)</code></pre></div>
 <p>The client receives it through <code>OnClientEvent</code>:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> equipmentChanged = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"EquipmentChanged"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> equipmentChanged = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"EquipmentChanged"</span>)
 
 equipmentChanged.<span class="t-prop">OnClientEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(itemName)
 	<span class="t-glob">print</span>(<span class="t-str">"The server equipped:"</span>, itemName)
 <span class="t-key">end</span>)</code></pre></div>
 <p>The server can also use <code>FireAllClients()</code>:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>roundStarted:<span class="t-fn">FireAllClients</span>(<span class="t-num">120</span>)</code></pre></div>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>roundStarted:<span class="t-fn">FireAllClients</span>(<span class="t-num">120</span>)</code></pre></div>
 <p>Every connected client listening to that RemoteEvent receives the value. This is useful for announcements, round timers, visual effects and other updates that do not require the sender to wait for a returned value.</p>
 <h2 id="remotefunction-send-a-request-and-wait-for-the-result">RemoteFunction: send a request and wait for the result<a class="anchor" href="#remotefunction-send-a-request-and-wait-for-the-result" aria-label="Link to this section">#</a></h2>
 <p>A <code>RemoteFunction</code> returns one or more values. From a LocalScript, call <code>InvokeServer()</code>:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
 <span class="t-key">local</span> remotes = ReplicatedStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Remotes"</span>)
 <span class="t-key">local</span> getInventory = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"GetInventory"</span>)
 
@@ -152,7 +147,7 @@ equipmentChanged.<span class="t-prop">OnClientEvent</span>:<span class="t-fn">Co
 <span class="t-glob">print</span>(<span class="t-str">"Inventory received"</span>)</code></pre></div>
 <p>The LocalScript stops at <code>InvokeServer()</code> until the server returns a result.</p>
 <p>The server handles the request with <code>OnServerInvoke</code>:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
 <span class="t-key">local</span> remotes = ReplicatedStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Remotes"</span>)
 <span class="t-key">local</span> getInventory = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"GetInventory"</span>)
 
@@ -169,17 +164,17 @@ getInventory.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">fu
 <span class="t-key">end</span></code></pre></div>
 <p>As with <code>OnServerEvent</code>, Roblox automatically provides the invoking player as the first argument.</p>
 <p>Unlike an event connection, <code>OnServerInvoke</code> is assigned directly. You do not use <code>:Connect()</code>:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>getInventory.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">function</span>(player)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>getInventory.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">function</span>(player)
 	<span class="t-key">return</span> {}
 <span class="t-key">end</span></code></pre></div>
 <p>Do not do this:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>getInventory.<span class="t-prop">OnServerInvoke</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>getInventory.<span class="t-prop">OnServerInvoke</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
 	<span class="t-key">return</span> {}
 <span class="t-key">end</span>)</code></pre></div>
 <p><code>OnServerInvoke</code> is a callback, not an event signal.</p>
 <h2 id="protecting-an-invocation-with-pcall">Protecting an invocation with pcall<a class="anchor" href="#protecting-an-invocation-with-pcall" aria-label="Link to this section">#</a></h2>
 <p>If the server callback errors, the invocation can fail. Code that depends on the result should handle that possibility.</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> success, result = <span class="t-glob">pcall</span>(<span class="t-key">function</span>()
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> success, result = <span class="t-glob">pcall</span>(<span class="t-key">function</span>()
 	<span class="t-key">return</span> getInventory:<span class="t-fn">InvokeServer</span>()
 <span class="t-key">end</span>)
 
@@ -195,7 +190,7 @@ getInventory.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">fu
 <p>A RemoteFunction is reasonable when all of these are true:</p>
 <ol><li>The caller needs a returned value.</li><li>The answer should be available quickly.</li><li>The current action cannot continue correctly without that answer.</li><li>The server can calculate the answer without waiting on a long operation.</li></ol>
 <p>Opening an inventory menu is a common example:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> success, inventory = <span class="t-glob">pcall</span>(<span class="t-key">function</span>()
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> success, inventory = <span class="t-glob">pcall</span>(<span class="t-key">function</span>()
 	<span class="t-key">return</span> getInventory:<span class="t-fn">InvokeServer</span>()
 <span class="t-key">end</span>)
 
@@ -208,7 +203,7 @@ drawInventory(inventory)
 inventoryFrame.<span class="t-prop">Visible</span> = <span class="t-key">true</span></code></pre></div>
 <p>The menu needs the inventory before it can draw the item buttons. Waiting for a short server response makes sense.</p>
 <p>A shop purchase can also use a RemoteFunction when the client needs an immediate result:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> purchaseItem = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"PurchaseItem"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> purchaseItem = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"PurchaseItem"</span>)
 
 <span class="t-key">local</span> success, purchased, message = <span class="t-glob">pcall</span>(<span class="t-key">function</span>()
 	<span class="t-key">return</span> purchaseItem:<span class="t-fn">InvokeServer</span>(<span class="t-str">"HealthPotion"</span>)
@@ -222,7 +217,7 @@ inventoryFrame.<span class="t-prop">Visible</span> = <span class="t-key">true</s
 	statusLabel.<span class="t-prop">Text</span> = message
 <span class="t-key">end</span></code></pre></div>
 <p>The server still decides whether the purchase is allowed:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> prices = {
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> prices = {
 	HealthPotion = <span class="t-num">50</span>,
 }
 
@@ -247,19 +242,19 @@ purchaseItem.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">fu
 <p>The client asks to purchase an item. The server checks the item, price and balance. The client does not get to declare that the purchase succeeded.</p>
 <h2 id="when-remotefunction-is-the-wrong-choice">When RemoteFunction is the wrong choice<a class="anchor" href="#when-remotefunction-is-the-wrong-choice" aria-label="Link to this section">#</a></h2>
 <p>Do not use a RemoteFunction just because returning <code>true</code> feels convenient. These actions normally belong on RemoteEvents:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>attackRequested:<span class="t-fn">FireServer</span>()
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>attackRequested:<span class="t-fn">FireServer</span>()
 doorInteraction:<span class="t-fn">FireServer</span>(door)
 vehicleHorn:<span class="t-fn">FireServer</span>(<span class="t-key">true</span>)
 readyStatusChanged:<span class="t-fn">FireServer</span>(<span class="t-key">true</span>)</code></pre></div>
 <p>The client does not need to pause until the server says, "Yes, I heard you."</p>
 <p>For example, this is usually a bad firing system:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> accepted = fireWeapon:<span class="t-fn">InvokeServer</span>(targetPosition)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> accepted = fireWeapon:<span class="t-fn">InvokeServer</span>(targetPosition)
 <span class="t-key">if</span> accepted <span class="t-key">then</span>
 	playRecoil()
 <span class="t-key">end</span></code></pre></div>
 <p>Every shot pauses the LocalScript while it waits for a network round trip. A player with higher latency will feel that delay more strongly.</p>
 <p>A better structure is:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>playRecoil()
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>playRecoil()
 fireWeapon:<span class="t-fn">FireServer</span>(targetPosition)</code></pre></div>
 <p>The server then validates the shot and applies the real damage. The client can display immediate visual feedback, but the server remains responsible for the result that affects gameplay.</p>
 <h2 id="the-difference-bites-when-everything-works-in-studio">The difference bites when everything works in Studio<a class="anchor" href="#the-difference-bites-when-everything-works-in-studio" aria-label="Link to this section">#</a></h2>
@@ -267,14 +262,14 @@ fireWeapon:<span class="t-fn">FireServer</span>(targetPosition)</code></pre></di
 <p>The problem shows up once the server callback does real work. A menu button calls <code>InvokeServer()</code>, the callback waits for data, and the entire button handler stops at that line. The button is not broken. The LocalScript is waiting.</p>
 <p>That is the annoying part of this bug: there may be no red error at all.</p>
 <p>When an interface sometimes feels dead, search your LocalScripts for:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>:<span class="t-fn">InvokeServer</span>()</code></pre></div>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>:<span class="t-fn">InvokeServer</span>()</code></pre></div>
 <p>Then check what the server callback does before it returns.</p>
 <h2 id="long-work-should-not-hold-a-remotefunction-open">Long work should not hold a RemoteFunction open<a class="anchor" href="#long-work-should-not-hold-a-remotefunction-open" aria-label="Link to this section">#</a></h2>
 <p>A RemoteFunction callback should return quickly. Avoid using one for work such as:</p>
 <ul><li>generating a large map</li><li>waiting for another player</li><li>running matchmaking</li><li>retrying a DataStore request several times</li><li>waiting for a countdown</li><li>processing a long queue</li></ul>
 <p>For a longer operation, use a RemoteEvent to start the request and another RemoteEvent to send the result later.</p>
 <p>Client:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> generateReport = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"GenerateReport"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> generateReport = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"GenerateReport"</span>)
 <span class="t-key">local</span> reportReady = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"ReportReady"</span>)
 
 generateReport:<span class="t-fn">FireServer</span>()
@@ -285,7 +280,7 @@ reportReady.<span class="t-prop">OnClientEvent</span>:<span class="t-fn">Connect
 	showReport(report)
 <span class="t-key">end</span>)</code></pre></div>
 <p>Server:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> generateReport = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"GenerateReport"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> generateReport = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"GenerateReport"</span>)
 <span class="t-key">local</span> reportReady = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"ReportReady"</span>)
 
 generateReport.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
@@ -297,27 +292,27 @@ generateReport.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Conn
 <p>Now the client can keep running while the server works. For a serious request system, include a request ID so the client can match each response to the correct request.</p>
 <h2 id="be-careful-with-invokeclient">Be careful with InvokeClient<a class="anchor" href="#be-careful-with-invokeclient" aria-label="Link to this section">#</a></h2>
 <p>A server Script can call a client RemoteFunction:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> answer = remoteFunction:<span class="t-fn">InvokeClient</span>(player)</code></pre></div>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> answer = remoteFunction:<span class="t-fn">InvokeClient</span>(player)</code></pre></div>
 <p>In most gameplay systems, this is a bad dependency. The server cannot trust the client's answer — an exploiter controls their client and can return whatever value benefits them.</p>
 <p>There is also a reliability problem. Roblox warns that <code>InvokeClient()</code> throws an error if the client disconnects during the invocation. If the client never returns a value, the server can yield forever.</p>
 <p>Do not make the server ask questions such as:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> didPlayerHitTarget = verifyHit:<span class="t-fn">InvokeClient</span>(player)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> didPlayerHitTarget = verifyHit:<span class="t-fn">InvokeClient</span>(player)
 <span class="t-key">local</span> canPlayerAffordItem = checkCoins:<span class="t-fn">InvokeClient</span>(player)
 <span class="t-key">local</span> isPlayerAllowedInside = checkPermission:<span class="t-fn">InvokeClient</span>(player)</code></pre></div>
 <p>Those decisions belong on the server.</p>
 <p>Use a RemoteEvent when the server only needs to tell the client to do something visual:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>showNotification:<span class="t-fn">FireClient</span>(player, <span class="t-str">"You unlocked a new area"</span>)</code></pre></div>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>showNotification:<span class="t-fn">FireClient</span>(player, <span class="t-str">"You unlocked a new area"</span>)</code></pre></div>
 <p>The server sends the instruction and continues. It does not depend on the client responding.</p>
 <h2 id="neither-remote-type-makes-client-data-trustworthy">Neither remote type makes client data trustworthy<a class="anchor" href="#neither-remote-type-makes-client-data-trustworthy" aria-label="Link to this section">#</a></h2>
 <p>Changing a RemoteEvent into a RemoteFunction does not improve security.</p>
 <p>Both can be fired or invoked with fake arguments by an exploiter. Validate every value received from a client before using it: permission checks, type checks, range checks, rate limits, and checks against the actual server state.</p>
 <p>Never accept this:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>giveCoins.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player, amount)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>giveCoins.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player, amount)
 	player.<span class="t-prop">Coins</span>.<span class="t-prop">Value</span> += amount
 <span class="t-key">end</span>)</code></pre></div>
 <p>The client could send any number it wants.</p>
 <p>Instead, the client should report an action:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>collectCoin.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player, coin)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>collectCoin.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player, coin)
 	<span class="t-com">-- Check that coin is a real collectible.</span>
 	<span class="t-com">-- Check that the player is close enough.</span>
 	<span class="t-com">-- Check that it has not already been collected.</span>
@@ -327,29 +322,29 @@ generateReport.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Conn
 <h2 id="common-mistakes">Common mistakes<a class="anchor" href="#common-mistakes" aria-label="Link to this section">#</a></h2>
 <h3 id="expecting-fireserver-to-return-something">Expecting FireServer to return something<a class="anchor" href="#expecting-fireserver-to-return-something" aria-label="Link to this section">#</a></h3>
 <p>This does not work:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> result = purchaseItem:<span class="t-fn">FireServer</span>(<span class="t-str">"HealthPotion"</span>)</code></pre></div>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> result = purchaseItem:<span class="t-fn">FireServer</span>(<span class="t-str">"HealthPotion"</span>)</code></pre></div>
 <p><code>result</code> will not contain a server response. <code>FireServer()</code> does not return the result of <code>OnServerEvent</code>. Use a RemoteFunction when the immediate result is required, or send the result back through another RemoteEvent.</p>
 <h3 id="forgetting-to-return-from-onserverinvoke">Forgetting to return from OnServerInvoke<a class="anchor" href="#forgetting-to-return-from-onserverinvoke" aria-label="Link to this section">#</a></h3>
 <p>This callback returns <code>nil</code>:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>getCoins.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">function</span>(player)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>getCoins.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">function</span>(player)
 	<span class="t-key">local</span> coins = player.<span class="t-prop">Coins</span>.<span class="t-prop">Value</span>
 <span class="t-key">end</span></code></pre></div>
 <p>It calculated the value but never returned it. Correct version:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>getCoins.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">function</span>(player)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>getCoins.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">function</span>(player)
 	<span class="t-key">return</span> player.<span class="t-prop">Coins</span>.<span class="t-prop">Value</span>
 <span class="t-key">end</span></code></pre></div>
 <h3 id="connecting-to-onserverinvoke">Connecting to OnServerInvoke<a class="anchor" href="#connecting-to-onserverinvoke" aria-label="Link to this section">#</a></h3>
 <p>This is wrong:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>remoteFunction.<span class="t-prop">OnServerInvoke</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>remoteFunction.<span class="t-prop">OnServerInvoke</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
 	<span class="t-key">return</span> <span class="t-key">true</span>
 <span class="t-key">end</span>)</code></pre></div>
 <p>Assign the callback instead:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>remoteFunction.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">function</span>(player)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>remoteFunction.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">function</span>(player)
 	<span class="t-key">return</span> <span class="t-key">true</span>
 <span class="t-key">end</span></code></pre></div>
 <h3 id="overwriting-the-callback">Overwriting the callback<a class="anchor" href="#overwriting-the-callback" aria-label="Link to this section">#</a></h3>
 <p>A RemoteFunction has one <code>OnServerInvoke</code> callback. This second assignment replaces the first one:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>getData.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">function</span>(player)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>getData.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">function</span>(player)
 	<span class="t-key">return</span> <span class="t-str">"First result"</span>
 <span class="t-key">end</span>
 
@@ -359,7 +354,7 @@ getData.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">functio
 <p>Organise the logic inside one callback, or call functions from a ModuleScript.</p>
 <h3 id="putting-remotes-somewhere-only-one-side-can-access">Putting remotes somewhere only one side can access<a class="anchor" href="#putting-remotes-somewhere-only-one-side-can-access" aria-label="Link to this section">#</a></h3>
 <p>Both sides must be able to find the remote. <code><a class="term-link" href="../terms/replicatedstorage.html" title="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code> is the normal location:</p>
-<div class="code"><span class="code-lang">Tree</span><pre><code>ReplicatedStorage
+<div class="code"><div class="code-bar"><span class="code-lang">Tree</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>ReplicatedStorage
 └── Remotes
     ├── EquipItem
     ├── EquipmentChanged
@@ -373,7 +368,7 @@ getData.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">functio
 <p><strong>Does the request affect currency, damage, inventory, progression or another player?</strong> Validate everything on the server, no matter which remote type you chose.</p>
 <h2 id="final-pattern">Final pattern<a class="anchor" href="#final-pattern" aria-label="Link to this section">#</a></h2>
 <p>Use RemoteEvents for commands and notifications:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>remoteEvent:<span class="t-fn">FireServer</span>(...)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>remoteEvent:<span class="t-fn">FireServer</span>(...)
 remoteEvent.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player, ...)
 <span class="t-key">end</span>)
 
@@ -381,7 +376,7 @@ remoteEvent:<span class="t-fn">FireClient</span>(player, ...)
 remoteEvent.<span class="t-prop">OnClientEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(...)
 <span class="t-key">end</span>)</code></pre></div>
 <p>Use RemoteFunctions for short request-and-response operations:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> result = remoteFunction:<span class="t-fn">InvokeServer</span>(...)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> result = remoteFunction:<span class="t-fn">InvokeServer</span>(...)
 
 remoteFunction.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">function</span>(player, ...)
 	<span class="t-key">return</span> result
@@ -406,6 +401,6 @@ remoteFunction.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=059bbcd3" defer></script>
+<script src="../assets/search.js?v=7bf74429" defer></script>
 </body>
 </html>

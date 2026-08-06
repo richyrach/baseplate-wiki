@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Why your game lags with 20 players when it was fine with 2 — Baseplate Wiki</title>
 <meta name="description" content="Most Roblox performance problems scale with player count for one of five reasons. How to find which one you have instead of guessing.">
-<link rel="stylesheet" href="../assets/style.css?v=05566cb2">
+<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<meta name="theme-color" content="#16191d">
 <script>
 /* Runs before first paint: without this the page renders in the OS theme and
    then snaps to the saved one, which is a visible flash on every navigation. */
@@ -22,31 +23,25 @@
 <body data-base="../" class="has-rail">
 <a class="skip" href="#main">Skip to content</a>
 <header class="top">
-  <button class="menu" aria-expanded="false" aria-controls="side">Menu</button>
+  <button class="menu" aria-expanded="false" aria-controls="side" aria-label="Menu">
+    <svg class="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 6.6h16.8"/><path d="M3.6 12h16.8"/><path d="M3.6 17.4h16.8"/></svg><svg class="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.8 5.8 18.2 18.2"/><path d="M18.2 5.8 5.8 18.2"/></svg>
+  </button>
   <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
-  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="tabs"><a class="tab on" href="../learn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.9 4.9h6.1c1.1 0 1.9.8 1.9 1.9v12.3c0-.9-.8-1.5-1.8-1.5H3.9z"/><path d="M20.1 4.9H14c-1.1 0-1.9.8-1.9 1.9v12.3c0-.9.8-1.5 1.8-1.5h6.2z"/></svg><span>Learn</span></a><a class="tab" href="../recipes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 6.4h11.1"/><path d="M9.2 12h11.1"/><path d="M9.2 17.6h11.1"/><path d="M3.7 6.1 4.9 7.3 7.1 4.9"/><path d="M3.7 11.7 4.9 12.9 7.1 10.5"/><path d="M3.7 17.3 4.9 18.5 7.1 16.1"/></svg><span>Recipes</span></a><a class="tab" href="../terms/index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.6 3.9h10.8v16.2l-5.4-3.9-5.4 3.9z"/></svg><span>Reference</span></a></nav>
   <nav class="top-links">
     <a href="../about.html">About</a>
     <a href="../contribute.html">Contribute</a>
   </nav>
   <button class="theme" type="button" aria-label="Switch between light and dark"
           title="Switch theme">
-    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="4.2"/>
-      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
-    </svg>
-    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-         aria-hidden="true">
-      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
-    </svg>
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.6v2.3"/><path d="M12 19.1v2.3"/><path d="M4.4 4.4 6 6"/><path d="M18 18 19.6 19.6"/><path d="M2.6 12h2.3"/><path d="M19.1 12h2.3"/><path d="M4.4 19.6 6 18"/><path d="M18 6 19.6 4.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8.3 8.3 0 0 1 9.8 4a8.3 8.3 0 1 0 10.2 10.2z"/></svg>
   </button>
 </header>
 <div class="shell shell-wide"><aside class="side" id="side">
   <form class="search" role="search" onsubmit="return false">
     <label class="sr" for="q">Search the wiki</label>
-    <input id="q" type="search" placeholder="Search&hellip;  /"
+    <svg class="search-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.3"/><path d="M15.3 15.3 20.4 20.4"/></svg>
+    <input id="q" type="search" placeholder="Search&hellip;"
            autocomplete="off" spellcheck="false">
     <div id="results" class="results" hidden></div>
   </form>
@@ -56,9 +51,9 @@
     <div class="side-more">
       <p class="side-label">More</p>
       <ul class="side-list">
-        <li><a href="../about.html"><span>About</span></a></li>
-        <li><a href="../contribute.html"><span>Contribute</span></a></li>
-        <li><a href="../contact.html"><span>Contact</span></a></li>
+        <li><a href="../about.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 11.2v5.3"/><path d="M12 7.7v.9"/></svg><span>About</span></a></li>
+        <li><a href="../contribute.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.3 4.5 19.5 7.7 9.2 18H6v-3.2z"/><path d="M14.3 6.5l3.2 3.2"/></svg><span>Contribute</span></a></li>
+        <li><a href="../contact.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.7" width="17" height="12.6" rx="1.9"/><path d="M3.9 6.7 12 12.6l8.1-5.9"/></svg><span>Contact</span></a></li>
       </ul>
     </div>
   </nav>
@@ -67,14 +62,14 @@
 <article class="doc">
   <p class="crumbs">
     <a href="../learn.html">Learn</a>
-    <span aria-hidden="true">/</span>
+    <svg class="crumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.6 5.6 16 12l-6.4 6.4"/></svg>
     <a href="../c/performance.html">Performance</a>
   </p>
   <h1>Why your game lags with 20 players when it was fine with 2</h1>
   <p class="lede">Most Roblox performance problems scale with player count for one of five reasons. How to find which one you have instead of guessing.</p>
   <p class="doc-meta"><span>Performance</span><span>Intermediate</span><span>12 min read</span></p>
   <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
-  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#first-is-it-the-server-or-the-client">First: is it the server or the client?</a></li><li><a href="#1-per-player-loops">1. Per-player loops</a></li><li><a href="#2-connections-that-are-never-disconnected">2. Connections that are never disconnected</a></li><li><a href="#3-remoteevent-traffic">3. RemoteEvent traffic</a></li><li><a href="#4-part-count-and-unanchored-parts">4. Part count and unanchored parts</a></li><li><a href="#5-characters-are-expensive">5. Characters are expensive</a></li><li><a href="#measure-then-fix">Measure, then fix</a></li><li><a href="#the-order-to-work-in">The order to work in</a></li></ul></aside>
+  <aside class="rail"><p class="rail-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 6.6h14.8"/><path d="M4.6 12h14.8"/><path d="M4.6 17.4h8.9"/></svg>On this page</p><ul><li><a href="#first-is-it-the-server-or-the-client">First: is it the server or the client?</a></li><li><a href="#1-per-player-loops">1. Per-player loops</a></li><li><a href="#2-connections-that-are-never-disconnected">2. Connections that are never disconnected</a></li><li><a href="#3-remoteevent-traffic">3. RemoteEvent traffic</a></li><li><a href="#4-part-count-and-unanchored-parts">4. Part count and unanchored parts</a></li><li><a href="#5-characters-are-expensive">5. Characters are expensive</a></li><li><a href="#measure-then-fix">Measure, then fix</a></li><li><a href="#the-order-to-work-in">The order to work in</a></li></ul></aside>
   <div class="prose">
 <p>Two players: smooth. Twenty players: unplayable.</p>
 <p>Something in your game costs per-player, and twenty is ten times two. The useful move is to find out <em>which</em> thing rather than optimising at random — and Roblox gives you the numbers to find out.</p>
@@ -89,7 +84,7 @@
 <p>Guessing without this split wastes hours. A rendering fix will do nothing for a server-bound game.</p>
 <h2 id="1-per-player-loops">1. Per-player loops<a class="anchor" href="#1-per-player-loops" aria-label="Link to this section">#</a></h2>
 <p>Something running per player per frame is 10x the work at 20 players:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- 20 players x 60 fps = 1200 executions a second</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- 20 players x 60 fps = 1200 executions a second</span>
 RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
 	<span class="t-key">for</span> _, player <span class="t-key">in</span> <span class="t-glob">ipairs</span>(Players:<span class="t-fn">GetPlayers</span>()) <span class="t-key">do</span>
 		<span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
@@ -101,7 +96,7 @@ RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</spa
 <p>Twenty players against fifty zones every frame is 60,000 checks a second.</p>
 <p>Two fixes, and they compose:</p>
 <p><strong>Run it less often.</strong> Zone checks do not need 60Hz:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-glob">task</span>.<span class="t-fn">spawn</span>(<span class="t-key">function</span>()
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-glob">task</span>.<span class="t-fn">spawn</span>(<span class="t-key">function</span>()
 	<span class="t-key">while</span> <span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">0.25</span>) <span class="t-key">do</span>
 		<span class="t-key">for</span> _, player <span class="t-key">in</span> <span class="t-glob">ipairs</span>(Players:<span class="t-fn">GetPlayers</span>()) <span class="t-key">do</span>
 			<span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
@@ -113,11 +108,11 @@ RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</spa
 <span class="t-key">end</span>)</code></pre></div>
 <p>Four times a second instead of sixty. For zone detection nobody can tell.</p>
 <p><strong>Use the engine's spatial queries instead of your own loop.</strong> <code>Region3</code> scanning by hand is slow; <code>GetPartBoundsInBox</code> is implemented in C++:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> parts = <span class="t-glob">workspace</span>:<span class="t-fn">GetPartBoundsInBox</span>(zone.<span class="t-prop">CFrame</span>, zone.<span class="t-prop">Size</span>)</code></pre></div>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> parts = <span class="t-glob">workspace</span>:<span class="t-fn">GetPartBoundsInBox</span>(zone.<span class="t-prop">CFrame</span>, zone.<span class="t-prop">Size</span>)</code></pre></div>
 <p>Better still, <code>Touched</code>/<code>TouchEnded</code> on a zone part is event-driven and costs nothing when nobody moves.</p>
 <h2 id="2-connections-that-are-never-disconnected">2. Connections that are never disconnected<a class="anchor" href="#2-connections-that-are-never-disconnected" aria-label="Link to this section">#</a></h2>
 <p>This is the one that produces the distinctive symptom of a server getting slower the longer it stays up, rather than being slow immediately.</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- a new connection every respawn, and the old one still runs</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- a new connection every respawn, and the old one still runs</span>
 Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
 	player.<span class="t-prop">CharacterAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(character)
 		RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
@@ -127,7 +122,7 @@ Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span
 <span class="t-key">end</span>)</code></pre></div>
 <p>After ten respawns that player has ten <code>Heartbeat</code> connections, nine of them tracking destroyed characters.</p>
 <p>Keep the connection and clean it up:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
 	player.<span class="t-prop">CharacterAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(character)
 		<span class="t-key">local</span> connection
 		connection = RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
@@ -142,7 +137,7 @@ Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span
 <p>To confirm you have this problem, watch <strong>Memory</strong> in the Developer Console over fifteen minutes on a populated server. A number that only ever climbs is a leak.</p>
 <h2 id="3-remoteevent-traffic">3. RemoteEvent traffic<a class="anchor" href="#3-remoteevent-traffic" aria-label="Link to this section">#</a></h2>
 <p>Every <a class="term-link" href="../terms/remoteevent.html" title="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvent</a> call is network traffic, and <code>FireAllClients</code> multiplies by player count.</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- 60 fps x 20 players = 1200 messages a second</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- 60 fps x 20 players = 1200 messages a second</span>
 RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
 	updatePosition:<span class="t-fn">FireAllClients</span>(vehicle.<span class="t-prop">Position</span>)
 <span class="t-key">end</span>)</code></pre></div>
@@ -150,7 +145,7 @@ RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</spa
 <p><strong>Send less often.</strong> Most state does not need 60Hz. 10Hz is plenty for a scoreboard.</p>
 <p><strong>Send to who needs it.</strong> <code>FireClient(player, ...)</code> beats <code>FireAllClients</code> when only one player cares.</p>
 <p><strong>Use replicated properties instead of events.</strong> A <code>Value</code> object, or an attribute, replicates automatically and is not something you can accidentally spam:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code>scoreValue.<span class="t-prop">Value</span> = newScore     <span class="t-com">-- replicates once, to everyone, automatically</span></code></pre></div>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>scoreValue.<span class="t-prop">Value</span> = newScore     <span class="t-com">-- replicates once, to everyone, automatically</span></code></pre></div>
 <p>Check the <strong>Network</strong> tab in the Developer Console to see what is actually being sent. It is usually surprising.</p>
 <h2 id="4-part-count-and-unanchored-parts">4. Part count and unanchored parts<a class="anchor" href="#4-part-count-and-unanchored-parts" aria-label="Link to this section">#</a></h2>
 <p>Client-side frame time is often just rendering too much.</p>
@@ -161,7 +156,7 @@ RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</spa
 <ul><li><strong>Transparent and reflective surfaces</strong> cost more than opaque ones.</li><li><strong>Particle emitters</strong> are expensive per particle. Twenty players with a trail each</li></ul>
 <p>  is a lot of particles.</p>
 <p>The audit:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> total, unanchored = <span class="t-num">0</span>, <span class="t-num">0</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> total, unanchored = <span class="t-num">0</span>, <span class="t-num">0</span>
 <span class="t-key">for</span> _, d <span class="t-key">in</span> <span class="t-glob">ipairs</span>(<span class="t-glob">workspace</span>:<span class="t-fn">GetDescendants</span>()) <span class="t-key">do</span>
 	<span class="t-key">if</span> d:<span class="t-fn">IsA</span>(<span class="t-str">"BasePart"</span>) <span class="t-key">then</span>
 		total += <span class="t-num">1</span>
@@ -177,7 +172,7 @@ RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</spa
 <p>Each character is roughly 15 parts plus a <code>Humanoid</code>, and <code>Humanoid</code> is one of the most expensive objects in the engine — it does state machines, physics and animation every frame.</p>
 <p>Twenty players is 300 parts and 20 Humanoids that all have to be simulated and rendered by every client.</p>
 <p>You cannot avoid player characters, but you can avoid <em>extra</em> Humanoids. NPCs are often the real cost:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- an NPC that does not need to walk does not need a Humanoid</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- an NPC that does not need to walk does not need a Humanoid</span>
 npc.<span class="t-prop">Humanoid</span>:<span class="t-fn">Destroy</span>()</code></pre></div>
 <p>If the NPC is purely decorative, removing the <code>Humanoid</code> removes most of its cost. If it needs to move, <code>Humanoid.WalkSpeed = 0</code> does not help — the state machine still runs.</p>
 <h2 id="measure-then-fix">Measure, then fix<a class="anchor" href="#measure-then-fix" aria-label="Link to this section">#</a></h2>
@@ -205,6 +200,6 @@ npc.<span class="t-prop">Humanoid</span>:<span class="t-fn">Destroy</span>()</co
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=059bbcd3" defer></script>
+<script src="../assets/search.js?v=7bf74429" defer></script>
 </body>
 </html>

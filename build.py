@@ -136,6 +136,69 @@ def icon(name, cls="ico"):
             f'stroke-linejoin="round" aria-hidden="true">{paths}</svg>')
 
 
+
+# ---------------------------------------------------------------- UI icons
+#
+# ONE drawing standard for every icon on the site, category marks included:
+#   24x24 viewBox, no fill, stroke: currentColor, width 1.6, round caps/joins.
+# Anything that deviates reads as a different icon set and makes the UI look
+# assembled from parts. If you add an icon, match these numbers exactly.
+
+UI_ICONS = {
+    "menu": '<path d="M3.6 6.6h16.8"/><path d="M3.6 12h16.8"/><path d="M3.6 17.4h16.8"/>',
+    "close": '<path d="M5.8 5.8 18.2 18.2"/><path d="M18.2 5.8 5.8 18.2"/>',
+    "search": '<circle cx="10.7" cy="10.7" r="6.3"/><path d="M15.3 15.3 20.4 20.4"/>',
+    "copy": '<rect x="9" y="9" width="11" height="11" rx="2.2"/>'
+            '<path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/>',
+    "check": '<path d="M4.8 12.6 9.6 17.4 19.2 6.8"/>',
+    "learn": '<path d="M3.9 4.9h6.1c1.1 0 1.9.8 1.9 1.9v12.3c0-.9-.8-1.5-1.8-1.5H3.9z"/>'
+             '<path d="M20.1 4.9H14c-1.1 0-1.9.8-1.9 1.9v12.3c0-.9.8-1.5 1.8-1.5h6.2z"/>',
+    "recipes": '<path d="M9.2 6.4h11.1"/><path d="M9.2 12h11.1"/><path d="M9.2 17.6h11.1"/>'
+               '<path d="M3.7 6.1 4.9 7.3 7.1 4.9"/><path d="M3.7 11.7 4.9 12.9 7.1 10.5"/>'
+               '<path d="M3.7 17.3 4.9 18.5 7.1 16.1"/>',
+    "reference": '<path d="M6.6 3.9h10.8v16.2l-5.4-3.9-5.4 3.9z"/>',
+    "chevron": '<path d="M9.6 5.6 16 12l-6.4 6.4"/>',
+    "list": '<path d="M4.6 6.6h14.8"/><path d="M4.6 12h14.8"/><path d="M4.6 17.4h8.9"/>',
+    "info": '<circle cx="12" cy="12" r="8.4"/><path d="M12 11.2v5.3"/>'
+            '<path d="M12 7.7v.9"/>',
+    "pencil": '<path d="M16.3 4.5 19.5 7.7 9.2 18H6v-3.2z"/><path d="M14.3 6.5l3.2 3.2"/>',
+    "mail": '<rect x="3.5" y="5.7" width="17" height="12.6" rx="1.9"/>'
+            '<path d="M3.9 6.7 12 12.6l8.1-5.9"/>',
+    "sun": '<circle cx="12" cy="12" r="4.1"/>'
+           '<path d="M12 2.6v2.3"/><path d="M12 19.1v2.3"/><path d="M4.4 4.4 6 6"/>'
+           '<path d="M18 18 19.6 19.6"/><path d="M2.6 12h2.3"/><path d="M19.1 12h2.3"/>'
+           '<path d="M4.4 19.6 6 18"/><path d="M18 6 19.6 4.4"/>',
+    "moon": '<path d="M20 14.2A8.3 8.3 0 0 1 9.8 4a8.3 8.3 0 1 0 10.2 10.2z"/>',
+}
+
+
+def ui_icon(name, cls=""):
+    paths = UI_ICONS.get(name, "")
+    if not paths:
+        return ""
+    c = f' class="{cls}"' if cls else ""
+    return (f'<svg{c} viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+            f'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" '
+            f'aria-hidden="true">{paths}</svg>')
+
+
+def favicon_links(up):
+    """Emit icon tags only for files that actually exist in static/.
+
+    Linking an icon that is not there produces a 404 on every page load, so
+    each tag is conditional."""
+    have = {f.name for f in (ROOT / "static").iterdir()} if (ROOT / "static").exists() else set()
+    out = []
+    if "favicon.svg" in have:
+        out.append(f'<link rel="icon" type="image/svg+xml" href="{up}favicon.svg">')
+    if "favicon.ico" in have:
+        out.append(f'<link rel="icon" sizes="any" href="{up}favicon.ico">')
+    if "apple-touch-icon.png" in have:
+        out.append(f'<link rel="apple-touch-icon" href="{up}apple-touch-icon.png">')
+    out.append('<meta name="theme-color" content="#16191d">')
+    return "\n".join(out)
+
+
 def ad(slot):
     """An ad position. Until approval this emits only a comment, so the page
     never ships an empty ad container."""
@@ -148,12 +211,14 @@ def ad(slot):
 def tabs(depth=0, active=""):
     """Top switcher: Learn / Recipes / Reference."""
     up = "../" * depth
-    items = [("Learn", "learn.html"), ("Recipes", "recipes.html"),
-             ("Reference", "terms/index.html")]
+    items = [("Learn", "learn.html", "learn"),
+             ("Recipes", "recipes.html", "recipes"),
+             ("Reference", "terms/index.html", "reference")]
     out = []
-    for label, url in items:
-        on = ' class="on"' if url == active else ""
-        out.append(f'<a{on} href="{up}{url}">{label}</a>')
+    for label, url, mark in items:
+        on = " on" if url == active else ""
+        out.append(f'<a class="tab{on}" href="{up}{url}">'
+                   f'{ui_icon(mark)}<span>{label}</span></a>')
     return f'<nav class="tabs">{"".join(out)}</nav>'
 
 
@@ -228,8 +293,11 @@ def render(md):
             label = {"lua": "Luau", "luau": "Luau", "bash": "Shell",
                      "text": "Tree", "json": "JSON"}.get(lang, lang.upper())
             body = highlight_block("\n".join(code), lang)
-            head = f'<span class="code-lang">{label}</span>' if lang else ""
-            out.append(f'<div class="code">{head}<pre><code>{body}</code></pre></div>')
+            bar = (f'<div class="code-bar"><span class="code-lang">{label}</span>'
+                   f'<button class="copy" type="button" aria-label="Copy code">'
+                   f'{ui_icon("copy", "i-copy")}{ui_icon("check", "i-check")}'
+                   f'<span class="copy-text">Copy</span></button></div>')
+            out.append(f'<div class="code">{bar}<pre><code>{body}</code></pre></div>')
             continue
 
         m = re.match(r"^> \[!(\w+)\]\s*(.*)", line)
@@ -319,7 +387,8 @@ def sidebar(depth, active_url="", active_cat="", guides=None):
     return f"""<aside class="side" id="side">
   <form class="search" role="search" onsubmit="return false">
     <label class="sr" for="q">Search the wiki</label>
-    <input id="q" type="search" placeholder="Search&hellip;  /"
+    {ui_icon("search", "search-mark")}
+    <input id="q" type="search" placeholder="Search&hellip;"
            autocomplete="off" spellcheck="false">
     <div id="results" class="results" hidden></div>
   </form>
@@ -329,9 +398,9 @@ def sidebar(depth, active_url="", active_cat="", guides=None):
     <div class="side-more">
       <p class="side-label">More</p>
       <ul class="side-list">
-        <li><a href="{up}about.html"><span>About</span></a></li>
-        <li><a href="{up}contribute.html"><span>Contribute</span></a></li>
-        <li><a href="{up}contact.html"><span>Contact</span></a></li>
+        <li><a href="{up}about.html">{ui_icon("info")}<span>About</span></a></li>
+        <li><a href="{up}contribute.html">{ui_icon("pencil")}<span>Contribute</span></a></li>
+        <li><a href="{up}contact.html">{ui_icon("mail")}<span>Contact</span></a></li>
       </ul>
     </div>
   </nav>
@@ -358,6 +427,7 @@ def page(title, description, body, depth=0, active_url="", active_cat="",
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(description)}">
 <link rel="stylesheet" href="{up}assets/style.css?v={ASSET_V.get('style.css', '0')}">
+{favicon_links(up)}
 <script>
 /* Runs before first paint: without this the page renders in the OS theme and
    then snaps to the saved one, which is a visible flash on every navigation. */
@@ -374,7 +444,9 @@ def page(title, description, body, depth=0, active_url="", active_cat="",
 <body data-base="{up}" class="{extra_class}">
 <a class="skip" href="#main">Skip to content</a>
 <header class="top">
-  <button class="menu" aria-expanded="false" aria-controls="side">Menu</button>
+  <button class="menu" aria-expanded="false" aria-controls="side" aria-label="Menu">
+    {ui_icon("menu", "i-open")}{ui_icon("close", "i-close")}
+  </button>
   <a class="brand" href="{up}index.html">{SITE_SHORT}<span>Wiki</span></a>
   {tabs(depth, active_tab)}
   <nav class="top-links">
@@ -383,16 +455,7 @@ def page(title, description, body, depth=0, active_url="", active_cat="",
   </nav>
   <button class="theme" type="button" aria-label="Switch between light and dark"
           title="Switch theme">
-    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="4.2"/>
-      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
-    </svg>
-    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-         aria-hidden="true">
-      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
-    </svg>
+    {ui_icon("sun", "sun")}{ui_icon("moon", "moon")}
   </button>
 </header>
 {shell}
@@ -479,7 +542,7 @@ def build_guide(g, guides):
     if len(g["toc"]) > 2:
         items = "".join(f'<li><a href="#{a}">{html.escape(tt)}</a></li>'
                         for a, tt in g["toc"])
-        toc = (f'<aside class="rail"><p class="rail-label">On this page</p>'
+        toc = (f'<aside class="rail"><p class="rail-label">{ui_icon("list")}On this page</p>'
                f"<ul>{items}</ul></aside>")
 
     bits = [b for b in [g["category"], g["level"],
@@ -500,7 +563,7 @@ def build_guide(g, guides):
     body = f"""<article class="doc">
   <p class="crumbs">
     <a href="../{sect_url}">{sect['title']}</a>
-    <span aria-hidden="true">/</span>
+    {ui_icon("chevron", "crumb-sep")}
     <a href="../c/{cat_slug}.html">{html.escape(g['category'])}</a>
   </p>
   <h1>{html.escape(g['title'])}</h1>

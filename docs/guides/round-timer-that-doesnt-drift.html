@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Round-based games: a timer loop that doesn&#x27;t drift — Baseplate Wiki</title>
 <meta name="description" content="Counting down with wait(1) loses seconds every round. Use a deadline instead, and the clock stays honest for hours.">
-<link rel="stylesheet" href="../assets/style.css?v=05566cb2">
+<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<meta name="theme-color" content="#16191d">
 <script>
 /* Runs before first paint: without this the page renders in the OS theme and
    then snaps to the saved one, which is a visible flash on every navigation. */
@@ -22,31 +23,25 @@
 <body data-base="../" class="has-rail">
 <a class="skip" href="#main">Skip to content</a>
 <header class="top">
-  <button class="menu" aria-expanded="false" aria-controls="side">Menu</button>
+  <button class="menu" aria-expanded="false" aria-controls="side" aria-label="Menu">
+    <svg class="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 6.6h16.8"/><path d="M3.6 12h16.8"/><path d="M3.6 17.4h16.8"/></svg><svg class="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.8 5.8 18.2 18.2"/><path d="M18.2 5.8 5.8 18.2"/></svg>
+  </button>
   <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
-  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="tabs"><a class="tab" href="../learn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.9 4.9h6.1c1.1 0 1.9.8 1.9 1.9v12.3c0-.9-.8-1.5-1.8-1.5H3.9z"/><path d="M20.1 4.9H14c-1.1 0-1.9.8-1.9 1.9v12.3c0-.9.8-1.5 1.8-1.5h6.2z"/></svg><span>Learn</span></a><a class="tab on" href="../recipes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 6.4h11.1"/><path d="M9.2 12h11.1"/><path d="M9.2 17.6h11.1"/><path d="M3.7 6.1 4.9 7.3 7.1 4.9"/><path d="M3.7 11.7 4.9 12.9 7.1 10.5"/><path d="M3.7 17.3 4.9 18.5 7.1 16.1"/></svg><span>Recipes</span></a><a class="tab" href="../terms/index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.6 3.9h10.8v16.2l-5.4-3.9-5.4 3.9z"/></svg><span>Reference</span></a></nav>
   <nav class="top-links">
     <a href="../about.html">About</a>
     <a href="../contribute.html">Contribute</a>
   </nav>
   <button class="theme" type="button" aria-label="Switch between light and dark"
           title="Switch theme">
-    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="4.2"/>
-      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
-    </svg>
-    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-         aria-hidden="true">
-      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
-    </svg>
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.6v2.3"/><path d="M12 19.1v2.3"/><path d="M4.4 4.4 6 6"/><path d="M18 18 19.6 19.6"/><path d="M2.6 12h2.3"/><path d="M19.1 12h2.3"/><path d="M4.4 19.6 6 18"/><path d="M18 6 19.6 4.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.2A8.3 8.3 0 0 1 9.8 4a8.3 8.3 0 1 0 10.2 10.2z"/></svg>
   </button>
 </header>
 <div class="shell shell-wide"><aside class="side" id="side">
   <form class="search" role="search" onsubmit="return false">
     <label class="sr" for="q">Search the wiki</label>
-    <input id="q" type="search" placeholder="Search&hellip;  /"
+    <svg class="search-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.3"/><path d="M15.3 15.3 20.4 20.4"/></svg>
+    <input id="q" type="search" placeholder="Search&hellip;"
            autocomplete="off" spellcheck="false">
     <div id="results" class="results" hidden></div>
   </form>
@@ -56,9 +51,9 @@
     <div class="side-more">
       <p class="side-label">More</p>
       <ul class="side-list">
-        <li><a href="../about.html"><span>About</span></a></li>
-        <li><a href="../contribute.html"><span>Contribute</span></a></li>
-        <li><a href="../contact.html"><span>Contact</span></a></li>
+        <li><a href="../about.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 11.2v5.3"/><path d="M12 7.7v.9"/></svg><span>About</span></a></li>
+        <li><a href="../contribute.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.3 4.5 19.5 7.7 9.2 18H6v-3.2z"/><path d="M14.3 6.5l3.2 3.2"/></svg><span>Contribute</span></a></li>
+        <li><a href="../contact.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.7" width="17" height="12.6" rx="1.9"/><path d="M3.9 6.7 12 12.6l8.1-5.9"/></svg><span>Contact</span></a></li>
       </ul>
     </div>
   </nav>
@@ -67,24 +62,24 @@
 <article class="doc">
   <p class="crumbs">
     <a href="../recipes.html">Recipes</a>
-    <span aria-hidden="true">/</span>
+    <svg class="crumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.6 5.6 16 12l-6.4 6.4"/></svg>
     <a href="../c/multiplayer.html">Multiplayer</a>
   </p>
   <h1>Round-based games: a timer loop that doesn&#x27;t drift</h1>
   <p class="lede">Counting down with wait(1) loses seconds every round. Use a deadline instead, and the clock stays honest for hours.</p>
   <p class="doc-meta"><span>Multiplayer</span><span>Intermediate</span><span>9 min read</span></p>
   <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
-  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-pattern">The pattern</a></li><li><a href="#a-full-round-loop">A full round loop</a></li><li><a href="#the-client-side">The client side</a></li><li><a href="#os-clock-not-tick">os.clock, not tick</a></li><li><a href="#interrupting-a-round-early">Interrupting a round early</a></li><li><a href="#verifying-it-does-not-drift">Verifying it does not drift</a></li></ul></aside>
+  <aside class="rail"><p class="rail-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 6.6h14.8"/><path d="M4.6 12h14.8"/><path d="M4.6 17.4h8.9"/></svg>On this page</p><ul><li><a href="#the-pattern">The pattern</a></li><li><a href="#a-full-round-loop">A full round loop</a></li><li><a href="#the-client-side">The client side</a></li><li><a href="#os-clock-not-tick">os.clock, not tick</a></li><li><a href="#interrupting-a-round-early">Interrupting a round early</a></li><li><a href="#verifying-it-does-not-drift">Verifying it does not drift</a></li></ul></aside>
   <div class="prose">
 <p>The obvious countdown is wrong in a way that only shows up after a while:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">for</span> i = <span class="t-num">60</span>, <span class="t-num">0</span>, -<span class="t-num">1</span> <span class="t-key">do</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">for</span> i = <span class="t-num">60</span>, <span class="t-num">0</span>, -<span class="t-num">1</span> <span class="t-key">do</span>
 	timerValue.<span class="t-prop">Value</span> = i
 	<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">1</span>)
 <span class="t-key">end</span></code></pre></div>
 <p><code>task.wait(1)</code> does not wait exactly one second. It waits <em>at least</em> one second and returns on the next frame after that. On a busy server that might be 1.02 seconds. Sixty iterations of a small overshoot is a round that runs a second or two long, and after twenty rounds your timer and the actual clock have visibly parted company.</p>
 <p>The fix is to stop counting elapsed waits and start comparing against a deadline.</p>
 <h2 id="the-pattern">The pattern<a class="anchor" href="#the-pattern" aria-label="Link to this section">#</a></h2>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> countdown(seconds, onTick)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> <span class="t-key">function</span> countdown(seconds, onTick)
 	<span class="t-key">local</span> deadline = <span class="t-glob">os</span>.<span class="t-fn">clock</span>() + seconds
 	<span class="t-key">local</span> lastShown = <span class="t-key">nil</span>
 
@@ -108,7 +103,7 @@
 <p>The deadline is computed once. Every iteration asks "how much is left?" rather than "how much have I counted?", so a slow frame cannot accumulate error — the next iteration simply reports a slightly smaller number.</p>
 <p>Polling at 0.1s and only firing <code>onTick</code> when the whole second changes means the display is accurate to a tenth of a second without sending ten updates a second to anyone.</p>
 <h2 id="a-full-round-loop">A full round loop<a class="anchor" href="#a-full-round-loop" aria-label="Link to this section">#</a></h2>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService/RoundManager.server.lua</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- ServerScriptService/RoundManager.server.lua</span>
 <span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
 <span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
 
@@ -172,7 +167,7 @@ clockValue.<span class="t-prop">Parent</span> = state
 <p><strong>The player check happens twice.</strong> Once to leave the waiting phase, and again after the intermission — because someone may have left during those fifteen seconds. Without the second check you start a one-player round.</p>
 <p><strong>Phase and clock are <code>Value</code> objects in <code><a class="term-link" href="../terms/replicatedstorage.html" title="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code></strong>, not <a class="term-link" href="../terms/remoteevent.html" title="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvents</a>. Value objects replicate automatically and the client can read them at any time, including a player who joins mid-round. With RemoteEvents, a late joiner sees nothing until the next event fires.</p>
 <h2 id="the-client-side">The client side<a class="anchor" href="#the-client-side" aria-label="Link to this section">#</a></h2>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- StarterPlayerScripts/RoundHud.client.lua</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- StarterPlayerScripts/RoundHud.client.lua</span>
 <span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
 
 <span class="t-key">local</span> state = ReplicatedStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"RoundState"</span>)
@@ -204,7 +199,7 @@ redraw()</code></pre></div>
 <h2 id="os-clock-not-tick">os.clock, not tick<a class="anchor" href="#os-clock-not-tick" aria-label="Link to this section">#</a></h2>
 <p><code>tick()</code> is deprecated. For measuring elapsed time on one machine, <code>os.clock()</code> is the right call and it is monotonic, so it cannot jump if the system clock changes.</p>
 <p>If you need a timestamp the client and server agree on, use <code>workspace:GetServerTimeNow()</code> on both sides. Sending a <em>deadline</em> rather than a <em>remaining count</em> lets each client run its own smooth countdown with no further network traffic:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- server, once per round</span>
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- server, once per round</span>
 deadlineValue.<span class="t-prop">Value</span> = <span class="t-glob">workspace</span>:<span class="t-fn">GetServerTimeNow</span>() + ROUND_LENGTH
 
 <span class="t-com">-- client, every frame if you want a smooth bar</span>
@@ -213,7 +208,7 @@ deadlineValue.<span class="t-prop">Value</span> = <span class="t-glob">workspace
 <aside class="note note-warning"><p class="note-label">warning</p><p>Never drive round logic from the client's countdown. The client's clock is under the player's control. The server owns when the round ends; the client only displays it.</p></aside>
 <h2 id="interrupting-a-round-early">Interrupting a round early<a class="anchor" href="#interrupting-a-round-early" aria-label="Link to this section">#</a></h2>
 <p>A team wiping out should not require waiting for the clock. Add a signal the countdown can watch:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> roundOver = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"BindableEvent"</span>)
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> roundOver = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"BindableEvent"</span>)
 <span class="t-key">local</span> finished = <span class="t-key">false</span>
 
 roundOver.<span class="t-prop">Event</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
@@ -228,7 +223,7 @@ roundOver.<span class="t-prop">Event</span>:<span class="t-fn">Connect</span>(<s
 <p>Because the loop checks a flag rather than sleeping through the whole duration, it can exit within a tenth of a second of the condition being met.</p>
 <h2 id="verifying-it-does-not-drift">Verifying it does not drift<a class="anchor" href="#verifying-it-does-not-drift" aria-label="Link to this section">#</a></h2>
 <p>Print the real duration at the end of each round:</p>
-<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> started = <span class="t-glob">os</span>.<span class="t-fn">clock</span>()
+<div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> started = <span class="t-glob">os</span>.<span class="t-fn">clock</span>()
 runRound()
 <span class="t-glob">print</span>(<span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"round took %.2fs (expected %d)"</span>, <span class="t-glob">os</span>.<span class="t-fn">clock</span>() - started, ROUND_LENGTH))</code></pre></div>
 <p>Leave it running for ten rounds. With the deadline pattern the number stays within a fraction of a second every time. With the <code>wait(1)</code> loop, watch it grow.</p>
@@ -249,6 +244,6 @@ runRound()
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=059bbcd3" defer></script>
+<script src="../assets/search.js?v=7bf74429" defer></script>
 </body>
 </html>
