@@ -3,7 +3,7 @@
 An open reference for Roblox game development — written and tested by hand, and
 open to corrections.
 
-**Live site:** _(GitHub Pages URL goes here once enabled)_
+**Live site:** https://richyrach.github.io/baseplate-wiki/
 
 - **Learn** — explanations you read once, in order, to understand how something works.
 - **Recipes** — self-contained answers to one specific task.
@@ -37,8 +37,11 @@ No dependencies beyond Python 3. No npm, no build tools.
 python3 build.py
 ```
 
-Markdown in `content/` becomes HTML in `site/`. Edit `templates/style.css`, never
-anything inside `site/` — that directory is regenerated on every build.
+Markdown in `content/` becomes HTML in `docs/`. Edit `templates/style.css`, never
+anything inside `docs/` — that directory is regenerated on every build.
+
+(`docs/` rather than `site/` because GitHub Pages will only publish from the repo
+root or a folder named `docs`.)
 
 | File | Purpose |
 |---|---|

@@ -20,7 +20,7 @@ from terms import link_terms, load_terms
 
 ROOT = Path(__file__).parent
 CONTENT = ROOT / "content"
-SITE = ROOT / "site"
+SITE = ROOT / "docs"   # "docs" because GitHub Pages only publishes / or /docs
 
 SITE_NAME = "Baseplate Wiki"
 SITE_SHORT = "Baseplate"
@@ -761,7 +761,7 @@ def main():
 
     words = sum(len(strip_tags(g["body"]).split()) for g in guides)
     print(f"built {len(guides)} guides (~{words} words), "
-          f"{len(glossary)} reference entries, {indexed} search entries -> site/")
+          f"{len(glossary)} reference entries, {indexed} search entries -> docs/")
     if not ADS_ENABLED:
         print("ads: OFF (slots are HTML comments) -- flip ADS_ENABLED after approval")
 
