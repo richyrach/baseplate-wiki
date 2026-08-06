@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A daily reward streak that cannot be cheated by changing the clock — Baseplate Wiki</title>
+<meta name="description" content="Tracking daily logins with server time, handling broken streaks, and why os.time on the client is worthless for this.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../recipes.html">Recipes</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/data.html">Data</a>
+  </p>
+  <h1>A daily reward streak that cannot be cheated by changing the clock</h1>
+  <p class="lede">Tracking daily logins with server time, handling broken streaks, and why os.time on the client is worthless for this.</p>
+  <p class="doc-meta"><span>Data</span><span>Intermediate</span><span>11 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#use-server-time-always">Use server time, always</a></li><li><a href="#deciding-what-a-day-is">Deciding what a day is</a></li><li><a href="#the-reward-table">The reward table</a></li><li><a href="#the-claim-server-side">The claim, server-side</a></li><li><a href="#the-five-things-that-make-it-safe">The five things that make it safe</a></li><li><a href="#showing-the-state-to-the-client">Showing the state to the client</a></li><li><a href="#client-side">Client side</a></li><li><a href="#testing-it-without-waiting-a-day">Testing it without waiting a day</a></li></ul></aside>
+  <div class="prose">
+<p>A daily reward looks simple and has one hard part: deciding what "a new day" means, in a way a player cannot manipulate.</p>
+<h2 id="use-server-time-always">Use server time, always<a class="anchor" href="#use-server-time-always" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- WRONG: this is the player's own clock</span>
+<span class="t-key">local</span> now = <span class="t-glob">os</span>.<span class="t-fn">time</span>()          <span class="t-com">-- in a LocalScript</span></code></pre></div>
+<p>A client's <code>os.time()</code> is the time on their machine. They can change it. Any streak logic built on a client timestamp can be advanced by setting the system clock forward.</p>
+<p>On the <strong>server</strong>, <code>os.time()</code> is the server's clock, which players do not control. That is what you want.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService</span>
+<span class="t-key">local</span> now = <span class="t-glob">os</span>.<span class="t-fn">time</span>()          <span class="t-com">-- seconds since epoch, UTC, server-side</span></code></pre></div>
+<p><code>workspace:GetServerTimeNow()</code> is also server-authoritative but measures elapsed time rather than wall-clock date, so it is the wrong tool for "which calendar day is it."</p>
+<h2 id="deciding-what-a-day-is">Deciding what a day is<a class="anchor" href="#deciding-what-a-day-is" aria-label="Link to this section">#</a></h2>
+<p>Two approaches, and the difference matters more than it looks.</p>
+<p><strong>Calendar day (UTC).</strong> A new day starts at UTC midnight.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> dayNumber(unixTime)
+	<span class="t-key">return</span> <span class="t-glob">math</span>.<span class="t-fn">floor</span>(unixTime / <span class="t-num">86400</span>)
+<span class="t-key">end</span></code></pre></div>
+<p>Simple, and everyone's streak resets at the same moment. The downside: a player in Iran claiming at 3am local time is on a different UTC day than they expect, and can feel like they lost a streak unfairly.</p>
+<p><strong>Rolling 24 hours.</strong> A new claim is available 24 hours after the last one.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> COOLDOWN = <span class="t-num">24</span> * <span class="t-num">60</span> * <span class="t-num">60</span>
+<span class="t-key">local</span> canClaim = (now - lastClaim) &gt;= COOLDOWN</code></pre></div>
+<p>Fair across time zones, but it drifts — claim at 8pm, then 8:05pm the next day, and by the end of the week you are claiming at midnight.</p>
+<p><strong>The compromise most games use</strong>, and what I would recommend: calendar days for the streak, with a grace window so a late claim does not break it.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> GRACE_DAYS = <span class="t-num">1</span>        <span class="t-com">-- miss one day and the streak survives</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> evaluate(lastClaimDay, today)
+	<span class="t-key">if</span> lastClaimDay == <span class="t-key">nil</span> <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-str">"first"</span>
+	<span class="t-key">elseif</span> today == lastClaimDay <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-str">"already"</span>
+	<span class="t-key">elseif</span> today - lastClaimDay &lt;= <span class="t-num">1</span> + GRACE_DAYS <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-str">"continue"</span>
+	<span class="t-key">else</span>
+		<span class="t-key">return</span> <span class="t-str">"broken"</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span></code></pre></div>
+<h2 id="the-reward-table">The reward table<a class="anchor" href="#the-reward-table" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> REWARDS = {
+	[<span class="t-num">1</span>] = { coins = <span class="t-num">50</span> },
+	[<span class="t-num">2</span>] = { coins = <span class="t-num">75</span> },
+	[<span class="t-num">3</span>] = { coins = <span class="t-num">100</span> },
+	[<span class="t-num">4</span>] = { coins = <span class="t-num">150</span> },
+	[<span class="t-num">5</span>] = { coins = <span class="t-num">200</span> },
+	[<span class="t-num">6</span>] = { coins = <span class="t-num">300</span> },
+	[<span class="t-num">7</span>] = { coins = <span class="t-num">500</span>, item = <span class="t-str">"WeeklyCrate"</span> },
+}
+
+<span class="t-key">local</span> <span class="t-key">function</span> rewardFor(streak)
+	<span class="t-com">-- cycles every 7 days, so day 8 is day 1's reward again</span>
+	<span class="t-key">local</span> index = ((streak - <span class="t-num">1</span>) % #REWARDS) + <span class="t-num">1</span>
+	<span class="t-key">return</span> REWARDS[index]
+<span class="t-key">end</span></code></pre></div>
+<p>Cycling rather than growing forever keeps the numbers sane. A linear reward that increases every day becomes absurd by day 200.</p>
+<h2 id="the-claim-server-side">The claim, server-side<a class="anchor" href="#the-claim-server-side" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService/DailyReward.server.lua</span>
+<span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+<span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+
+<span class="t-key">local</span> claimRemote = ReplicatedStorage.<span class="t-prop">Remotes</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"ClaimDaily"</span>)
+
+<span class="t-key">local</span> <span class="t-key">function</span> dayNumber(unixTime)
+	<span class="t-key">return</span> <span class="t-glob">math</span>.<span class="t-fn">floor</span>(unixTime / <span class="t-num">86400</span>)
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> tryClaim(player)
+	<span class="t-key">local</span> data = cache[player.<span class="t-prop">UserId</span>]        <span class="t-com">-- your loaded save table</span>
+	<span class="t-key">if</span> <span class="t-key">not</span> data <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-key">false</span>, <span class="t-str">"Data not loaded"</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> today = dayNumber(<span class="t-glob">os</span>.<span class="t-fn">time</span>())
+	<span class="t-key">local</span> outcome = evaluate(data.<span class="t-prop">lastClaimDay</span>, today)
+
+	<span class="t-key">if</span> outcome == <span class="t-str">"already"</span> <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-key">false</span>, <span class="t-str">"Come back tomorrow"</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">if</span> outcome == <span class="t-str">"first"</span> <span class="t-key">then</span>
+		data.<span class="t-prop">streak</span> = <span class="t-num">1</span>
+	<span class="t-key">elseif</span> outcome == <span class="t-str">"continue"</span> <span class="t-key">then</span>
+		data.<span class="t-prop">streak</span> = (data.<span class="t-prop">streak</span> <span class="t-key">or</span> <span class="t-num">0</span>) + <span class="t-num">1</span>
+	<span class="t-key">else</span>
+		data.<span class="t-prop">streak</span> = <span class="t-num">1</span>                       <span class="t-com">-- broken, start again</span>
+	<span class="t-key">end</span>
+
+	data.<span class="t-prop">lastClaimDay</span> = today
+
+	<span class="t-key">local</span> reward = rewardFor(data.<span class="t-prop">streak</span>)
+	addBalance(player, reward.<span class="t-prop">coins</span>)
+	<span class="t-key">if</span> reward.<span class="t-prop">item</span> <span class="t-key">then</span>
+		grantItem(player, reward.<span class="t-prop">item</span>)
+	<span class="t-key">end</span>
+
+	markDirty(player)                         <span class="t-com">-- let the autosave write it</span>
+
+	<span class="t-key">return</span> <span class="t-key">true</span>, reward, data.<span class="t-prop">streak</span>
+<span class="t-key">end</span>
+
+claimRemote.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">function</span>(player)
+	<span class="t-key">if</span> rateLimited(player) <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-key">false</span>, <span class="t-str">"Too fast"</span>
+	<span class="t-key">end</span>
+	<span class="t-key">return</span> tryClaim(player)
+<span class="t-key">end</span></code></pre></div>
+<h2 id="the-five-things-that-make-it-safe">The five things that make it safe<a class="anchor" href="#the-five-things-that-make-it-safe" aria-label="Link to this section">#</a></h2>
+<p><strong>The remote takes no arguments.</strong> The client says "I want to claim." It does not say which day it is, how long its streak is, or what reward it should get. Every one of those is computed server-side. This single design choice removes most of the attack surface.</p>
+<p><strong><code>lastClaimDay</code> is stored, not <code>lastClaimTime</code>.</strong> Storing a day number rather than a timestamp means the "already claimed" check is an integer comparison and cannot be defeated by a few seconds of clock skew.</p>
+<p><strong>The rate limit is on the handler.</strong> <code>OnServerInvoke</code> can be called repeatedly; without a limit, a player can fire ten claims in one frame and — if your data write is slow — have several pass the <code>already</code> check before the first one lands.</p>
+<p><strong>The write happens before the reward is reported.</strong> <code>data.lastClaimDay = today</code> is set before granting, so even if granting fails the day is consumed. That is the safe direction for an exploit: worst case a player loses one reward, rather than farming infinite ones.</p>
+<p><strong>Nothing trusts <code>data.streak</code> from the client.</strong> It lives in the server's cache and is saved with the rest of the player's data.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>If your DataStore save is asynchronous — and it should be — a player who claims and immediately leaves may not have the write persisted. Save on claim as well as on the autosave timer for anything this visible, or players will report losing streaks.</p></aside>
+<h2 id="showing-the-state-to-the-client">Showing the state to the client<a class="anchor" href="#showing-the-state-to-the-client" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> claimState(player)
+	<span class="t-key">local</span> data = cache[player.<span class="t-prop">UserId</span>]
+	<span class="t-key">if</span> <span class="t-key">not</span> data <span class="t-key">then</span>
+		<span class="t-key">return</span> { ready = <span class="t-key">false</span> }
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> today = dayNumber(<span class="t-glob">os</span>.<span class="t-fn">time</span>())
+	<span class="t-key">local</span> outcome = evaluate(data.<span class="t-prop">lastClaimDay</span>, today)
+
+	<span class="t-key">return</span> {
+		ready = outcome ~= <span class="t-str">"already"</span>,
+		streak = data.<span class="t-prop">streak</span> <span class="t-key">or</span> <span class="t-num">0</span>,
+		nextReward = rewardFor((data.<span class="t-prop">streak</span> <span class="t-key">or</span> <span class="t-num">0</span>) + <span class="t-num">1</span>),
+		secondsUntilTomorrow = ((today + <span class="t-num">1</span>) * <span class="t-num">86400</span>) - <span class="t-glob">os</span>.<span class="t-fn">time</span>(),
+	}
+<span class="t-key">end</span></code></pre></div>
+<p>Sending <code>secondsUntilTomorrow</code> lets the client run its own countdown without asking the server again. The client displays it; the server still decides whether a claim is allowed, so a client with a manipulated countdown just sees a wrong number and gets refused.</p>
+<h2 id="client-side">Client side<a class="anchor" href="#client-side" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> claimRemote = ReplicatedStorage.<span class="t-prop">Remotes</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"ClaimDaily"</span>)
+
+button.<span class="t-prop">Activated</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+	button.<span class="t-prop">Active</span> = <span class="t-key">false</span>
+
+	<span class="t-key">local</span> ok, result, streak = <span class="t-glob">pcall</span>(<span class="t-key">function</span>()
+		<span class="t-key">return</span> claimRemote:<span class="t-fn">InvokeServer</span>()
+	<span class="t-key">end</span>)
+
+	<span class="t-key">if</span> <span class="t-key">not</span> ok <span class="t-key">then</span>
+		statusLabel.<span class="t-prop">Text</span> = <span class="t-str">"Something went wrong"</span>
+	<span class="t-key">elseif</span> result == <span class="t-key">false</span> <span class="t-key">then</span>
+		statusLabel.<span class="t-prop">Text</span> = <span class="t-glob">tostring</span>(streak)     <span class="t-com">-- the message</span>
+	<span class="t-key">else</span>
+		statusLabel.<span class="t-prop">Text</span> = <span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"Day %d! +%d coins"</span>, streak, result.<span class="t-prop">coins</span>)
+	<span class="t-key">end</span>
+
+	<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">1</span>)
+	button.<span class="t-prop">Active</span> = <span class="t-key">true</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>Note the <code>pcall</code> around <code>InvokeServer</code>. A <code>RemoteFunction</code> that errors on the server throws on the client, and without the <code>pcall</code> the button stays disabled forever.</p>
+<h2 id="testing-it-without-waiting-a-day">Testing it without waiting a day<a class="anchor" href="#testing-it-without-waiting-a-day" aria-label="Link to this section">#</a></h2>
+<p>Temporarily override the day function in Studio:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> FAKE_DAY_OFFSET = <span class="t-num">0</span>        <span class="t-com">-- bump this to simulate days passing</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> dayNumber(unixTime)
+	<span class="t-key">return</span> <span class="t-glob">math</span>.<span class="t-fn">floor</span>(unixTime / <span class="t-num">86400</span>) + FAKE_DAY_OFFSET
+<span class="t-key">end</span></code></pre></div>
+<p>Then in the Command Bar, change <code>FAKE_DAY_OFFSET</code> and claim again. Walk through all four outcomes:</p>
+<ol><li>First ever claim → streak 1.</li><li>Claim again immediately → refused.</li><li>Offset +1, claim → streak 2.</li><li>Offset +5, claim → streak resets to 1.</li></ol>
+<p>Delete the offset before publishing. Shipping it is shipping a free reward button.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

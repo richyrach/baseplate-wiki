@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spawning one vehicle per player and cleaning up the old one — Baseplate Wiki</title>
+<meta name="description" content="A server-side spawner that gives each player exactly one vehicle, removes their previous one, and cannot be abused to flood the server.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../recipes.html">Recipes</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/vehicles.html">Vehicles</a>
+  </p>
+  <h1>Spawning one vehicle per player and cleaning up the old one</h1>
+  <p class="lede">A server-side spawner that gives each player exactly one vehicle, removes their previous one, and cannot be abused to flood the server.</p>
+  <p class="doc-meta"><span>Vehicles</span><span>Intermediate</span><span>10 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#setup">Setup</a></li><li><a href="#the-spawner">The spawner</a></li><li><a href="#the-four-things-that-make-it-safe">The four things that make it safe</a></li><li><a href="#the-client-side">The client side</a></li><li><a href="#seating-the-driver">Seating the driver</a></li><li><a href="#restricting-the-driver-s-seat-to-the-owner">Restricting the driver&#x27;s seat to the owner</a></li><li><a href="#idle-cleanup">Idle cleanup</a></li><li><a href="#testing-it">Testing it</a></li></ul></aside>
+  <div class="prose">
+<p>The requirement: a player picks a car, it appears at a spawn point, and their previous one disappears. Nobody can fill the map with cars by clicking fast.</p>
+<p>This has to live on the server. A client-spawned vehicle exists only for that player, and letting the client decide how many to spawn is how you end up with a server holding four hundred cars.</p>
+<h2 id="setup">Setup<a class="anchor" href="#setup" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Tree</span><pre><code>ServerStorage
+└── Vehicles
+    ├── Hatchback
+    └── Pickup
+
+ReplicatedStorage
+└── Remotes
+    └── RequestVehicle
+
+Workspace
+├── VehicleSpawns        (parts, one per spawn point)
+└── SpawnedVehicles      (empty folder)</code></pre></div>
+<p>Vehicles live in <code>ServerStorage</code> so clients cannot read or clone them. Spawned ones go in their own folder so cleanup never has to guess what is a vehicle.</p>
+<h2 id="the-spawner">The spawner<a class="anchor" href="#the-spawner" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService/VehicleSpawner.server.lua</span>
+<span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+<span class="t-key">local</span> ServerStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ServerStorage"</span>)
+<span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+
+<span class="t-key">local</span> templates = ServerStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Vehicles"</span>)
+<span class="t-key">local</span> spawnPoints = <span class="t-glob">workspace</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"VehicleSpawns"</span>)
+<span class="t-key">local</span> spawnedFolder = <span class="t-glob">workspace</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"SpawnedVehicles"</span>)
+<span class="t-key">local</span> requestVehicle = ReplicatedStorage.<span class="t-prop">Remotes</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"RequestVehicle"</span>)
+
+<span class="t-key">local</span> COOLDOWN = <span class="t-num">3</span>
+
+<span class="t-key">local</span> ownedVehicle = {}   <span class="t-com">-- [userId] = model</span>
+<span class="t-key">local</span> lastRequest = {}    <span class="t-com">-- [userId] = os.clock()</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> despawn(userId)
+	<span class="t-key">local</span> existing = ownedVehicle[userId]
+	<span class="t-key">if</span> existing <span class="t-key">and</span> existing.<span class="t-prop">Parent</span> <span class="t-key">then</span>
+		existing:<span class="t-fn">Destroy</span>()
+	<span class="t-key">end</span>
+	ownedVehicle[userId] = <span class="t-key">nil</span>
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> freeSpawnPoint()
+	<span class="t-key">local</span> points = spawnPoints:<span class="t-fn">GetChildren</span>()
+
+	<span class="t-key">for</span> i = #points, <span class="t-num">2</span>, -<span class="t-num">1</span> <span class="t-key">do</span>          <span class="t-com">-- Fisher-Yates shuffle</span>
+		<span class="t-key">local</span> j = <span class="t-glob">math</span>.<span class="t-fn">random</span>(i)
+		points[i], points[j] = points[j], points[i]
+	<span class="t-key">end</span>
+
+	<span class="t-key">for</span> _, point <span class="t-key">in</span> <span class="t-glob">ipairs</span>(points) <span class="t-key">do</span>
+		<span class="t-key">local</span> region = <span class="t-glob">workspace</span>:<span class="t-fn">GetPartBoundsInBox</span>(
+			point.<span class="t-prop">CFrame</span> + <span class="t-glob">Vector3</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">4</span>, <span class="t-num">0</span>),
+			<span class="t-glob">Vector3</span>.<span class="t-fn">new</span>(<span class="t-num">14</span>, <span class="t-num">8</span>, <span class="t-num">24</span>)
+		)
+
+		<span class="t-key">local</span> blocked = <span class="t-key">false</span>
+		<span class="t-key">for</span> _, hit <span class="t-key">in</span> <span class="t-glob">ipairs</span>(region) <span class="t-key">do</span>
+			<span class="t-key">if</span> hit:<span class="t-fn">IsDescendantOf</span>(spawnedFolder) <span class="t-key">then</span>
+				blocked = <span class="t-key">true</span>
+				<span class="t-key">break</span>
+			<span class="t-key">end</span>
+		<span class="t-key">end</span>
+
+		<span class="t-key">if</span> <span class="t-key">not</span> blocked <span class="t-key">then</span>
+			<span class="t-key">return</span> point
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">return</span> points[<span class="t-num">1</span>]   <span class="t-com">-- everywhere is busy; reuse the first</span>
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> spawnVehicle(player, vehicleName)
+	<span class="t-key">local</span> userId = player.<span class="t-prop">UserId</span>
+
+	<span class="t-com">-- the client sends a name; the server decides if it is real</span>
+	<span class="t-key">if</span> <span class="t-glob">typeof</span>(vehicleName) ~= <span class="t-str">"string"</span> <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> template = templates:<span class="t-fn">FindFirstChild</span>(vehicleName)
+	<span class="t-key">if</span> <span class="t-key">not</span> template <span class="t-key">or</span> <span class="t-key">not</span> template:<span class="t-fn">IsA</span>(<span class="t-str">"Model"</span>) <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> now = <span class="t-glob">os</span>.<span class="t-fn">clock</span>()
+	<span class="t-key">if</span> lastRequest[userId] <span class="t-key">and</span> now - lastRequest[userId] &lt; COOLDOWN <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+	lastRequest[userId] = now
+
+	despawn(userId)
+
+	<span class="t-key">local</span> point = freeSpawnPoint()
+	<span class="t-key">if</span> <span class="t-key">not</span> point <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> vehicle = template:<span class="t-fn">Clone</span>()
+	vehicle:<span class="t-fn">SetAttribute</span>(<span class="t-str">"OwnerUserId"</span>, userId)
+
+	<span class="t-com">-- pivot so the vehicle sits above the pad, not inside it</span>
+	<span class="t-key">local</span> _, size = vehicle:<span class="t-fn">GetBoundingBox</span>()
+	vehicle:<span class="t-fn">PivotTo</span>(point.<span class="t-prop">CFrame</span> * <span class="t-glob">CFrame</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, size.<span class="t-prop">Y</span> / <span class="t-num">2</span> + <span class="t-num">1</span>, <span class="t-num">0</span>))
+	vehicle.<span class="t-prop">Parent</span> = spawnedFolder
+
+	ownedVehicle[userId] = vehicle
+	<span class="t-key">return</span> vehicle
+<span class="t-key">end</span>
+
+requestVehicle.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(spawnVehicle)
+
+Players.<span class="t-prop">PlayerRemoving</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	despawn(player.<span class="t-prop">UserId</span>)
+	lastRequest[player.<span class="t-prop">UserId</span>] = <span class="t-key">nil</span>
+<span class="t-key">end</span>)</code></pre></div>
+<h2 id="the-four-things-that-make-it-safe">The four things that make it safe<a class="anchor" href="#the-four-things-that-make-it-safe" aria-label="Link to this section">#</a></h2>
+<p><strong>The client sends a name, never a model.</strong> <code>FindFirstChild</code> against <code>ServerStorage.Vehicles</code> means only vehicles you actually shipped can spawn. If the client could send an instance, it could send anything.</p>
+<p><strong>One vehicle per player, enforced by <code>despawn</code> before every spawn.</strong> The count cannot grow no matter how the request arrives.</p>
+<p><strong>A cooldown.</strong> <code>OnServerEvent</code> can be fired as fast as an exploiter likes. Without the timer, a spawn loop is a denial-of-service on your own server.</p>
+<p><strong>Cleanup on leave.</strong> <code>PlayerRemoving</code> removes the vehicle and the cooldown entry, so neither table grows forever.</p>
+<h2 id="the-client-side">The client side<a class="anchor" href="#the-client-side" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- StarterPlayerScripts/VehicleMenu.client.lua</span>
+<span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+<span class="t-key">local</span> requestVehicle = ReplicatedStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Remotes"</span>)
+	:<span class="t-fn">WaitForChild</span>(<span class="t-str">"RequestVehicle"</span>)
+
+<span class="t-key">local</span> button = <span class="t-glob">script</span>.<span class="t-prop">Parent</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"SpawnHatchback"</span>)
+
+button.<span class="t-prop">Activated</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+	button.<span class="t-prop">Active</span> = <span class="t-key">false</span>
+	requestVehicle:<span class="t-fn">FireServer</span>(<span class="t-str">"Hatchback"</span>)
+	<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">3</span>)
+	button.<span class="t-prop">Active</span> = <span class="t-key">true</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>The client-side disable is courtesy, not security — it stops honest players double-clicking. The server cooldown is what actually protects you.</p>
+<h2 id="seating-the-driver">Seating the driver<a class="anchor" href="#seating-the-driver" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> seatPlayer(player, vehicle)
+	<span class="t-key">local</span> seat = vehicle:<span class="t-fn">FindFirstChildWhichIsA</span>(<span class="t-str">"VehicleSeat"</span>, <span class="t-key">true</span>)
+	<span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
+	<span class="t-key">if</span> <span class="t-key">not</span> seat <span class="t-key">or</span> <span class="t-key">not</span> character <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> humanoid = character:<span class="t-fn">FindFirstChildOfClass</span>(<span class="t-str">"Humanoid"</span>)
+	<span class="t-key">if</span> humanoid <span class="t-key">then</span>
+		seat:<span class="t-fn">Sit</span>(humanoid)
+	<span class="t-key">end</span>
+<span class="t-key">end</span></code></pre></div>
+<p>Call it right after <code>vehicle.Parent = spawnedFolder</code>. <code>Seat:Sit(humanoid)</code> is the supported way — teleporting the character on top of the seat and hoping is not.</p>
+<h2 id="restricting-the-driver-s-seat-to-the-owner">Restricting the driver's seat to the owner<a class="anchor" href="#restricting-the-driver-s-seat-to-the-owner" aria-label="Link to this section">#</a></h2>
+<p>The <code>OwnerUserId</code> attribute set during spawn makes this easy:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> guardSeat(vehicle)
+	<span class="t-key">local</span> seat = vehicle:<span class="t-fn">FindFirstChildWhichIsA</span>(<span class="t-str">"VehicleSeat"</span>, <span class="t-key">true</span>)
+	<span class="t-key">if</span> <span class="t-key">not</span> seat <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-key">end</span>
+
+	seat:<span class="t-fn">GetPropertyChangedSignal</span>(<span class="t-str">"Occupant"</span>):<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+		<span class="t-key">local</span> occupant = seat.<span class="t-prop">Occupant</span>
+		<span class="t-key">if</span> <span class="t-key">not</span> occupant <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-key">end</span>
+
+		<span class="t-key">local</span> player = Players:<span class="t-fn">GetPlayerFromCharacter</span>(occupant.<span class="t-prop">Parent</span>)
+		<span class="t-key">if</span> player <span class="t-key">and</span> player.<span class="t-prop">UserId</span> ~= vehicle:<span class="t-fn">GetAttribute</span>(<span class="t-str">"OwnerUserId"</span>) <span class="t-key">then</span>
+			seat:<span class="t-fn">Sit</span>(<span class="t-key">nil</span>)   <span class="t-com">-- eject</span>
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>)
+<span class="t-key">end</span></code></pre></div>
+<p>Whether you want this depends on the game — in a racing game, yes; in a sandbox, letting friends drive each other's cars is the fun part.</p>
+<h2 id="idle-cleanup">Idle cleanup<a class="anchor" href="#idle-cleanup" aria-label="Link to this section">#</a></h2>
+<p>Vehicles left behind by players who are still online accumulate. A sweeper keeps the map clear:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> IDLE_LIMIT = <span class="t-num">300</span>
+
+<span class="t-glob">task</span>.<span class="t-fn">spawn</span>(<span class="t-key">function</span>()
+	<span class="t-key">while</span> <span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">30</span>) <span class="t-key">do</span>
+		<span class="t-key">for</span> _, vehicle <span class="t-key">in</span> <span class="t-glob">ipairs</span>(spawnedFolder:<span class="t-fn">GetChildren</span>()) <span class="t-key">do</span>
+			<span class="t-key">local</span> root = vehicle.<span class="t-prop">PrimaryPart</span>
+			<span class="t-key">if</span> root <span class="t-key">then</span>
+				<span class="t-key">local</span> moving = root.<span class="t-prop">AssemblyLinearVelocity</span>.<span class="t-prop">Magnitude</span> &gt; <span class="t-num">1</span>
+				<span class="t-key">local</span> since = vehicle:<span class="t-fn">GetAttribute</span>(<span class="t-str">"IdleSince"</span>)
+
+				<span class="t-key">if</span> moving <span class="t-key">then</span>
+					vehicle:<span class="t-fn">SetAttribute</span>(<span class="t-str">"IdleSince"</span>, <span class="t-key">nil</span>)
+				<span class="t-key">elseif</span> <span class="t-key">not</span> since <span class="t-key">then</span>
+					vehicle:<span class="t-fn">SetAttribute</span>(<span class="t-str">"IdleSince"</span>, <span class="t-glob">os</span>.<span class="t-fn">clock</span>())
+				<span class="t-key">elseif</span> <span class="t-glob">os</span>.<span class="t-fn">clock</span>() - since &gt; IDLE_LIMIT <span class="t-key">then</span>
+					vehicle:<span class="t-fn">Destroy</span>()
+				<span class="t-key">end</span>
+			<span class="t-key">end</span>
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)</code></pre></div>
+<h2 id="testing-it">Testing it<a class="anchor" href="#testing-it" aria-label="Link to this section">#</a></h2>
+<ol><li>Two clients from the <strong>Test</strong> tab. Spawn from both, confirm two vehicles exist.</li><li>Spawn repeatedly from one client — the count should stay at one.</li><li>Click faster than the cooldown — extra requests should be ignored, not queued.</li><li>Leave with one client. Its vehicle should disappear.</li><li>Check <code>Workspace.SpawnedVehicles</code> in the Explorer while testing. That folder is</li></ol>
+<p>   the whole truth about what exists.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

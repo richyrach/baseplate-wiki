@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Click a part to buy a game pass, with ProximityPrompt or ClickDetector — Baseplate Wiki</title>
+<meta name="description" content="Turning a world object into a shop. Two ways to do it, why ProximityPrompt is usually the better one, and the server checks that make it safe.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../recipes.html">Recipes</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/monetization.html">Monetization</a>
+  </p>
+  <h1>Click a part to buy a game pass, with ProximityPrompt or ClickDetector</h1>
+  <p class="lede">Turning a world object into a shop. Two ways to do it, why ProximityPrompt is usually the better one, and the server checks that make it safe.</p>
+  <p class="doc-meta"><span>Monetization</span><span>Beginner</span><span>9 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#option-a-proximityprompt-recommended">Option A: ProximityPrompt (recommended)</a></li><li><a href="#option-b-clickdetector">Option B: ClickDetector</a></li><li><a href="#both-must-be-created-or-handled-on-the-server">Both must be created or handled on the server</a></li><li><a href="#making-the-vendor-show-ownership">Making the vendor show ownership</a></li><li><a href="#anchor-the-vendor">Anchor the vendor</a></li><li><a href="#checklist">Checklist</a></li></ul></aside>
+  <div class="prose">
+<p>A pad on the floor or a vending machine that sells a game pass when a player interacts with it. There are two mechanisms and they behave very differently on phones.</p>
+<h2 id="option-a-proximityprompt-recommended">Option A: ProximityPrompt (recommended)<a class="anchor" href="#option-a-proximityprompt-recommended" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService, or a Script inside the part</span>
+<span class="t-key">local</span> MarketplaceService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"MarketplaceService"</span>)
+
+<span class="t-key">local</span> PASS_ID = <span class="t-num">123456789</span>
+<span class="t-key">local</span> part = <span class="t-glob">workspace</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"PassVendor"</span>)
+
+<span class="t-key">local</span> prompt = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"ProximityPrompt"</span>)
+prompt.<span class="t-prop">ActionText</span> = <span class="t-str">"Buy Speed Pass"</span>
+prompt.<span class="t-prop">ObjectText</span> = <span class="t-str">"Vendor"</span>
+prompt.<span class="t-prop">KeyboardKeyCode</span> = <span class="t-glob">Enum</span>.<span class="t-prop">KeyCode</span>.<span class="t-prop">E</span>
+prompt.<span class="t-prop">HoldDuration</span> = <span class="t-num">0</span>
+prompt.<span class="t-prop">MaxActivationDistance</span> = <span class="t-num">10</span>
+prompt.<span class="t-prop">RequiresLineOfSight</span> = <span class="t-key">false</span>
+prompt.<span class="t-prop">Parent</span> = part
+
+prompt.<span class="t-prop">Triggered</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	MarketplaceService:<span class="t-fn">PromptGamePassPurchase</span>(player, PASS_ID)
+<span class="t-key">end</span>)</code></pre></div>
+<p>Why this is the better default:</p>
+<ul><li><strong>It works on every platform with no extra code.</strong> Keyboard shows "E", gamepad</li></ul>
+<p>  shows a button, touch shows a tappable circle. A <code>ClickDetector</code> needs you to   think about touch separately.</p>
+<ul><li><strong>It shows the player what the interaction is</strong> before they commit, via</li></ul>
+<p>  <code>ActionText</code>.</p>
+<ul><li><strong><code>MaxActivationDistance</code> is enforced by the engine</strong>, so a player cannot trigger</li></ul>
+<p>  it from across the map.</p>
+<ul><li><strong><code>Triggered</code> fires on the server</strong> with the correct <code>player</code> argument already</li></ul>
+<p>  filled in.</p>
+<p><code>RequiresLineOfSight = false</code> is worth setting — the default <code>true</code> means the prompt vanishes when anything, including a decorative fence, is between the player and the part.</p>
+<p>Set <code>HoldDuration</code> to about <code>0.5</code> for anything destructive or expensive, so a mistimed key press does not open a purchase prompt.</p>
+<h2 id="option-b-clickdetector">Option B: ClickDetector<a class="anchor" href="#option-b-clickdetector" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> MarketplaceService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"MarketplaceService"</span>)
+
+<span class="t-key">local</span> PASS_ID = <span class="t-num">123456789</span>
+<span class="t-key">local</span> part = <span class="t-glob">workspace</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"PassVendor"</span>)
+
+<span class="t-key">local</span> detector = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"ClickDetector"</span>)
+detector.<span class="t-prop">MaxActivationDistance</span> = <span class="t-num">12</span>
+detector.<span class="t-prop">Parent</span> = part
+
+detector.<span class="t-prop">MouseClick</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	MarketplaceService:<span class="t-fn">PromptGamePassPurchase</span>(player, PASS_ID)
+<span class="t-key">end</span>)</code></pre></div>
+<p><code>MouseClick</code> does fire on a tap despite the name, so this is not broken on mobile — but there is no visual hint that the object is clickable, which on a phone means most players never discover it.</p>
+<p>Use a <code>ClickDetector</code> when the object is obviously interactive on its own (a big labelled button model) and a prompt would look wrong.</p>
+<aside class="note note-note"><p class="note-label">note</p><p><code>ClickDetector</code> also has <code>MouseHoverEnter</code> and <code>MouseHoverLeave</code>, which are handy for a highlight on desktop. They never fire on touch devices, so treat any highlight they drive as decoration, not as the thing that tells players an object is usable.</p></aside>
+<h2 id="both-must-be-created-or-handled-on-the-server">Both must be created or handled on the server<a class="anchor" href="#both-must-be-created-or-handled-on-the-server" aria-label="Link to this section">#</a></h2>
+<p>If the <code>Triggered</code> or <code>MouseClick</code> handler is in a <strong><a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a></strong>, it still works — but then only that client knows, and anything you do in response is client-side and private.</p>
+<p>For a purchase prompt specifically, <code>PromptGamePassPurchase</code> can be called from either side. Calling it from the server is simpler because you already have the <code>player</code> argument.</p>
+<p>For anything that changes game state, the handler must be server-side, and it must still validate:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>prompt.<span class="t-prop">Triggered</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	<span class="t-com">-- the engine guarantees proximity, but check anything else yourself</span>
+	<span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
+	<span class="t-key">if</span> <span class="t-key">not</span> character <span class="t-key">or</span> <span class="t-key">not</span> character:<span class="t-fn">FindFirstChildOfClass</span>(<span class="t-str">"Humanoid"</span>) <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">if</span> humanoidIsDead(character) <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	grantSomething(player)
+<span class="t-key">end</span>)</code></pre></div>
+<p>A <code><a class="term-link" href="../terms/proximityprompt.html" title="The cross-platform way to make a world object interactive. Handles keyboard, gamepad and touch with no extra code.">ProximityPrompt</a></code>'s distance is enforced, which is genuinely useful — but nothing else about the player's state is.</p>
+<h2 id="making-the-vendor-show-ownership">Making the vendor show ownership<a class="anchor" href="#making-the-vendor-show-ownership" aria-label="Link to this section">#</a></h2>
+<p>A vendor that still says "Buy" after you have bought it looks broken. Update the prompt per player using <code>Enabled</code>:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> MarketplaceService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"MarketplaceService"</span>)
+<span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+
+<span class="t-key">local</span> PASS_ID = <span class="t-num">123456789</span>
+<span class="t-key">local</span> prompt = <span class="t-glob">workspace</span>.<span class="t-prop">PassVendor</span>.<span class="t-prop">ProximityPrompt</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> owns(player)
+	<span class="t-key">local</span> ok, result = <span class="t-glob">pcall</span>(<span class="t-key">function</span>()
+		<span class="t-key">return</span> MarketplaceService:<span class="t-fn">UserOwnsGamePassAsync</span>(player.<span class="t-prop">UserId</span>, PASS_ID)
+	<span class="t-key">end</span>)
+	<span class="t-key">return</span> ok <span class="t-key">and</span> result
+<span class="t-key">end</span>
+
+prompt.<span class="t-prop">Triggered</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	<span class="t-key">if</span> owns(player) <span class="t-key">then</span>
+		<span class="t-com">-- already theirs: give them the thing instead of selling it again</span>
+		applyBenefit(player)
+	<span class="t-key">else</span>
+		MarketplaceService:<span class="t-fn">PromptGamePassPurchase</span>(player, PASS_ID)
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>A <code>ProximityPrompt</code> is a single object shared by everyone, so you cannot show different <code>ActionText</code> per player from the server. If you want per-player text, the usual approach is to create the prompt on the client from a LocalScript, and keep a server handler for anything that actually changes state.</p>
+<h2 id="anchor-the-vendor">Anchor the vendor<a class="anchor" href="#anchor-the-vendor" aria-label="Link to this section">#</a></h2>
+<p>An unanchored vendor part gets pushed around by players and eventually ends up in the void, taking your shop with it.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>part.<span class="t-prop">Anchored</span> = <span class="t-key">true</span></code></pre></div>
+<p>Obvious in hindsight, and it happens constantly.</p>
+<h2 id="checklist">Checklist<a class="anchor" href="#checklist" aria-label="Link to this section">#</a></h2>
+<ol><li>Vendor part is <code><a class="term-link" href="../terms/anchored.html" title="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a></code>.</li><li><code>ProximityPrompt</code> with clear <code>ActionText</code>, and <code>RequiresLineOfSight = false</code></li></ol>
+<p>   unless you specifically want occlusion.</p>
+<ol><li><code>Triggered</code> handler is on the <strong>server</strong>.</li><li>Ownership checked with <code>pcall</code>, and the owned path does something sensible rather</li></ol>
+<p>   than re-prompting.</p>
+<ol><li>Tested on a phone — this is the whole reason to prefer prompts over click</li></ol>
+<p>   detectors.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

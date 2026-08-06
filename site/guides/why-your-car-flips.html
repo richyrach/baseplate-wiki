@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why your car flips, sinks, or drives like it&#x27;s on ice — Baseplate Wiki</title>
+<meta name="description" content="Vehicle handling problems nearly always trace back to mass, centre of gravity, or friction. Three properties, in the order to check them.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/vehicles.html">Vehicles</a>
+  </p>
+  <h1>Why your car flips, sinks, or drives like it&#x27;s on ice</h1>
+  <p class="lede">Vehicle handling problems nearly always trace back to mass, centre of gravity, or friction. Three properties, in the order to check them.</p>
+  <p class="doc-meta"><span>Vehicles</span><span>Intermediate</span><span>11 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#1-centre-of-gravity-is-too-high">1. Centre of gravity is too high</a></li><li><a href="#2-parts-are-massless-or-the-wrong-parts-are">2. Parts are Massless, or the wrong parts are</a></li><li><a href="#3-friction-is-wrong-on-the-wheels-or-the-road">3. Friction is wrong on the wheels or the road</a></li><li><a href="#sinking-through-the-road">Sinking through the road</a></li><li><a href="#steering-that-feels-wrong">Steering that feels wrong</a></li><li><a href="#if-you-are-using-a-chassis">If you are using A-Chassis</a></li><li><a href="#the-diagnostic-order">The diagnostic order</a></li></ul></aside>
+  <div class="prose">
+<p>A car that flips on every corner, sinks into the road, or slides like the map is made of glass is almost never a scripting problem. It is physics doing exactly what the numbers you gave it say it should.</p>
+<p>There are three numbers, and checking them in this order solves most vehicle handling complaints.</p>
+<h2 id="1-centre-of-gravity-is-too-high">1. Centre of gravity is too high<a class="anchor" href="#1-centre-of-gravity-is-too-high" aria-label="Link to this section">#</a></h2>
+<p>A vehicle flips because its mass is high above its wheels. Roblox derives the centre of mass from the parts you built with, and a body made of large blocks sitting on top of small wheels puts that centre well above the axle line.</p>
+<p>The fix that works, and that real vehicle physics uses too, is to add weight low down:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> ballast = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"Part"</span>)
+ballast.<span class="t-prop">Name</span> = <span class="t-str">"Ballast"</span>
+ballast.<span class="t-prop">Size</span> = <span class="t-glob">Vector3</span>.<span class="t-fn">new</span>(<span class="t-num">4</span>, <span class="t-num">0.4</span>, <span class="t-num">8</span>)
+ballast.<span class="t-prop">Transparency</span> = <span class="t-num">1</span>
+ballast.<span class="t-prop">CanCollide</span> = <span class="t-key">false</span>
+ballast.<span class="t-prop">Massless</span> = <span class="t-key">false</span>
+ballast.<span class="t-prop">CustomPhysicalProperties</span> = <span class="t-glob">PhysicalProperties</span>.<span class="t-fn">new</span>(
+	<span class="t-num">12</span>,    <span class="t-com">-- density: heavy</span>
+	<span class="t-num">0.3</span>,   <span class="t-com">-- friction</span>
+	<span class="t-num">0</span>,     <span class="t-com">-- elasticity</span>
+	<span class="t-num">1</span>,     <span class="t-com">-- friction weight</span>
+	<span class="t-num">1</span>      <span class="t-com">-- elasticity weight</span>
+)
+ballast.<span class="t-prop">CFrame</span> = chassis.<span class="t-prop">CFrame</span> * <span class="t-glob">CFrame</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, -<span class="t-num">1.2</span>, <span class="t-num">0</span>)
+ballast.<span class="t-prop">Parent</span> = vehicle
+
+<span class="t-key">local</span> weld = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"WeldConstraint"</span>)
+weld.<span class="t-prop">Part0</span> = chassis
+weld.<span class="t-prop">Part1</span> = ballast
+weld.<span class="t-prop">Parent</span> = chassis</code></pre></div>
+<p>An invisible, non-colliding, dense slab welded below the chassis drags the centre of mass down without changing how the car looks or collides. Tune the density: too little and it still rolls, too much and it feels like it is bolted to the ground.</p>
+<aside class="note note-note"><p class="note-label">note</p><p>Make the bodywork lighter as well as the floor heavier. Set <code>CustomPhysicalProperties</code> with a low density on roof and shell parts, or mark purely decorative parts <code>Massless = true</code> so they contribute no mass at all.</p></aside>
+<h2 id="2-parts-are-massless-or-the-wrong-parts-are">2. Parts are Massless, or the wrong parts are<a class="anchor" href="#2-parts-are-massless-or-the-wrong-parts-are" aria-label="Link to this section">#</a></h2>
+<p><code>Massless = true</code> makes a part contribute no mass to its assembly. It is genuinely useful for detail parts — mirrors, spoilers, badges — that should not affect handling.</p>
+<p>It causes two distinct bugs when misapplied:</p>
+<ul><li><strong>Everything massless.</strong> The vehicle weighs almost nothing, gets thrown around by</li></ul>
+<p>  the slightest collision, and bounces off kerbs.</p>
+<ul><li><strong>The wheels massless.</strong> Wheels need mass to press into the road. Massless wheels</li></ul>
+<p>  produce no grip, and the car slides.</p>
+<p>Audit it:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">for</span> _, part <span class="t-key">in</span> <span class="t-glob">ipairs</span>(vehicle:<span class="t-fn">GetDescendants</span>()) <span class="t-key">do</span>
+	<span class="t-key">if</span> part:<span class="t-fn">IsA</span>(<span class="t-str">"BasePart"</span>) <span class="t-key">then</span>
+		<span class="t-glob">print</span>(<span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"%-20s mass=%.2f massless=%s"</span>,
+			part.<span class="t-prop">Name</span>, part:<span class="t-fn">GetMass</span>(), <span class="t-glob">tostring</span>(part.<span class="t-prop">Massless</span>)))
+	<span class="t-key">end</span>
+<span class="t-key">end</span></code></pre></div>
+<p>Run that in the Command Bar with the vehicle selected. Any wheel or chassis part reporting a mass near zero is a problem.</p>
+<h2 id="3-friction-is-wrong-on-the-wheels-or-the-road">3. Friction is wrong on the wheels or the road<a class="anchor" href="#3-friction-is-wrong-on-the-wheels-or-the-road" aria-label="Link to this section">#</a></h2>
+<p>Sliding is a friction problem, and friction is a negotiation between two surfaces — so the road matters as much as the tyre.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>wheel.<span class="t-prop">CustomPhysicalProperties</span> = <span class="t-glob">PhysicalProperties</span>.<span class="t-fn">new</span>(
+	<span class="t-num">0.7</span>,   <span class="t-com">-- density</span>
+	<span class="t-num">2</span>,     <span class="t-com">-- friction: high, tyres grip</span>
+	<span class="t-num">0</span>,     <span class="t-com">-- elasticity: 0, tyres do not bounce</span>
+	<span class="t-num">100</span>,   <span class="t-com">-- friction weight: dominate the contact</span>
+	<span class="t-num">1</span>
+)</code></pre></div>
+<p>The fourth argument, <strong>friction weight</strong>, is the one people miss. It decides whose friction value wins when two surfaces touch. Setting it high on the wheel means the tyre's grip dominates whatever the road says, which is what you want — otherwise a slippery road surface overrides your careful tyre tuning.</p>
+<p>Elasticity should be <code>0</code> on wheels. Any bounce turns small bumps into launches.</p>
+<h2 id="sinking-through-the-road">Sinking through the road<a class="anchor" href="#sinking-through-the-road" aria-label="Link to this section">#</a></h2>
+<p>If the car falls through geometry, it is almost always one of:</p>
+<ul><li><strong>The road is not <code><a class="term-link" href="../terms/anchored.html" title="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a></code>.</strong> Unanchored road parts get pushed by the car.</li><li><strong><code>CanCollide = false</code></strong> on the wheels or the road part.</li><li><strong>Very thin road parts.</strong> A part under about 0.5 studs thick can be passed</li></ul>
+<p>  through by a fast-moving object between physics steps. Make roads at least one   stud thick.</p>
+<ul><li><strong>Very high speed.</strong> Fast objects tunnel through thin geometry. Thicker</li></ul>
+<p>  collision surfaces are the practical fix.</p>
+<h2 id="steering-that-feels-wrong">Steering that feels wrong<a class="anchor" href="#steering-that-feels-wrong" aria-label="Link to this section">#</a></h2>
+<p>Two distinct complaints here:</p>
+<p><strong>Turns too sharply at speed</strong> — the steering angle should reduce as speed rises. Real cars do this and it is most of what makes a vehicle feel controlled:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> MAX_ANGLE = <span class="t-num">35</span>
+<span class="t-key">local</span> MIN_ANGLE = <span class="t-num">8</span>
+<span class="t-key">local</span> FALLOFF_SPEED = <span class="t-num">90</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> steerAngleFor(speed)
+	<span class="t-key">local</span> t = <span class="t-glob">math</span>.<span class="t-fn">clamp</span>(speed / FALLOFF_SPEED, <span class="t-num">0</span>, <span class="t-num">1</span>)
+	<span class="t-key">return</span> MAX_ANGLE + (MIN_ANGLE - MAX_ANGLE) * t
+<span class="t-key">end</span></code></pre></div>
+<p><strong>Snaps back to centre instantly</strong> — interpolate toward the target angle instead of setting it:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>currentAngle += (targetAngle - currentAngle) * <span class="t-glob">math</span>.<span class="t-fn">min</span>(dt * <span class="t-num">6</span>, <span class="t-num">1</span>)</code></pre></div>
+<p>The <code>math.min(dt * 6, 1)</code> guard matters: on a frame with a long delta, <code>dt * 6</code> can exceed 1 and overshoot the target, which produces a visible jitter.</p>
+<h2 id="if-you-are-using-a-chassis">If you are using A-Chassis<a class="anchor" href="#if-you-are-using-a-chassis" aria-label="Link to this section">#</a></h2>
+<p>A-Chassis is the most common community chassis and it has its own tuning file, usually <code>A-Chassis Tune</code> inside the vehicle model. Its values override a lot of what you would otherwise set by hand.</p>
+<p>The values worth looking at first:</p>
+<ul><li><code>Tune.WeightBrickSize</code> and <code>Tune.Weight</code> — the ballast concept above, built in.</li><li><code>Tune.CenterOfGravity</code> — moves the centre of mass directly.</li><li><code>Tune.WheelFrictionWeight</code>, <code>Tune.FrictionMultiplier</code> — grip.</li><li><code>Tune.SteerInner</code> / <code>Tune.SteerOuter</code> and <code>Tune.SteerDecay</code> — the speed falloff</li></ul>
+<p>  above, built in.</p>
+<p>If A-Chassis is installed, tune there rather than setting <code>CustomPhysicalProperties</code> manually — otherwise you have two systems fighting over the same properties, and the result depends on which ran last.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>Check which version of A-Chassis you have before following any tutorial. Tune value names moved between 6.x and later releases, and a guide written for the wrong version will have you editing values that do not exist.</p></aside>
+<h2 id="the-diagnostic-order">The diagnostic order<a class="anchor" href="#the-diagnostic-order" aria-label="Link to this section">#</a></h2>
+<ol><li>Print the mass of every part. Anything unexpectedly near zero is suspect.</li><li>Add or increase low ballast until it stops flipping. This fixes most of it.</li><li>Raise wheel friction and friction weight until it stops sliding.</li><li>Set wheel elasticity to <code>0</code>.</li><li>Confirm the road is anchored, collidable, and at least a stud thick.</li><li>Only then start adjusting steering feel — tuning steering on a car with a bad</li></ol>
+<p>   centre of gravity is wasted effort.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

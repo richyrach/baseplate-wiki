@@ -1,0 +1,7 @@
+
+# Working notes kept out of the public repo
+*.pyc
+.DS_Store
+CHATGPT-*.md
+START-HERE.md
+__pycache__/

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why your button works in Studio but does nothing on mobile — Baseplate Wiki</title>
+<meta name="description" content="The button is fine. It is usually the input code filtering for a mouse, or something invisible sitting on top of it.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/ui.html">UI</a>
+  </p>
+  <h1>Why your button works in Studio but does nothing on mobile</h1>
+  <p class="lede">The button is fine. It is usually the input code filtering for a mouse, or something invisible sitting on top of it.</p>
+  <p class="doc-meta"><span>UI</span><span>Beginner</span><span>8 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#1-you-are-only-listening-for-a-mouse">1. You are only listening for a mouse</a></li><li><a href="#2-you-are-using-the-deprecated-mouse-object">2. You are using the deprecated Mouse object</a></li><li><a href="#3-something-invisible-is-on-top-of-it">3. Something invisible is on top of it</a></li><li><a href="#4-the-button-is-off-screen-or-too-small-to-hit">4. The button is off-screen, or too small to hit</a></li><li><a href="#testing-it-properly">Testing it properly</a></li><li><a href="#the-order-to-check-things">The order to check things</a></li></ul></aside>
+  <div class="prose">
+<p>The button works on your computer. On a phone, tapping it does nothing at all — no error, no response.</p>
+<p>There are four common causes. The first is by far the most frequent, and it is a single line of code.</p>
+<h2 id="1-you-are-only-listening-for-a-mouse">1. You are only listening for a mouse<a class="anchor" href="#1-you-are-only-listening-for-a-mouse" aria-label="Link to this section">#</a></h2>
+<p>If your input code checks the input type, and only accepts mouse buttons, touch input never matches:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- breaks on phones: a tap is not MouseButton1</span>
+UserInputService.<span class="t-prop">InputBegan</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(input)
+	<span class="t-key">if</span> input.<span class="t-prop">UserInputType</span> == <span class="t-glob">Enum</span>.<span class="t-prop">UserInputType</span>.<span class="t-prop">MouseButton1</span> <span class="t-key">then</span>
+		doTheThing()
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>Accept touch as well:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> UserInputService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"UserInputService"</span>)
+
+UserInputService.<span class="t-prop">InputBegan</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(input, gameProcessed)
+	<span class="t-key">if</span> gameProcessed <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">if</span> input.<span class="t-prop">UserInputType</span> == <span class="t-glob">Enum</span>.<span class="t-prop">UserInputType</span>.<span class="t-prop">MouseButton1</span>
+		<span class="t-key">or</span> input.<span class="t-prop">UserInputType</span> == <span class="t-glob">Enum</span>.<span class="t-prop">UserInputType</span>.<span class="t-prop">Touch</span> <span class="t-key">then</span>
+		doTheThing()
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>Note the <code>gameProcessed</code> check. Without it, this fires while the player is typing in chat — which produces the opposite bug, where an action triggers when it should not.</p>
+<h2 id="2-you-are-using-the-deprecated-mouse-object">2. You are using the deprecated Mouse object<a class="anchor" href="#2-you-are-using-the-deprecated-mouse-object" aria-label="Link to this section">#</a></h2>
+<p>Older tutorials use <code>Player:GetMouse()</code>. Phones have no mouse. Anything built on <code>mouse.Button1Down</code>, <code>mouse.Hit</code>, or <code>mouse.Target</code> has no touch equivalent and simply never fires.</p>
+<p>For a GUI button, the direct events are the right tool and they already handle touch:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> button = <span class="t-glob">script</span>.<span class="t-prop">Parent</span>
+
+button.<span class="t-prop">Activated</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+	doTheThing()
+<span class="t-key">end</span>)</code></pre></div>
+<p><code>GuiButton.Activated</code> fires for mouse clicks, taps and gamepad activation, which is usually what you actually meant. <code>MouseButton1Click</code> also fires on tap despite the name, so existing code using it is not broken — but <code>Activated</code> states the intent better and covers gamepad too.</p>
+<p>For clicking objects in the world rather than a GUI, use a <code>ClickDetector</code> (its <code>MouseClick</code> event fires on tap) or a <code><a class="term-link" href="../terms/proximityprompt.html" title="The cross-platform way to make a world object interactive. Handles keyboard, gamepad and touch with no extra code.">ProximityPrompt</a></code>, which was designed for cross-platform interaction and gives you the button hint for free.</p>
+<h2 id="3-something-invisible-is-on-top-of-it">3. Something invisible is on top of it<a class="anchor" href="#3-something-invisible-is-on-top-of-it" aria-label="Link to this section">#</a></h2>
+<p>This one produces the most confusing version of the symptom, because the button looks completely normal.</p>
+<p>A <code>Frame</code> with <code>BackgroundTransparency = 1</code> is invisible but still absorbs input. If it overlaps your button and sits above it, taps hit the frame.</p>
+<p>Two things to check:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- a transparent frame that should not eat input</span>
+overlay.<span class="t-prop">Active</span> = <span class="t-key">false</span>
+
+<span class="t-com">-- and make sure the button is above it</span>
+button.<span class="t-prop">ZIndex</span> = <span class="t-num">2</span></code></pre></div>
+<p><code>Active = false</code> on a <code>Frame</code> lets input pass through to whatever is behind it. This is the fix for the classic "invisible full-screen container swallowing everything."</p>
+<p>Why does it work with a mouse? Often it does not, and you never noticed, because your cursor was landing on a part of the button the overlay did not cover. A thumb is much bigger than a cursor.</p>
+<aside class="note note-note"><p class="note-label">note</p><p>To find the culprit, temporarily set every <code>Frame</code>'s <code>BackgroundTransparency</code> to <code>0.5</code> and look at what is actually stacked over your button. It is usually obvious immediately.</p></aside>
+<h2 id="4-the-button-is-off-screen-or-too-small-to-hit">4. The button is off-screen, or too small to hit<a class="anchor" href="#4-the-button-is-off-screen-or-too-small-to-hit" aria-label="Link to this section">#</a></h2>
+<p>Covered in more depth in the Scale vs Offset guide, but the short version:</p>
+<ul><li>A button positioned in <strong>Offset</strong> pixels can be entirely outside a smaller</li></ul>
+<p>  screen. It is not ignoring your tap; it is not there.</p>
+<ul><li>A button under roughly 44 pixels on its shortest side is very hard to hit with a</li></ul>
+<p>  thumb, so it feels broken intermittently rather than completely.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>button.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0.4</span>, <span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-num">48</span>)
+button.<span class="t-prop">AnchorPoint</span> = <span class="t-glob">Vector2</span>.<span class="t-fn">new</span>(<span class="t-num">0.5</span>, <span class="t-num">0.5</span>)
+button.<span class="t-prop">Position</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">0.85</span>)</code></pre></div>
+<h2 id="testing-it-properly">Testing it properly<a class="anchor" href="#testing-it-properly" aria-label="Link to this section">#</a></h2>
+<p>Studio's device emulator (<strong>Test</strong> tab → <strong>Device</strong>) changes the viewport, so it catches causes 3 and 4. It does <strong>not</strong> faithfully emulate touch, so it will not reliably catch causes 1 and 2.</p>
+<p>To catch those, check the code rather than the behaviour: search your <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScripts</a> for <code>MouseButton1</code>, <code>GetMouse</code>, and <code>Button1Down</code>. Every hit is a place where touch was probably not considered.</p>
+<p>You can also check the platform at runtime, which is useful for showing different hints:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> UserInputService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"UserInputService"</span>)
+
+<span class="t-key">if</span> UserInputService.<span class="t-prop">TouchEnabled</span> <span class="t-key">and</span> <span class="t-key">not</span> UserInputService.<span class="t-prop">KeyboardEnabled</span> <span class="t-key">then</span>
+	hintLabel.<span class="t-prop">Text</span> = <span class="t-str">"Tap to open"</span>
+<span class="t-key">else</span>
+	hintLabel.<span class="t-prop">Text</span> = <span class="t-str">"Press E to open"</span>
+<span class="t-key">end</span></code></pre></div>
+<p>Checking both flags matters: some devices report <code>TouchEnabled</code> <strong>and</strong> have a keyboard, so testing touch alone will misclassify laptops with touchscreens.</p>
+<h2 id="the-order-to-check-things">The order to check things<a class="anchor" href="#the-order-to-check-things" aria-label="Link to this section">#</a></h2>
+<ol><li>Does the button's handler use <code>Activated</code> or <code>MouseButton1Click</code>? If it uses</li></ol>
+<p>   <code>UserInputService</code> with a type filter, that is your bug.</p>
+<ol><li>Any <code>GetMouse()</code> or <code>mouse.Hit</code> in the path? Rewrite that part.</li><li>Set all frames to 50% transparency and look for an overlay above the button.</li><li>Run the device emulator on the smallest phone and confirm the button is actually</li></ol>
+<p>   on screen and at least 44 pixels tall.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

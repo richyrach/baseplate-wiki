@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teams and spawns without players landing on top of each other — Baseplate Wiki</title>
+<meta name="description" content="Setting up Teams, tying spawn points to them, and spreading players out so nobody spawns inside someone else.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../recipes.html">Recipes</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/multiplayer.html">Multiplayer</a>
+  </p>
+  <h1>Teams and spawns without players landing on top of each other</h1>
+  <p class="lede">Setting up Teams, tying spawn points to them, and spreading players out so nobody spawns inside someone else.</p>
+  <p class="doc-meta"><span>Multiplayer</span><span>Beginner</span><span>8 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#creating-the-teams">Creating the teams</a></li><li><a href="#assigning-players">Assigning players</a></li><li><a href="#tying-spawn-points-to-teams">Tying spawn points to teams</a></li><li><a href="#spreading-players-out">Spreading players out</a></li><li><a href="#team-aware-behaviour-elsewhere">Team-aware behaviour elsewhere</a></li><li><a href="#checklist">Checklist</a></li></ul></aside>
+  <div class="prose">
+<p>Two problems that arrive together: putting players on teams, and stopping everyone from materialising in the same square metre.</p>
+<h2 id="creating-the-teams">Creating the teams<a class="anchor" href="#creating-the-teams" aria-label="Link to this section">#</a></h2>
+<p>Teams go in the <code>Teams</code> service. Add it from the Explorer's <code>+</code> if it is not there, then:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService/TeamSetup.server.lua</span>
+<span class="t-key">local</span> Teams = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Teams"</span>)
+
+<span class="t-key">local</span> <span class="t-key">function</span> makeTeam(name, colourName)
+	<span class="t-key">local</span> team = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"Team"</span>)
+	team.<span class="t-prop">Name</span> = name
+	team.<span class="t-prop">TeamColor</span> = <span class="t-glob">BrickColor</span>.<span class="t-fn">new</span>(colourName)
+	team.<span class="t-prop">AutoAssignable</span> = <span class="t-key">false</span>     <span class="t-com">-- we assign manually</span>
+	team.<span class="t-prop">Parent</span> = Teams
+	<span class="t-key">return</span> team
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> runners = makeTeam(<span class="t-str">"Runners"</span>, <span class="t-str">"Bright blue"</span>)
+<span class="t-key">local</span> seekers = makeTeam(<span class="t-str">"Seekers"</span>, <span class="t-str">"Bright red"</span>)</code></pre></div>
+<p><code>TeamColor</code> is a <code>BrickColor</code>, not a <code>Color3</code>, and it is the actual identity of the team as far as spawn points are concerned. <strong>Two teams must never share a TeamColor</strong> — Roblox matches spawns to teams by colour, so duplicates make spawning unpredictable.</p>
+<p><code>AutoAssignable = false</code> stops Roblox putting joining players on a team by itself, which you want if your round system decides team membership.</p>
+<h2 id="assigning-players">Assigning players<a class="anchor" href="#assigning-players" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+
+<span class="t-key">local</span> <span class="t-key">function</span> assignBalanced(player)
+	<span class="t-key">local</span> counts = {}
+	<span class="t-key">for</span> _, team <span class="t-key">in</span> <span class="t-glob">ipairs</span>(Teams:<span class="t-fn">GetTeams</span>()) <span class="t-key">do</span>
+		counts[team] = #team:<span class="t-fn">GetPlayers</span>()
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> smallest, smallestCount = <span class="t-key">nil</span>, <span class="t-glob">math</span>.<span class="t-prop">huge</span>
+	<span class="t-key">for</span> team, count <span class="t-key">in</span> <span class="t-glob">pairs</span>(counts) <span class="t-key">do</span>
+		<span class="t-key">if</span> count &lt; smallestCount <span class="t-key">then</span>
+			smallest, smallestCount = team, count
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+
+	player.<span class="t-prop">Team</span> = smallest
+<span class="t-key">end</span>
+
+Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(assignBalanced)</code></pre></div>
+<p>Setting <code>player.Team</code> is enough — <code>player.TeamColor</code> follows automatically. Setting <code>TeamColor</code> directly also works but is the older style and easier to get wrong.</p>
+<p>To respawn a player immediately after a team change, so they appear at their new team's spawn:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>player.<span class="t-prop">Team</span> = seekers
+player:<span class="t-fn">LoadCharacter</span>()</code></pre></div>
+<p>Without <code>LoadCharacter</code>, they stay where they are until they next die.</p>
+<h2 id="tying-spawn-points-to-teams">Tying spawn points to teams<a class="anchor" href="#tying-spawn-points-to-teams" aria-label="Link to this section">#</a></h2>
+<p>For each <code>SpawnLocation</code>:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-glob">spawn</span>.<span class="t-prop">TeamColor</span> = <span class="t-glob">BrickColor</span>.<span class="t-fn">new</span>(<span class="t-str">"Bright blue"</span>)
+<span class="t-glob">spawn</span>.<span class="t-prop">Neutral</span> = <span class="t-key">false</span>                 <span class="t-com">-- only this team may use it</span>
+<span class="t-glob">spawn</span>.<span class="t-prop">AllowTeamChangeOnTouch</span> = <span class="t-key">false</span>  <span class="t-com">-- touching it does not switch teams</span></code></pre></div>
+<p>Three properties, and each one is a distinct bug if you get it wrong:</p>
+<ul><li><strong><code>Neutral = true</code></strong> means anyone can spawn there, regardless of <code>TeamColor</code>. This</li></ul>
+<p>  is the default, and it is why "I set the TeamColor but everyone still spawns   everywhere" happens. You must set <code>Neutral = false</code>.</p>
+<ul><li><strong><code>AllowTeamChangeOnTouch = true</code></strong> switches a player's team when they walk over</li></ul>
+<p>  the pad. Occasionally desirable, usually a surprise — players wander onto an enemy   spawn and defect.</p>
+<ul><li><strong><code>Enabled = false</code></strong> takes a spawn out of use entirely, which is handy for</li></ul>
+<p>  disabling a base between rounds.</p>
+<h2 id="spreading-players-out">Spreading players out<a class="anchor" href="#spreading-players-out" aria-label="Link to this section">#</a></h2>
+<p>Roblox already spreads spawning across the available <code>SpawnLocation</code>s, so the real fix for pile-ups is usually <strong>more spawn pads</strong>. Six pads per team beats one pad and clever code.</p>
+<p>When you need exact control, place characters yourself:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> spawnPositionsAround(centre, count, radius)
+	<span class="t-key">local</span> positions = {}
+	<span class="t-key">for</span> i = <span class="t-num">1</span>, count <span class="t-key">do</span>
+		<span class="t-key">local</span> angle = (i / count) * <span class="t-glob">math</span>.<span class="t-prop">pi</span> * <span class="t-num">2</span>
+		positions[i] = centre + <span class="t-glob">Vector3</span>.<span class="t-fn">new</span>(
+			<span class="t-glob">math</span>.<span class="t-fn">cos</span>(angle) * radius,
+			<span class="t-num">0</span>,
+			<span class="t-glob">math</span>.<span class="t-fn">sin</span>(angle) * radius
+		)
+	<span class="t-key">end</span>
+	<span class="t-key">return</span> positions
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> placeTeam(team, centre)
+	<span class="t-key">local</span> members = team:<span class="t-fn">GetPlayers</span>()
+	<span class="t-key">local</span> spots = spawnPositionsAround(centre, #members, <span class="t-num">12</span>)
+
+	<span class="t-key">for</span> i, player <span class="t-key">in</span> <span class="t-glob">ipairs</span>(members) <span class="t-key">do</span>
+		<span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
+		<span class="t-key">if</span> character <span class="t-key">and</span> character.<span class="t-prop">PrimaryPart</span> <span class="t-key">then</span>
+			character:<span class="t-fn">PivotTo</span>(<span class="t-glob">CFrame</span>.<span class="t-fn">new</span>(spots[i] + <span class="t-glob">Vector3</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">4</span>, <span class="t-num">0</span>)))
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span></code></pre></div>
+<p>Distributing points around a circle guarantees even spacing regardless of how many players there are, which a random scatter does not.</p>
+<p>Note <code>character:PivotTo(...)</code> rather than setting <code>HumanoidRootPart.CFrame</code> directly. A character is a model of welded and jointed parts; moving the model moves all of it, while moving one part can leave limbs behind.</p>
+<p>The <code>+ Vector3.new(0, 4, 0)</code> matters too — placing a character exactly at floor level lands it inside the floor, and the physics engine resolves that by launching it.</p>
+<h2 id="team-aware-behaviour-elsewhere">Team-aware behaviour elsewhere<a class="anchor" href="#team-aware-behaviour-elsewhere" aria-label="Link to this section">#</a></h2>
+<p>Once teams exist, most gameplay code needs to check them:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> sameTeam(playerA, playerB)
+	<span class="t-key">return</span> playerA.<span class="t-prop">Team</span> ~= <span class="t-key">nil</span> <span class="t-key">and</span> playerA.<span class="t-prop">Team</span> == playerB.<span class="t-prop">Team</span>
+<span class="t-key">end</span></code></pre></div>
+<p>Use this before applying damage, or friendly fire will quietly be on. The <code>nil</code> check matters — two players both on no team are not teammates, and without it they would compare equal.</p>
+<p>To react to changes:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>player:<span class="t-fn">GetPropertyChangedSignal</span>(<span class="t-str">"Team"</span>):<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+	<span class="t-glob">print</span>(player.<span class="t-prop">Name</span>, <span class="t-str">"is now on"</span>, player.<span class="t-prop">Team</span> <span class="t-key">and</span> player.<span class="t-prop">Team</span>.<span class="t-prop">Name</span> <span class="t-key">or</span> <span class="t-str">"no team"</span>)
+<span class="t-key">end</span>)</code></pre></div>
+<aside class="note note-note"><p class="note-label">note</p><p>The default leaderboard groups players by team automatically once Teams exist. If you do not want that grouping, you need a custom player list rather than a Teams setting.</p></aside>
+<h2 id="checklist">Checklist<a class="anchor" href="#checklist" aria-label="Link to this section">#</a></h2>
+<ol><li>Every team has a <strong>unique</strong> <code>TeamColor</code>.</li><li>Every team spawn has <code>Neutral = false</code> and the matching <code>TeamColor</code>.</li><li><code>AllowTeamChangeOnTouch</code> is <code>false</code> unless you specifically want defection.</li><li>At least four to six spawn pads per team.</li><li>Damage code checks <code>sameTeam</code> before applying.</li><li>Test with two clients and switch one team mid-round — confirm they respawn in the</li></ol>
+<p>   right base.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

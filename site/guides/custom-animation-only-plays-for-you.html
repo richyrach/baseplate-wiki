@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why your custom animation only plays for you — Baseplate Wiki</title>
+<meta name="description" content="Animation permissions, the Animator object, and which side has to play a track for everyone to see it.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/animation.html">Animation</a>
+  </p>
+  <h1>Why your custom animation only plays for you</h1>
+  <p class="lede">Animation permissions, the Animator object, and which side has to play a track for everyone to see it.</p>
+  <p class="doc-meta"><span>Animation</span><span>Intermediate</span><span>10 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#1-the-animation-is-not-owned-by-whoever-owns-the-game">1. The animation is not owned by whoever owns the game</a></li><li><a href="#2-you-are-using-the-deprecated-loadanimation">2. You are using the deprecated LoadAnimation</a></li><li><a href="#3-it-is-being-played-on-the-wrong-side">3. It is being played on the wrong side</a></li><li><a href="#nothing-plays-at-all-priority">Nothing plays at all: priority</a></li><li><a href="#blending-and-stopping">Blending and stopping</a></li><li><a href="#r6-versus-r15">R6 versus R15</a></li><li><a href="#diagnosis-in-order">Diagnosis in order</a></li></ul></aside>
+  <div class="prose">
+<p>You upload an animation, play it, and it looks right on your screen. Someone else in the server sees your character standing still.</p>
+<p>Or worse: it works for you in Studio and fails for everyone including you once published.</p>
+<p>There are three distinct causes and they have different symptoms, so identifying which one you have is most of the work.</p>
+<h2 id="1-the-animation-is-not-owned-by-whoever-owns-the-game">1. The animation is not owned by whoever owns the game<a class="anchor" href="#1-the-animation-is-not-owned-by-whoever-owns-the-game" aria-label="Link to this section">#</a></h2>
+<p>This is the most common cause, and it is not a code problem at all.</p>
+<p>An animation asset belongs to the account that uploaded it. A game can only play animations owned by the same account or group that owns the <strong>game</strong>.</p>
+<p>So:</p>
+<ul><li>You upload an animation to your account, and the game is under your account →</li></ul>
+<p>  works.</p>
+<ul><li>You upload to your account, then move the game into a group → <strong>stops working.</strong></li><li>A friend uploads it and you use the ID → does not work.</li><li>You took the ID from a free model or a tutorial → almost certainly does not work.</li></ul>
+<p>The symptom is distinctive: it fails for everyone, consistently, and the output usually carries a message about the animation failing to load or not being owned by the game creator.</p>
+<p>The fix is to re-upload the animation under the account or group that owns the game. There is no scripting workaround — it is a deliberate permission rule.</p>
+<aside class="note note-note"><p class="note-label">note</p><p>This is the single most likely reason a "working" animation breaks the day you move a game into a group. If a working animation stops working and you changed nothing in the code, check ownership first.</p></aside>
+<h2 id="2-you-are-using-the-deprecated-loadanimation">2. You are using the deprecated LoadAnimation<a class="anchor" href="#2-you-are-using-the-deprecated-loadanimation" aria-label="Link to this section">#</a></h2>
+<p><code>Humanoid:LoadAnimation()</code> is deprecated. The current path is the <code>Animator</code> object that lives inside the <code>Humanoid</code>:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> character = player.<span class="t-prop">Character</span> <span class="t-key">or</span> player.<span class="t-prop">CharacterAdded</span>:<span class="t-fn">Wait</span>()
+<span class="t-key">local</span> humanoid = character:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Humanoid"</span>)
+<span class="t-key">local</span> animator = humanoid:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Animator"</span>)
+
+<span class="t-key">local</span> animation = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"Animation"</span>)
+animation.<span class="t-prop">AnimationId</span> = <span class="t-str">"rbxassetid://YOUR_ID_HERE"</span>
+
+<span class="t-key">local</span> track = animator:<span class="t-fn">LoadAnimation</span>(animation)
+track:<span class="t-fn">Play</span>()</code></pre></div>
+<p>Deprecated functions still work for a while, so this rarely causes an immediate failure — but it does produce warnings, and it is the kind of thing that eventually stops working without notice.</p>
+<p>Note <code><a class="term-link" href="../terms/waitforchild.html" title="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a>("Animator")</code>. The <code>Animator</code> is created by the engine and may not exist the instant a character spawns. Indexing it directly is a race, and it is a common cause of intermittent failures.</p>
+<h2 id="3-it-is-being-played-on-the-wrong-side">3. It is being played on the wrong side<a class="anchor" href="#3-it-is-being-played-on-the-wrong-side" aria-label="Link to this section">#</a></h2>
+<p>This is the one that produces "only I can see it."</p>
+<p>The rules, as they behave in practice:</p>
+<ul><li>An animation played on the <strong>server</strong>, through the character's <code>Animator</code>,</li></ul>
+<p>  replicates to everyone.</p>
+<ul><li>An animation played on the <strong>client</strong>, on that client's <strong>own</strong> character,</li></ul>
+<p>  replicates to everyone. Roblox replicates the local player's own animations   outward, which is why local input handling works.</p>
+<ul><li>An animation played on the <strong>client</strong>, on <strong>someone else's</strong> character or on an</li></ul>
+<p>  arbitrary rig, does <strong>not</strong> replicate. Only that client sees it.</p>
+<p>That third case is the bug. Code like this, in a <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a>, looks reasonable and is visible only to the person running it:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- LocalScript: only this client sees the NPC wave</span>
+<span class="t-key">local</span> npc = <span class="t-glob">workspace</span>.<span class="t-prop">Shopkeeper</span>
+<span class="t-key">local</span> animator = npc.<span class="t-prop">Humanoid</span>.<span class="t-prop">Animator</span>
+animator:<span class="t-fn">LoadAnimation</span>(waveAnimation):<span class="t-fn">Play</span>()</code></pre></div>
+<p>For an NPC or any rig that is not the local player's character, play it on the server:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService</span>
+<span class="t-key">local</span> npc = <span class="t-glob">workspace</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Shopkeeper"</span>)
+<span class="t-key">local</span> animator = npc:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Humanoid"</span>):<span class="t-fn">WaitForChild</span>(<span class="t-str">"Animator"</span>)
+
+<span class="t-key">local</span> track = animator:<span class="t-fn">LoadAnimation</span>(waveAnimation)
+track:<span class="t-fn">Play</span>()</code></pre></div>
+<p>For the local player's own actions, playing on the client is correct and preferable — it is instant, with no round trip.</p>
+<h2 id="nothing-plays-at-all-priority">Nothing plays at all: priority<a class="anchor" href="#nothing-plays-at-all-priority" aria-label="Link to this section">#</a></h2>
+<p>If a track loads without error and simply has no visible effect, it is usually being overridden by the default animation script, which is constantly playing idle, walk and run tracks.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>track.<span class="t-prop">Priority</span> = <span class="t-glob">Enum</span>.<span class="t-prop">AnimationPriority</span>.<span class="t-prop">Action</span>
+track:<span class="t-fn">Play</span>()</code></pre></div>
+<p>The order, lowest to highest: <code>Core</code>, <code>Idle</code>, <code>Movement</code>, <code>Action</code>, <code>Action2</code>, <code>Action3</code>, <code>Action4</code>.</p>
+<p>The default character animations run at <code>Movement</code> and <code>Idle</code>. Anything you want to see over walking needs to be at least <code>Action</code>.</p>
+<p>You can also set the priority on the animation itself in the Animation Editor, which is usually the better place — then every script that plays it gets it right.</p>
+<h2 id="blending-and-stopping">Blending and stopping<a class="anchor" href="#blending-and-stopping" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code>track:<span class="t-fn">Play</span>(<span class="t-num">0.2</span>)                      <span class="t-com">-- fade in over 0.2s</span>
+track:<span class="t-fn">Stop</span>(<span class="t-num">0.3</span>)                      <span class="t-com">-- fade out over 0.3s</span>
+track:<span class="t-fn">AdjustSpeed</span>(<span class="t-num">1.5</span>)               <span class="t-com">-- 1.5x speed</span>
+track.<span class="t-prop">Looped</span> = <span class="t-key">true</span></code></pre></div>
+<p>The fade arguments are what separate an animation that snaps in jarringly from one that reads as smooth. A short fade, around 0.1 to 0.3 seconds, is almost always an improvement.</p>
+<p>Keep a reference to the track so you can stop it. Losing the reference means the animation cannot be stopped except by playing something at higher priority.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> tracks = {}
+
+<span class="t-key">local</span> <span class="t-key">function</span> playOnce(name, animation)
+	<span class="t-key">if</span> tracks[name] <span class="t-key">then</span>
+		tracks[name]:<span class="t-fn">Stop</span>(<span class="t-num">0.1</span>)
+	<span class="t-key">end</span>
+	<span class="t-key">local</span> track = animator:<span class="t-fn">LoadAnimation</span>(animation)
+	track.<span class="t-prop">Priority</span> = <span class="t-glob">Enum</span>.<span class="t-prop">AnimationPriority</span>.<span class="t-prop">Action</span>
+	track:<span class="t-fn">Play</span>(<span class="t-num">0.1</span>)
+	tracks[name] = track
+	<span class="t-key">return</span> track
+<span class="t-key">end</span></code></pre></div>
+<h2 id="r6-versus-r15">R6 versus R15<a class="anchor" href="#r6-versus-r15" aria-label="Link to this section">#</a></h2>
+<p>An animation authored for an R15 rig will not play correctly on an R6 character and vice versa — the joint names differ, so the animation targets bones that do not exist.</p>
+<p>Check <strong>Game Settings → Avatar → Animation</strong> for which rig type your game uses, and author animations against the same one. A "nothing happens, no errors" symptom on a correctly-owned animation is often this.</p>
+<h2 id="diagnosis-in-order">Diagnosis in order<a class="anchor" href="#diagnosis-in-order" aria-label="Link to this section">#</a></h2>
+<ol><li><strong>Does anyone see it, including you?</strong> No → ownership (cause 1). Check who</li></ol>
+<p>   uploaded the asset and who owns the game.</p>
+<ol><li><strong>Do only you see it?</strong> → wrong side (cause 3). Move the play call to the server</li></ol>
+<p>   if it is not your own character.</p>
+<ol><li><strong>Does the track load with no error but nothing moves?</strong> → priority, or an R6/R15</li></ol>
+<p>   mismatch.</p>
+<ol><li><strong>Does it work sometimes?</strong> → you are indexing <code>Animator</code> before it exists. Use</li></ol>
+<p>   <code>WaitForChild</code>.</p>
+<ol><li>Check the Developer Console (<code>F9</code>) on <strong>both</strong> the client and server tabs. Asset</li></ol>
+<p>   loading failures are reported, and they name the reason.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

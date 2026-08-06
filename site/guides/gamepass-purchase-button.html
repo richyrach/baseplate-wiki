@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A game pass button that checks ownership before prompting — Baseplate Wiki</title>
+<meta name="description" content="Prompting a game pass purchase from a GUI button, checking whether they already own it, and granting the benefit on the server where it counts.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../recipes.html">Recipes</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/monetization.html">Monetization</a>
+  </p>
+  <h1>A game pass button that checks ownership before prompting</h1>
+  <p class="lede">Prompting a game pass purchase from a GUI button, checking whether they already own it, and granting the benefit on the server where it counts.</p>
+  <p class="doc-meta"><span>Monetization</span><span>Beginner</span><span>10 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#getting-the-pass-id">Getting the pass ID</a></li><li><a href="#the-client-button">The client button</a></li><li><a href="#reacting-to-the-result">Reacting to the result</a></li><li><a href="#granting-the-benefit-server-side">Granting the benefit, server-side</a></li><li><a href="#showing-the-price-on-the-button">Showing the price on the button</a></li><li><a href="#testing-purchases-without-spending-robux">Testing purchases without spending Robux</a></li></ul></aside>
+  <div class="prose">
+<p>A button that sells a game pass has three jobs: don't try to sell it to someone who already owns it, prompt correctly, and grant the benefit <strong>on the server</strong> once the purchase goes through.</p>
+<p>Most tutorials get the first and third wrong.</p>
+<h2 id="getting-the-pass-id">Getting the pass ID<a class="anchor" href="#getting-the-pass-id" aria-label="Link to this section">#</a></h2>
+<p>The ID is in the URL of the game pass page on the Roblox website — the number in <code>.../game-pass/123456789/Name</code>. It is <strong>not</strong> the same as the asset ID shown in Studio's toolbox, and passing the wrong one produces a prompt that fails silently.</p>
+<h2 id="the-client-button">The client button<a class="anchor" href="#the-client-button" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- StarterPlayerScripts, or a LocalScript inside the button</span>
+<span class="t-key">local</span> MarketplaceService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"MarketplaceService"</span>)
+<span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+
+<span class="t-key">local</span> PASS_ID = <span class="t-num">123456789</span>          <span class="t-com">-- your game pass ID</span>
+
+<span class="t-key">local</span> player = Players.<span class="t-prop">LocalPlayer</span>
+<span class="t-key">local</span> button = <span class="t-glob">script</span>.<span class="t-prop">Parent</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> ownsPass()
+	<span class="t-key">local</span> ok, owns = <span class="t-glob">pcall</span>(<span class="t-key">function</span>()
+		<span class="t-key">return</span> MarketplaceService:<span class="t-fn">UserOwnsGamePassAsync</span>(player.<span class="t-prop">UserId</span>, PASS_ID)
+	<span class="t-key">end</span>)
+
+	<span class="t-key">if</span> <span class="t-key">not</span> ok <span class="t-key">then</span>
+		<span class="t-glob">warn</span>(<span class="t-str">"[Pass] ownership check failed:"</span>, owns)
+		<span class="t-key">return</span> <span class="t-key">nil</span>                  <span class="t-com">-- nil means "we don't know"</span>
+	<span class="t-key">end</span>
+	<span class="t-key">return</span> owns
+<span class="t-key">end</span>
+
+button.<span class="t-prop">Activated</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+	button.<span class="t-prop">Active</span> = <span class="t-key">false</span>
+
+	<span class="t-key">local</span> owns = ownsPass()
+	<span class="t-key">if</span> owns == <span class="t-key">true</span> <span class="t-key">then</span>
+		button.<span class="t-prop">Text</span> = <span class="t-str">"Already owned"</span>
+	<span class="t-key">elseif</span> owns == <span class="t-key">nil</span> <span class="t-key">then</span>
+		button.<span class="t-prop">Text</span> = <span class="t-str">"Try again"</span>    <span class="t-com">-- the check failed, not "they don't own it"</span>
+	<span class="t-key">else</span>
+		MarketplaceService:<span class="t-fn">PromptGamePassPurchase</span>(player, PASS_ID)
+	<span class="t-key">end</span>
+
+	<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">1</span>)
+	button.<span class="t-prop">Active</span> = <span class="t-key">true</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>Two details that matter:</p>
+<p><strong><code>UserOwnsGamePassAsync</code> is a network call and can fail.</strong> It must be wrapped in <code>pcall</code>. If it errors and you treat that as "does not own", you prompt someone who already paid — which reads as trying to charge them twice.</p>
+<p><strong>Returning three states, not two.</strong> <code>true</code>, <code>false</code>, and <code>nil</code> for "the check failed". Collapsing an error into <code>false</code> is the bug above.</p>
+<p><code>Activated</code> rather than <code>MouseButton1Click</code>, because <code>Activated</code> also covers gamepad and touch. See the guide on buttons failing on mobile.</p>
+<h2 id="reacting-to-the-result">Reacting to the result<a class="anchor" href="#reacting-to-the-result" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code>MarketplaceService.<span class="t-prop">PromptGamePassPurchaseFinished</span>:<span class="t-fn">Connect</span>(
+	<span class="t-key">function</span>(purchasingPlayer, gamePassId, wasPurchased)
+		<span class="t-key">if</span> purchasingPlayer ~= player <span class="t-key">or</span> gamePassId ~= PASS_ID <span class="t-key">then</span>
+			<span class="t-key">return</span>
+		<span class="t-key">end</span>
+
+		<span class="t-key">if</span> wasPurchased <span class="t-key">then</span>
+			button.<span class="t-prop">Text</span> = <span class="t-str">"Thanks!"</span>
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+)</code></pre></div>
+<p>Check both arguments. This event fires for prompts you did not start, and on the server it fires for <strong>every</strong> player, so an unfiltered handler grants the wrong person the wrong thing.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>This event is for <strong>UI feedback only</strong>. Never grant the actual benefit here on the client — a client can fire nothing of the sort, but it also cannot be trusted to tell the server a purchase happened. Grant server-side, as below.</p></aside>
+<h2 id="granting-the-benefit-server-side">Granting the benefit, server-side<a class="anchor" href="#granting-the-benefit-server-side" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService/PassBenefits.server.lua</span>
+<span class="t-key">local</span> MarketplaceService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"MarketplaceService"</span>)
+<span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+
+<span class="t-key">local</span> PASS_ID = <span class="t-num">123456789</span>
+<span class="t-key">local</span> SPEED_BONUS = <span class="t-num">8</span>
+
+<span class="t-key">local</span> ownsCache = {}       <span class="t-com">-- [userId] = boolean</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> checkOwnership(player)
+	<span class="t-key">local</span> ok, owns = <span class="t-glob">pcall</span>(<span class="t-key">function</span>()
+		<span class="t-key">return</span> MarketplaceService:<span class="t-fn">UserOwnsGamePassAsync</span>(player.<span class="t-prop">UserId</span>, PASS_ID)
+	<span class="t-key">end</span>)
+
+	<span class="t-key">if</span> <span class="t-key">not</span> ok <span class="t-key">then</span>
+		<span class="t-glob">warn</span>(<span class="t-str">"[Pass] check failed for"</span>, player.<span class="t-prop">Name</span>, owns)
+		<span class="t-key">return</span> <span class="t-key">false</span>           <span class="t-com">-- fail closed; do not grant on an unknown</span>
+	<span class="t-key">end</span>
+
+	ownsCache[player.<span class="t-prop">UserId</span>] = owns
+	<span class="t-key">return</span> owns
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> applyBenefit(player)
+	<span class="t-key">if</span> <span class="t-key">not</span> ownsCache[player.<span class="t-prop">UserId</span>] <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
+	<span class="t-key">if</span> <span class="t-key">not</span> character <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-key">end</span>
+
+	<span class="t-key">local</span> humanoid = character:<span class="t-fn">FindFirstChildOfClass</span>(<span class="t-str">"Humanoid"</span>)
+	<span class="t-key">if</span> humanoid <span class="t-key">then</span>
+		humanoid.<span class="t-prop">WalkSpeed</span> = <span class="t-num">16</span> + SPEED_BONUS
+	<span class="t-key">end</span>
+<span class="t-key">end</span>
+
+Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	checkOwnership(player)
+
+	player.<span class="t-prop">CharacterAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+		<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">0.1</span>)          <span class="t-com">-- let the default WalkSpeed be applied first</span>
+		applyBenefit(player)
+	<span class="t-key">end</span>)
+
+	<span class="t-key">if</span> player.<span class="t-prop">Character</span> <span class="t-key">then</span>
+		applyBenefit(player)
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)
+
+<span class="t-com">-- someone buys it mid-session</span>
+MarketplaceService.<span class="t-prop">PromptGamePassPurchaseFinished</span>:<span class="t-fn">Connect</span>(
+	<span class="t-key">function</span>(player, gamePassId, wasPurchased)
+		<span class="t-key">if</span> gamePassId ~= PASS_ID <span class="t-key">or</span> <span class="t-key">not</span> wasPurchased <span class="t-key">then</span>
+			<span class="t-key">return</span>
+		<span class="t-key">end</span>
+		ownsCache[player.<span class="t-prop">UserId</span>] = <span class="t-key">true</span>
+		applyBenefit(player)
+	<span class="t-key">end</span>
+)
+
+Players.<span class="t-prop">PlayerRemoving</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	ownsCache[player.<span class="t-prop">UserId</span>] = <span class="t-key">nil</span>
+<span class="t-key">end</span>)</code></pre></div>
+<h3 id="why-the-cache">Why the cache<a class="anchor" href="#why-the-cache" aria-label="Link to this section">#</a></h3>
+<p><code>UserOwnsGamePassAsync</code> is a web request. Calling it every time a character spawns, or on every hit in combat, is slow and will eventually be rate-limited. Check once on join, cache the answer, and update the cache when the purchase event fires.</p>
+<p>Clear it on <code>PlayerRemoving</code> or the table grows for the life of the server.</p>
+<h3 id="why-fail-closed">Why fail closed<a class="anchor" href="#why-fail-closed" aria-label="Link to this section">#</a></h3>
+<p>If the check errors, the server-side function returns <code>false</code> and grants nothing. That is the right way round: a paying customer who has to rejoin is annoyed; a free permanent benefit granted to everyone because Roblox's API blipped is a broken economy.</p>
+<p>The client-side version returns <code>nil</code> instead, because there the goal is showing an honest message rather than making a security decision.</p>
+<h3 id="why-re-apply-on-characteradded">Why re-apply on CharacterAdded<a class="anchor" href="#why-re-apply-on-characteradded" aria-label="Link to this section">#</a></h3>
+<p><code>WalkSpeed</code> lives on the <code>Humanoid</code>, and the character is rebuilt on every respawn. Set it once on join and it is gone the first time they die.</p>
+<p>The <code>task.wait(0.1)</code> gives Roblox's default character setup time to apply its own <code>WalkSpeed</code> first, otherwise it can overwrite yours.</p>
+<h2 id="showing-the-price-on-the-button">Showing the price on the button<a class="anchor" href="#showing-the-price-on-the-button" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> ok, info = <span class="t-glob">pcall</span>(<span class="t-key">function</span>()
+	<span class="t-key">return</span> MarketplaceService:<span class="t-fn">GetProductInfoAsync</span>(PASS_ID, <span class="t-glob">Enum</span>.<span class="t-prop">InfoType</span>.<span class="t-prop">GamePass</span>)
+<span class="t-key">end</span>)
+
+<span class="t-key">if</span> ok <span class="t-key">and</span> info <span class="t-key">then</span>
+	button.<span class="t-prop">Text</span> = <span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"%s — %d R$"</span>, info.<span class="t-prop">Name</span>, info.<span class="t-prop">PriceInRobux</span> <span class="t-key">or</span> <span class="t-num">0</span>)
+<span class="t-key">end</span></code></pre></div>
+<p>Note <strong><code>GetProductInfoAsync</code></strong>. The older <code>GetProductInfo</code> is deprecated. Most tutorials online still show the old name, and it will keep working for a while before it does not.</p>
+<p><code>PriceInRobux</code> can be <code>nil</code> if the pass is offsale, hence the <code>or 0</code>.</p>
+<h2 id="testing-purchases-without-spending-robux">Testing purchases without spending Robux<a class="anchor" href="#testing-purchases-without-spending-robux" aria-label="Link to this section">#</a></h2>
+<p>You cannot properly test a real purchase without buying it. What you can do:</p>
+<ul><li>Test the <strong>not-owned</strong> path by using a second account that does not own the pass.</li><li>Test the <strong>owned</strong> path with your own account after buying it once.</li><li>Temporarily force the cache to <code>true</code> in Studio to check the benefit applies:</li></ul>
+<p>  <code>ownsCache[player.UserId] = true</code>. Remove it before publishing — an easy way to   ship a game where everyone gets the pass for free.</p>
+<p>Game pass purchases do not work in Studio at all. The prompt appears and does nothing. Test in the published game.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

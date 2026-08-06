@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anchored — Baseplate Wiki reference</title>
+<meta name="description" content="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a class="on" href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc doc-term">
+  <p class="crumbs"><a href="index.html">Reference</a>
+    <span aria-hidden="true">/</span><a href="../c/building.html">Building</a></p>
+  <h1><code class="term-title">Anchored</code></h1>
+  <p class="lede">Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.</p>
+  <!-- ad slot 'term-top': paste AdSense code here AFTER approval -->
+  <div class="prose">
+<p><code>Anchored</code> is a boolean on every <code>BasePart</code>. When it is <code>true</code>, physics does not move that part — it does not fall, cannot be pushed, and is not simulated.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>part.<span class="t-prop">Anchored</span> = <span class="t-key">true</span></code></pre></div>
+<h2 id="why-it-matters-twice">Why it matters twice<a class="anchor" href="#why-it-matters-twice" aria-label="Link to this section">#</a></h2>
+<p><strong>Correctness.</strong> An unanchored part falls the instant physics starts. This is why a build that looks perfect in Studio collapses when you press Play: edit mode does not run physics, so nothing was holding it up.</p>
+<p><strong>Performance.</strong> Anchored parts are essentially free. Unanchored parts are bodies the physics solver must resolve every frame. A map with thousands of unanchored decorative parts is one of the most common causes of a game that runs badly for no visible reason.</p>
+<p>Auditing a map takes one loop:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> total, loose = <span class="t-num">0</span>, <span class="t-num">0</span>
+<span class="t-key">for</span> _, d <span class="t-key">in</span> <span class="t-glob">ipairs</span>(<span class="t-glob">workspace</span>:<span class="t-fn">GetDescendants</span>()) <span class="t-key">do</span>
+	<span class="t-key">if</span> d:<span class="t-fn">IsA</span>(<span class="t-str">"BasePart"</span>) <span class="t-key">then</span>
+		total += <span class="t-num">1</span>
+		<span class="t-key">if</span> <span class="t-key">not</span> d.<span class="t-prop">Anchored</span> <span class="t-key">then</span> loose += <span class="t-num">1</span> <span class="t-key">end</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span>
+<span class="t-glob">print</span>(total, <span class="t-str">"parts,"</span>, loose, <span class="t-str">"unanchored"</span>)</code></pre></div>
+<h2 id="the-interaction-people-get-wrong">The interaction people get wrong<a class="anchor" href="#the-interaction-people-get-wrong" aria-label="Link to this section">#</a></h2>
+<p><strong>Anchored beats welded.</strong> If any part in a welded assembly is anchored, the whole assembly is effectively immovable, because the weld ties it to something that cannot move.</p>
+<p>This is the number one cause of "my welded vehicle will not move." One wheel is still anchored from when it was being built.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- unanchor everything in a model that is meant to move</span>
+<span class="t-key">for</span> _, part <span class="t-key">in</span> <span class="t-glob">ipairs</span>(model:<span class="t-fn">GetDescendants</span>()) <span class="t-key">do</span>
+	<span class="t-key">if</span> part:<span class="t-fn">IsA</span>(<span class="t-str">"BasePart"</span>) <span class="t-key">then</span>
+		part.<span class="t-prop">Anchored</span> = <span class="t-key">false</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span></code></pre></div>
+<aside class="note note-warning"><p class="note-label">warning</p><p>Setting <code>Anchored = false</code> on a large assembly at runtime hands the whole thing to the physics engine at once. If parts are slightly intersecting, they will violently push apart. Position accurately before unanchoring.</p></aside>
+<h2 id="anchored-versus-massless-versus-cancollide">Anchored versus Massless versus CanCollide<a class="anchor" href="#anchored-versus-massless-versus-cancollide" aria-label="Link to this section">#</a></h2>
+<p>Three properties that all sound like they might stop a part moving, and do different things:</p>
+<div class="table-scroll"><table><thead><tr><th>Property</th><th>Effect</th></tr></thead><tbody><tr><td><code>Anchored = true</code></td><td>not simulated at all; immovable</td></tr><tr><td><code>Massless = true</code></td><td>simulated, but contributes no mass to its assembly</td></tr><tr><td><code>CanCollide = false</code></td><td>simulated and has mass, but passes through things</td></tr></tbody></table></div>
+<p><code>Massless</code> is for detail parts — mirrors, badges — that should not affect how a vehicle handles. It does <strong>not</strong> stop them falling; a massless unanchored part still drops.</p>
+<h2 id="driving-movement-on-an-anchored-part">Driving movement on an anchored part<a class="anchor" href="#driving-movement-on-an-anchored-part" aria-label="Link to this section">#</a></h2>
+<p>Anchored parts can still be moved by script, which is exactly what you want for doors, lifts and platforms:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>part.<span class="t-prop">Anchored</span> = <span class="t-key">true</span>
+part.<span class="t-prop">CFrame</span> = part.<span class="t-prop">CFrame</span> * <span class="t-glob">CFrame</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">5</span>, <span class="t-num">0</span>)</code></pre></div>
+<p>Because physics is not fighting you for control, scripted movement on an anchored part is smooth and exact. The same code on an unanchored part stutters, as the script sets a position and physics immediately moves it somewhere else.</p>
+<p>For a whole model, move the model rather than the parts — see <code>PivotTo</code>.</p>
+<h2 id="in-studio">In Studio<a class="anchor" href="#in-studio" aria-label="Link to this section">#</a></h2>
+<p>Select any number of parts and tick <strong>Anchored</strong> once in the Properties panel; it applies to the entire selection. A checkbox showing a mixed state means some of the selection is anchored and some is not, which for scenery is a bug you have just found.</p>
+  </div>
+  <section class="related"><h2>Guides that use this</h2><ul><li><a href="../guides/day-night-cycle.html">A day and night cycle that looks good and stays in sync</a></li><li><a href="../guides/moving-a-model-pivotto.html">Moving a model without it exploding: PrimaryPart and PivotTo</a></li><li><a href="../guides/welds-weldconstraints-anchored.html">Welds, WeldConstraints and Anchored: why your build falls apart on Play</a></li></ul></section>
+  <footer class="doc-foot">
+    <p>Something wrong or missing here?
+       <a href="../contribute.html">Send a correction</a>.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

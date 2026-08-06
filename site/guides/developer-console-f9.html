@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Developer Console (F9): finding the errors Studio never showed you — Baseplate Wiki</title>
+<meta name="description" content="Client errors in a live game do not appear in the Studio output window. This is where they go, and how to read them.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/scripting.html">Scripting</a>
+  </p>
+  <h1>The Developer Console (F9): finding the errors Studio never showed you</h1>
+  <p class="lede">Client errors in a live game do not appear in the Studio output window. This is where they go, and how to read them.</p>
+  <p class="doc-meta"><span>Scripting</span><span>Beginner</span><span>7 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#opening-it">Opening it</a></li><li><a href="#the-part-people-miss-client-and-server-are-separate">The part people miss: client and server are separate</a></li><li><a href="#reading-a-stack-trace">Reading a stack trace</a></li><li><a href="#colours">Colours</a></li><li><a href="#making-your-own-output-easier-to-find">Making your own output easier to find</a></li><li><a href="#the-other-tabs">The other tabs</a></li><li><a href="#before-you-ask-anyone-for-help">Before you ask anyone for help</a></li></ul></aside>
+  <div class="prose">
+<p>You publish the game, join it, and something is broken. You alt-tab to Studio and the output window is empty and clean.</p>
+<p>The output window is not lying to you. It simply is not connected to the game you are playing. In a live game, the error you are looking for is almost always in the <strong>Developer Console</strong>, and you open it by pressing <code>F9</code>.</p>
+<p>A large share of "there's no error, it just doesn't work" turns out to be a red line sitting in a console that has never been opened.</p>
+<h2 id="opening-it">Opening it<a class="anchor" href="#opening-it" aria-label="Link to this section">#</a></h2>
+<ul><li><strong>Computer:</strong> press <code>F9</code> while in the game.</li><li><strong>In-game menu:</strong> Escape → Settings, then the console option.</li><li><strong>Chat command:</strong> type <code>/console</code>.</li><li><strong>Phone or tablet:</strong> the chat command is the only reliable route.</li></ul>
+<p>It works in a live game and in Studio, and it is available to any player, not just the game's owner. That last part matters both ways: it is how a player can send you a useful bug report, and it is a reminder that anything you <code>print</code> is visible to anyone who looks.</p>
+<h2 id="the-part-people-miss-client-and-server-are-separate">The part people miss: client and server are separate<a class="anchor" href="#the-part-people-miss-client-and-server-are-separate" aria-label="Link to this section">#</a></h2>
+<p>At the top of the console there is a switch between <strong>Client</strong> and <strong>Server</strong>. They are different logs and neither shows the other's messages.</p>
+<ul><li><strong>Client</strong> — everything from <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScripts</a> on your own machine.</li><li><strong>Server</strong> — everything from server Scripts, for the whole server.</li></ul>
+<p>If you are hunting a bug and the log looks empty, check that you are on the right side first. It is the single most common reason people conclude "there is no error."</p>
+<aside class="note note-note"><p class="note-label">note</p><p>In a live game you only see the <strong>server</strong> log for a game you have edit permissions on. Ordinary players see their own client log only. That is a privacy and security boundary, not a bug.</p></aside>
+<h2 id="reading-a-stack-trace">Reading a stack trace<a class="anchor" href="#reading-a-stack-trace" aria-label="Link to this section">#</a></h2>
+<p>A red error looks roughly like this:</p>
+<div class="code"><span class="code-lang">Tree</span><pre><code>MainMenu is not a valid member of PlayerGui "Players.You.PlayerGui"
+  Stack Begin
+  Script 'Players.You.PlayerGui.MenuHandler', Line 4
+  Stack End</code></pre></div>
+<p>Read it from the top:</p>
+<ul><li><strong>Line 1</strong> is what went wrong.</li><li>The <code>Script '...'</code> line is the full path to the script, so you know exactly</li></ul>
+<p>  which file to open — useful when you have three scripts with similar names.</p>
+<ul><li><strong>Line 4</strong> is where it happened.</li></ul>
+<p>When there are several <code>Script</code> lines, they are the call chain. The top one is where the error occurred; the ones below are what called it. If the top line is inside a module you did not write, the interesting line is usually the first one that <em>is</em> yours.</p>
+<h2 id="colours">Colours<a class="anchor" href="#colours" aria-label="Link to this section">#</a></h2>
+<ul><li><strong>Red</strong> — an error. Execution of that thread stopped.</li><li><strong>Orange or yellow</strong> — a <code>warn()</code>, or a Roblox deprecation notice. Not fatal,</li></ul>
+<p>  often still worth reading.</p>
+<ul><li><strong>White or grey</strong> — <code>print()</code> output.</li><li><strong>Blue-ish info lines</strong> — Roblox's own engine messages.</li></ul>
+<p>The deprecation warnings are worth a look every so often. They are how you find out that a function you are relying on is scheduled to stop working.</p>
+<h2 id="making-your-own-output-easier-to-find">Making your own output easier to find<a class="anchor" href="#making-your-own-output-easier-to-find" aria-label="Link to this section">#</a></h2>
+<p>Once a game has any real traffic, the console fills with noise. Two habits make your own messages findable.</p>
+<p><strong>Tag them.</strong> Pick a prefix per system:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-glob">print</span>(<span class="t-str">"[Vehicles] spawned"</span>, model.<span class="t-prop">Name</span>, <span class="t-str">"for"</span>, player.<span class="t-prop">Name</span>)
+<span class="t-glob">warn</span>(<span class="t-str">"[Vehicles] no spawn point found, using origin"</span>)</code></pre></div>
+<p>Then use the console's filter box to type <code>[Vehicles]</code> and see only that system.</p>
+<p><strong>Use <code>warn</code> for things you want to notice.</strong> It comes out coloured, so it stands out from ordinary prints:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">if</span> <span class="t-key">not</span> spawnPoint <span class="t-key">then</span>
+	<span class="t-glob">warn</span>(<span class="t-str">"[Vehicles] SpawnPoint missing -- add one to Workspace"</span>)
+	<span class="t-key">return</span>
+<span class="t-key">end</span></code></pre></div>
+<h2 id="the-other-tabs">The other tabs<a class="anchor" href="#the-other-tabs" aria-label="Link to this section">#</a></h2>
+<p>The console has more than a log. Two are genuinely useful:</p>
+<ul><li><strong>Memory</strong> — memory use broken down by category. This is where you look when a</li></ul>
+<p>  game gets slower the longer a server stays up, which usually means something is   being created and never destroyed.</p>
+<ul><li><strong>Network</strong> — data being sent. Worth a look if you suspect a <a class="term-link" href="../terms/remoteevent.html" title="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvent</a> is</li></ul>
+<p>  firing far more often than you intended, which is a common cause of lag that   looks like a rendering problem.</p>
+<p>There is also the <strong>MicroProfiler</strong> (<code>Ctrl+F6</code>), which is a separate and much deeper tool for frame-time analysis.</p>
+<h2 id="before-you-ask-anyone-for-help">Before you ask anyone for help<a class="anchor" href="#before-you-ask-anyone-for-help" aria-label="Link to this section">#</a></h2>
+<p>If you are about to post in a forum or a Discord asking why something is broken, do these four things first. They resolve a surprising fraction of problems on their own, and they make the question answerable if not:</p>
+<ol><li>Open <code>F9</code> and switch to the correct side, client or server.</li><li>Copy the <strong>entire</strong> red block, including the <code>Stack Begin</code>/<code>Stack End</code> lines.</li></ol>
+<p>   The script path and line number are the parts that let someone actually help.</p>
+<ol><li>Add <code>print("reached line N")</code> above the failing line and confirm the code even</li></ol>
+<p>   gets there. Quite often it does not, and the real bug is earlier.</p>
+<ol><li>Check whether it happens in Studio with <strong>two</strong> test clients, not just</li></ol>
+<p>   single-player Play. If it only breaks live, the cause is usually a client-server    or replication-timing issue rather than your logic.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

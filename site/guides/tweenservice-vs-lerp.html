@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TweenService vs lerp: smooth movement without a while loop — Baseplate Wiki</title>
+<meta name="description" content="When to hand movement to TweenService, when to interpolate yourself, and why tweening a Model does not work.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../recipes.html">Recipes</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/animation.html">Animation</a>
+  </p>
+  <h1>TweenService vs lerp: smooth movement without a while loop</h1>
+  <p class="lede">When to hand movement to TweenService, when to interpolate yourself, and why tweening a Model does not work.</p>
+  <p class="doc-meta"><span>Animation</span><span>Beginner</span><span>9 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#tweenservice-the-common-case">TweenService: the common case</a></li><li><a href="#the-model-problem">The Model problem</a></li><li><a href="#manual-interpolation">Manual interpolation</a></li><li><a href="#the-pattern-for-a-target-that-keeps-moving">The pattern for a target that keeps moving</a></li><li><a href="#which-event-to-use">Which event to use</a></li><li><a href="#stopping-and-reusing-tweens">Stopping and reusing tweens</a></li><li><a href="#quick-decision-guide">Quick decision guide</a></li></ul></aside>
+  <div class="prose">
+<p>You want something to move smoothly instead of teleporting. There are two tools and the choice is genuinely situational.</p>
+<ul><li><strong><code>TweenService</code></strong> — you know the start, the end, and the duration up front.</li><li><strong>Manual interpolation (<code>Lerp</code>)</strong> — the target can change while the motion is</li></ul>
+<p>  running, or the motion depends on something live.</p>
+<h2 id="tweenservice-the-common-case">TweenService: the common case<a class="anchor" href="#tweenservice-the-common-case" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> TweenService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"TweenService"</span>)
+
+<span class="t-key">local</span> part = <span class="t-glob">workspace</span>.<span class="t-prop">Platform</span>
+
+<span class="t-key">local</span> info = <span class="t-glob">TweenInfo</span>.<span class="t-fn">new</span>(
+	<span class="t-num">2</span>,                              <span class="t-com">-- seconds</span>
+	<span class="t-glob">Enum</span>.<span class="t-prop">EasingStyle</span>.<span class="t-prop">Quad</span>,          <span class="t-com">-- shape of the acceleration</span>
+	<span class="t-glob">Enum</span>.<span class="t-prop">EasingDirection</span>.<span class="t-prop">InOut</span>,     <span class="t-com">-- where the easing applies</span>
+	<span class="t-num">0</span>,                              <span class="t-com">-- repeat count</span>
+	<span class="t-key">false</span>,                          <span class="t-com">-- reverses</span>
+	<span class="t-num">0</span>                               <span class="t-com">-- delay</span>
+)
+
+<span class="t-key">local</span> tween = TweenService:<span class="t-fn">Create</span>(part, info, {
+	<span class="t-glob">CFrame</span> = part.<span class="t-prop">CFrame</span> * <span class="t-glob">CFrame</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">20</span>, <span class="t-num">0</span>),
+})
+
+tween:<span class="t-fn">Play</span>()</code></pre></div>
+<p>Everything after the duration is optional — <code>TweenInfo.new(2)</code> is valid and gives you a sensible default.</p>
+<p><code>Create</code> takes the object, the info, and a table of <strong>target property values</strong>. Any numeric-ish property works: <code>CFrame</code>, <code>Position</code>, <code>Size</code>, <code>Transparency</code>, <code>BackgroundColor3</code>, <code><a class="term-link" href="../terms/udim2.html" title="The two-part size and position type for GUI objects. Scale is a fraction of the parent, Offset is fixed pixels.">UDim2</a></code>, <code>Rotation</code>.</p>
+<h3 id="waiting-for-it">Waiting for it<a class="anchor" href="#waiting-for-it" aria-label="Link to this section">#</a></h3>
+<div class="code"><span class="code-lang">Luau</span><pre><code>tween.<span class="t-prop">Completed</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(playbackState)
+	<span class="t-key">if</span> playbackState == <span class="t-glob">Enum</span>.<span class="t-prop">PlaybackState</span>.<span class="t-prop">Completed</span> <span class="t-key">then</span>
+		<span class="t-glob">print</span>(<span class="t-str">"arrived"</span>)
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)
+
+<span class="t-com">-- or block the current thread</span>
+tween:<span class="t-fn">Play</span>()
+tween.<span class="t-prop">Completed</span>:<span class="t-fn">Wait</span>()</code></pre></div>
+<p>Check the <code>playbackState</code>. <code>Completed</code> also fires when a tween is cancelled, and treating a cancellation as a successful arrival causes subtle bugs — a door that reports itself open after being interrupted halfway.</p>
+<h3 id="easing-briefly">Easing, briefly<a class="anchor" href="#easing-briefly" aria-label="Link to this section">#</a></h3>
+<ul><li><code>Linear</code> — constant speed. Mechanical: lifts, conveyor belts.</li><li><code>Quad</code> / <code>Cubic</code> with <code>InOut</code> — accelerate then decelerate. The default choice for</li></ul>
+<p>  almost everything; reads as natural.</p>
+<ul><li><code>Back</code> — overshoots slightly then settles. Good on UI appearing.</li><li><code>Elastic</code> / <code>Bounce</code> — very obvious. Fine for a cartoon effect, tiring anywhere else.</li></ul>
+<p>If you are unsure, <code>Quad</code> + <code>InOut</code> is right more often than not.</p>
+<h2 id="the-model-problem">The Model problem<a class="anchor" href="#the-model-problem" aria-label="Link to this section">#</a></h2>
+<p>This does not work:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>TweenService:<span class="t-fn">Create</span>(<span class="t-glob">workspace</span>.<span class="t-prop">Door</span>, info, { <span class="t-glob">CFrame</span> = target })   <span class="t-com">-- errors</span></code></pre></div>
+<p>A <code>Model</code> has no <code>CFrame</code> property. Tweens animate properties, and a model's position is a pivot, not a property.</p>
+<p>Two workarounds:</p>
+<p><strong>Tween the PrimaryPart and let welds carry the rest.</strong> This is the good one:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> model = <span class="t-glob">workspace</span>.<span class="t-prop">Door</span>
+model.<span class="t-prop">PrimaryPart</span> = model:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Hinge"</span>)
+
+<span class="t-com">-- everything else is welded to Hinge, and unanchored</span>
+TweenService:<span class="t-fn">Create</span>(model.<span class="t-prop">PrimaryPart</span>, info, {
+	<span class="t-glob">CFrame</span> = model.<span class="t-prop">PrimaryPart</span>.<span class="t-prop">CFrame</span> * <span class="t-glob">CFrame</span>.<span class="t-fn">Angles</span>(<span class="t-num">0</span>, <span class="t-glob">math</span>.<span class="t-fn">rad</span>(<span class="t-num">90</span>), <span class="t-num">0</span>),
+}):<span class="t-fn">Play</span>()</code></pre></div>
+<p>For this to work, the <code>PrimaryPart</code> must be <code><a class="term-link" href="../terms/anchored.html" title="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a></code> and every other part unanchored and welded to it. The tween moves the anchored root; the welds drag the rest along.</p>
+<p><strong>Drive <code>PivotTo</code> yourself</strong> — the manual approach below.</p>
+<h2 id="manual-interpolation">Manual interpolation<a class="anchor" href="#manual-interpolation" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> RunService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"RunService"</span>)
+
+<span class="t-key">local</span> <span class="t-key">function</span> moveModel(model, target, seconds)
+	<span class="t-key">local</span> start = model:<span class="t-fn">GetPivot</span>()
+	<span class="t-key">local</span> elapsed = <span class="t-num">0</span>
+
+	<span class="t-key">local</span> connection
+	connection = RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(dt)
+		elapsed += dt
+		<span class="t-key">local</span> alpha = <span class="t-glob">math</span>.<span class="t-fn">min</span>(elapsed / seconds, <span class="t-num">1</span>)
+		model:<span class="t-fn">PivotTo</span>(start:<span class="t-fn">Lerp</span>(target, alpha))
+
+		<span class="t-key">if</span> alpha &gt;= <span class="t-num">1</span> <span class="t-key">then</span>
+			connection:<span class="t-fn">Disconnect</span>()
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>)
+<span class="t-key">end</span></code></pre></div>
+<p><code>CFrame:Lerp(goal, alpha)</code> interpolates position and rotation together. <code>alpha</code> runs 0 to 1. <code>Vector3</code> and <code>Color3</code> have <code>Lerp</code> too, and plain numbers use <code>a + (b - a) * alpha</code>.</p>
+<p>Note <code>connection:Disconnect()</code>. A <code>Heartbeat</code> connection you never disconnect runs for the lifetime of the server, and a few hundred of them is a real performance problem.</p>
+<h2 id="the-pattern-for-a-target-that-keeps-moving">The pattern for a target that keeps moving<a class="anchor" href="#the-pattern-for-a-target-that-keeps-moving" aria-label="Link to this section">#</a></h2>
+<p>This is where TweenService cannot help, because the destination is not known when the motion starts — a camera following a player, a turret tracking a target:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> RunService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"RunService"</span>)
+
+<span class="t-key">local</span> SMOOTHING = <span class="t-num">5</span>
+
+RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(dt)
+	<span class="t-key">local</span> goal = target.<span class="t-prop">Position</span>
+	<span class="t-key">local</span> current = follower.<span class="t-prop">Position</span>
+
+	<span class="t-key">local</span> alpha = <span class="t-num">1</span> - <span class="t-glob">math</span>.<span class="t-fn">exp</span>(-SMOOTHING * dt)
+	follower.<span class="t-prop">Position</span> = current:<span class="t-fn">Lerp</span>(goal, alpha)
+<span class="t-key">end</span>)</code></pre></div>
+<p>The <code>1 - math.exp(-k * dt)</code> form is worth knowing. The naive version — <code>alpha = SMOOTHING * dt</code> — gives you different smoothing at different frame rates, so the motion feels different on a fast machine than a slow one. The exponential form is frame-rate independent, which is why it turns up in camera code everywhere.</p>
+<h2 id="which-event-to-use">Which event to use<a class="anchor" href="#which-event-to-use" aria-label="Link to this section">#</a></h2>
+<ul><li><strong><code>Heartbeat</code></strong> — after physics. Right for most logic and for moving anchored</li></ul>
+<p>  things.</p>
+<ul><li><strong><code>RenderStepped</code></strong> — before the frame is drawn, client only. Right for camera work</li></ul>
+<p>  and anything that must be exactly in sync with what is rendered. Keep the work here   small; it runs before every frame and delays it.</p>
+<ul><li><strong><code>PreSimulation</code> / <code>PostSimulation</code></strong> — the newer names in this family, worth</li></ul>
+<p>  preferring in new code as the older ones are gradually deprecated.</p>
+<h2 id="stopping-and-reusing-tweens">Stopping and reusing tweens<a class="anchor" href="#stopping-and-reusing-tweens" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code>tween:<span class="t-fn">Pause</span>()
+tween:<span class="t-fn">Cancel</span>()   <span class="t-com">-- resets to the start</span></code></pre></div>
+<p><code>Cancel</code> snaps the property back. <code>Pause</code> leaves it mid-motion.</p>
+<p>A tween created for one journey is not reusable for a different destination — create a new one. Creating tweens is cheap; caching them and mutating their goals is not supported.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>Tweening a property that physics also controls means both fight for it. Tweening <code>Position</code> on an unanchored part produces stutter as the tween sets it and physics moves it back. Anchor anything you tween, or move it with physics constraints instead.</p></aside>
+<h2 id="quick-decision-guide">Quick decision guide<a class="anchor" href="#quick-decision-guide" aria-label="Link to this section">#</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Situation</th><th>Use</th></tr></thead><tbody><tr><td>Known start and end, fixed duration</td><td><code>TweenService</code></td></tr><tr><td>A GUI element appearing or moving</td><td><code>TweenService</code></td></tr><tr><td>A model that is welded to a PrimaryPart</td><td><code>TweenService</code> on the PrimaryPart</td></tr><tr><td>Target changes while moving</td><td>manual <code>Lerp</code> on <code>Heartbeat</code></td></tr><tr><td>Camera following something</td><td>manual <code>Lerp</code> with <code>1 - math.exp(-k * dt)</code></td></tr><tr><td>An unanchored physical object</td><td>neither — use constraints and forces</td></tr></tbody></table></div>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

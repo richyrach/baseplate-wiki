@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Welds, WeldConstraints and Anchored: why your build falls apart on Play — Baseplate Wiki</title>
+<meta name="description" content="Your model looks perfect in Studio and collapses the instant you press Play. There are three ways to hold parts together and they behave very differently.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/building.html">Building</a>
+  </p>
+  <h1>Welds, WeldConstraints and Anchored: why your build falls apart on Play</h1>
+  <p class="lede">Your model looks perfect in Studio and collapses the instant you press Play. There are three ways to hold parts together and they behave very differently.</p>
+  <p class="doc-meta"><span>Building</span><span>Beginner</span><span>10 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-three-options-and-when-each-is-right">The three options, and when each is right</a></li><li><a href="#anchored-for-anything-that-should-never-move">Anchored: for anything that should never move</a></li><li><a href="#weldconstraint-for-things-that-move-as-one-piece">WeldConstraint: for things that move as one piece</a></li><li><a href="#weld-vs-weldconstraint">Weld vs WeldConstraint</a></li><li><a href="#moving-a-welded-model">Moving a welded model</a></li><li><a href="#the-checklist-when-a-build-collapses">The checklist when a build collapses</a></li><li><a href="#checking-your-work-without-publishing">Checking your work without publishing</a></li></ul></aside>
+  <div class="prose">
+<p>You spend an hour building something out of forty parts. It looks exactly right. You press Play and it collapses into a heap on the floor.</p>
+<p>Nothing is broken. Studio's edit mode does not run physics, so nothing was holding those parts together in the first place — you were looking at forty separate objects that happened to be sitting in the right positions.</p>
+<p>The instant physics starts, gravity applies to each one independently.</p>
+<h2 id="the-three-options-and-when-each-is-right">The three options, and when each is right<a class="anchor" href="#the-three-options-and-when-each-is-right" aria-label="Link to this section">#</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Option</th><th>Parts can move</th><th>Held together</th><th>Use it for</th></tr></thead><tbody><tr><td><code><a class="term-link" href="../terms/anchored.html" title="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a> = true</code></td><td>no</td><td>n/a — frozen in place</td><td>walls, floors, scenery, anything static</td></tr><tr><td><code><a class="term-link" href="../terms/weldconstraint.html" title="Locks two parts' relative positions so they move as one body. The modern way to hold an assembly together.">WeldConstraint</a></code></td><td>yes, as one body</td><td>yes</td><td>doors, vehicles, anything that moves</td></tr><tr><td>Grouping into a Model</td><td>yes</td><td><strong>no</strong></td><td>organisation only</td></tr></tbody></table></div>
+<p>That last row is the trap. Grouping parts into a Model organises your Explorer and does absolutely nothing physically. A Model is a folder, not glue.</p>
+<h2 id="anchored-for-anything-that-should-never-move">Anchored: for anything that should never move<a class="anchor" href="#anchored-for-anything-that-should-never-move" aria-label="Link to this section">#</a></h2>
+<p>If a part is scenery, anchor it. That is the whole answer.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">for</span> _, descendant <span class="t-key">in</span> <span class="t-glob">ipairs</span>(<span class="t-glob">workspace</span>.<span class="t-prop">Building</span>:<span class="t-fn">GetDescendants</span>()) <span class="t-key">do</span>
+	<span class="t-key">if</span> descendant:<span class="t-fn">IsA</span>(<span class="t-str">"BasePart"</span>) <span class="t-key">then</span>
+		descendant.<span class="t-prop">Anchored</span> = <span class="t-key">true</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span></code></pre></div>
+<p>An anchored part is completely immovable by physics. It does not fall, it cannot be pushed, and it costs the engine essentially nothing because it is never simulated.</p>
+<p>This matters for performance as much as correctness. A thousand anchored parts are cheap. A thousand unanchored parts are a thousand bodies the physics engine has to solve every frame, and it is one of the most common reasons a map runs badly.</p>
+<aside class="note note-note"><p class="note-label">note</p><p>In Studio you can select every part in a model and tick <strong>Anchored</strong> once in the Properties panel — it applies to the whole selection. For a whole map, the loop above run from the Command Bar is faster.</p></aside>
+<h2 id="weldconstraint-for-things-that-move-as-one-piece">WeldConstraint: for things that move as one piece<a class="anchor" href="#weldconstraint-for-things-that-move-as-one-piece" aria-label="Link to this section">#</a></h2>
+<p>A <code>WeldConstraint</code> locks two parts' relative positions. Move one, the other follows.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> weld(part0, part1)
+	<span class="t-key">local</span> w = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"WeldConstraint"</span>)
+	w.<span class="t-prop">Part0</span> = part0
+	w.<span class="t-prop">Part1</span> = part1
+	w.<span class="t-prop">Parent</span> = part0
+	<span class="t-key">return</span> w
+<span class="t-key">end</span></code></pre></div>
+<p>Weld every part to <strong>one</strong> part — usually the largest, or the one you will move later:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> model = <span class="t-glob">workspace</span>.<span class="t-prop">Door</span>
+<span class="t-key">local</span> root = model.<span class="t-prop">PrimaryPart</span> <span class="t-key">or</span> model:<span class="t-fn">FindFirstChildWhichIsA</span>(<span class="t-str">"BasePart"</span>)
+
+<span class="t-key">for</span> _, part <span class="t-key">in</span> <span class="t-glob">ipairs</span>(model:<span class="t-fn">GetDescendants</span>()) <span class="t-key">do</span>
+	<span class="t-key">if</span> part:<span class="t-fn">IsA</span>(<span class="t-str">"BasePart"</span>) <span class="t-key">and</span> part ~= root <span class="t-key">then</span>
+		part.<span class="t-prop">Anchored</span> = <span class="t-key">false</span>
+		weld(root, part)
+	<span class="t-key">end</span>
+<span class="t-key">end</span>
+
+root.<span class="t-prop">Anchored</span> = <span class="t-key">false</span></code></pre></div>
+<p>Two things about this that catch people out:</p>
+<p><strong>Position at the moment of welding is what gets locked.</strong> A <code>WeldConstraint</code> records the offset between the two parts when it is created and enabled. Create the weld first and move the part afterwards, and it will snap back or drag its partner with it. Position everything, <em>then</em> weld.</p>
+<p><strong>Anchored beats welded.</strong> If any part in a welded assembly is anchored, the entire assembly is effectively anchored, because the weld ties it to something immovable. This is the single most common "my welded car won't move" cause: one wheel is still anchored from when you were building it.</p>
+<h2 id="weld-vs-weldconstraint">Weld vs WeldConstraint<a class="anchor" href="#weld-vs-weldconstraint" aria-label="Link to this section">#</a></h2>
+<p>There is an older <code>Weld</code> object as well, and the difference matters.</p>
+<ul><li><strong><code>WeldConstraint</code></strong> has <code>Part0</code> and <code>Part1</code> and works out the offset itself.</li></ul>
+<p>  This is what you want almost always.</p>
+<ul><li><strong><code>Weld</code></strong> has <code>Part0</code>, <code>Part1</code>, <code>C0</code> and <code>C1</code> — explicit CFrame offsets you set</li></ul>
+<p>  yourself. Powerful, fiddly, and easy to get wrong. Mostly seen in older vehicle   code.</p>
+<p>If you are writing something new, use <code>WeldConstraint</code>.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>Studio's <strong>Weld</strong> button under the Model tab, and the <code>Surface</code> properties (<code>SurfaceType</code>, <code>Studs</code>, <code>Inlet</code>) are a third and much older system. Mixing surface welds with WeldConstraints produces assemblies that behave differently depending on how they were assembled, which is miserable to debug. Pick one approach per model.</p></aside>
+<h2 id="moving-a-welded-model">Moving a welded model<a class="anchor" href="#moving-a-welded-model" aria-label="Link to this section">#</a></h2>
+<p>Once parts are welded, do not move them individually — that fights the welds. Move the model as a unit:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> model = <span class="t-glob">workspace</span>.<span class="t-prop">Door</span>
+model:<span class="t-fn">PivotTo</span>(model:<span class="t-fn">GetPivot</span>() * <span class="t-glob">CFrame</span>.<span class="t-fn">Angles</span>(<span class="t-num">0</span>, <span class="t-glob">math</span>.<span class="t-fn">rad</span>(<span class="t-num">90</span>), <span class="t-num">0</span>))</code></pre></div>
+<p><code>PivotTo</code> moves the whole model and everything welded to it, preserving the internal offsets. It needs a <code>PrimaryPart</code> set on the model, or it uses the model's bounding-box centre.</p>
+<p><code>Model:MoveTo(position)</code> also exists and additionally tries to avoid overlapping other objects by shifting upward — convenient for placing things on terrain, unhelpful when you want an exact position.</p>
+<h2 id="the-checklist-when-a-build-collapses">The checklist when a build collapses<a class="anchor" href="#the-checklist-when-a-build-collapses" aria-label="Link to this section">#</a></h2>
+<ol><li>Is every scenery part <strong>Anchored</strong>? Select the model, check the Properties</li></ol>
+<p>   panel shows Anchored ticked rather than showing a mixed state.</p>
+<ol><li>For things that should move: is exactly one part the root, and is every other</li></ol>
+<p>   part welded to it?</p>
+<ol><li>Is any part in the moving assembly still anchored? One is enough to freeze the</li></ol>
+<p>   lot.</p>
+<ol><li>Were the welds created <strong>after</strong> everything was positioned?</li><li>Are you moving the model with <code>PivotTo</code>, rather than setting one part's</li></ol>
+<p>   position?</p>
+<h2 id="checking-your-work-without-publishing">Checking your work without publishing<a class="anchor" href="#checking-your-work-without-publishing" aria-label="Link to this section">#</a></h2>
+<p>Press Play, then immediately switch to the <strong>Explorer</strong> and watch the model while physics runs. You will see instantly whether parts are separating, and which ones.</p>
+<p>For a faster loop, select a part in the running game and look at its <code>Anchored</code> and <code>AssemblyLinearVelocity</code> properties. A part that should be still and has a non-zero velocity is telling you exactly what is wrong.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

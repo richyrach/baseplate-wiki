@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A notification system: server-triggered toasts that stack — Baseplate Wiki</title>
+<meta name="description" content="One RemoteEvent, a queue, and a reusable template. Messages that appear, stack neatly, and clean themselves up.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../recipes.html">Recipes</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/ui.html">UI</a>
+  </p>
+  <h1>A notification system: server-triggered toasts that stack</h1>
+  <p class="lede">One RemoteEvent, a queue, and a reusable template. Messages that appear, stack neatly, and clean themselves up.</p>
+  <p class="doc-meta"><span>UI</span><span>Intermediate</span><span>11 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-setup">The setup</a></li><li><a href="#the-client">The client</a></li><li><a href="#the-server">The server</a></li><li><a href="#the-parts-that-matter">The parts that matter</a></li><li><a href="#never-trust-the-client-to-notify-itself">Never trust the client to notify itself</a></li><li><a href="#deduplicating-repeats">Deduplicating repeats</a></li><li><a href="#positioning">Positioning</a></li><li><a href="#testing-it">Testing it</a></li></ul></aside>
+  <div class="prose">
+<p>"You earned 50 coins." "Round starting." "Not enough Robux." Almost every game needs short messages triggered from the server, and the naive version — one label that gets overwritten — loses messages whenever two arrive close together.</p>
+<h2 id="the-setup">The setup<a class="anchor" href="#the-setup" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Tree</span><pre><code>ReplicatedStorage
+└── Remotes
+    └── Notify              (RemoteEvent)
+
+StarterGui
+└── Notifications           (ScreenGui)
+    ├── Container           (Frame, with a UIListLayout)
+    └── Template            (Frame, Visible = false)
+        ├── Icon            (ImageLabel)
+        └── Message         (TextLabel)</code></pre></div>
+<p>Put a <code>UIListLayout</code> in <code>Container</code> with <code>VerticalAlignment = Bottom</code> and <code>SortOrder = LayoutOrder</code>. The layout does the stacking so you never compute positions.</p>
+<h2 id="the-client">The client<a class="anchor" href="#the-client" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- StarterPlayerScripts/Notifications.client.lua</span>
+<span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+<span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+<span class="t-key">local</span> TweenService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"TweenService"</span>)
+
+<span class="t-key">local</span> notify = ReplicatedStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Remotes"</span>):<span class="t-fn">WaitForChild</span>(<span class="t-str">"Notify"</span>)
+
+<span class="t-key">local</span> player = Players.<span class="t-prop">LocalPlayer</span>
+<span class="t-key">local</span> gui = player:<span class="t-fn">WaitForChild</span>(<span class="t-str">"PlayerGui"</span>):<span class="t-fn">WaitForChild</span>(<span class="t-str">"Notifications"</span>)
+<span class="t-key">local</span> container = gui:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Container"</span>)
+<span class="t-key">local</span> template = gui:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Template"</span>)
+
+<span class="t-key">local</span> MAX_VISIBLE = <span class="t-num">4</span>
+<span class="t-key">local</span> LIFETIME = <span class="t-num">4</span>
+<span class="t-key">local</span> FADE = <span class="t-num">0.22</span>
+
+<span class="t-key">local</span> STYLES = {
+	info    = { colour = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">48</span>, <span class="t-num">54</span>, <span class="t-num">62</span>),  accent = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">77</span>, <span class="t-num">159</span>, <span class="t-num">230</span>) },
+	success = { colour = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">34</span>, <span class="t-num">56</span>, <span class="t-num">42</span>),  accent = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">120</span>, <span class="t-num">200</span>, <span class="t-num">120</span>) },
+	warning = { colour = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">62</span>, <span class="t-num">48</span>, <span class="t-num">34</span>),  accent = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">224</span>, <span class="t-num">150</span>, <span class="t-num">70</span>) },
+	<span class="t-glob">error</span>   = { colour = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">64</span>, <span class="t-num">38</span>, <span class="t-num">38</span>),  accent = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">232</span>, <span class="t-num">96</span>, <span class="t-num">96</span>) },
+}
+
+<span class="t-key">local</span> active = {}
+<span class="t-key">local</span> nextOrder = <span class="t-num">0</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> dismiss(toast)
+	<span class="t-key">if</span> toast:<span class="t-fn">GetAttribute</span>(<span class="t-str">"Dismissing"</span>) <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+	toast:<span class="t-fn">SetAttribute</span>(<span class="t-str">"Dismissing"</span>, <span class="t-key">true</span>)
+
+	<span class="t-key">local</span> out = TweenService:<span class="t-fn">Create</span>(
+		toast,
+		<span class="t-glob">TweenInfo</span>.<span class="t-fn">new</span>(FADE, <span class="t-glob">Enum</span>.<span class="t-prop">EasingStyle</span>.<span class="t-prop">Quad</span>, <span class="t-glob">Enum</span>.<span class="t-prop">EasingDirection</span>.<span class="t-prop">In</span>),
+		{ BackgroundTransparency = <span class="t-num">1</span>, Position = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0.25</span>, <span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-num">0</span>) }
+	)
+
+	out.<span class="t-prop">Completed</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+		<span class="t-key">for</span> i, t <span class="t-key">in</span> <span class="t-glob">ipairs</span>(active) <span class="t-key">do</span>
+			<span class="t-key">if</span> t == toast <span class="t-key">then</span>
+				<span class="t-glob">table</span>.<span class="t-fn">remove</span>(active, i)
+				<span class="t-key">break</span>
+			<span class="t-key">end</span>
+		<span class="t-key">end</span>
+		toast:<span class="t-fn">Destroy</span>()
+	<span class="t-key">end</span>)
+
+	out:<span class="t-fn">Play</span>()
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> show(message, style)
+	<span class="t-key">local</span> look = STYLES[style] <span class="t-key">or</span> STYLES.<span class="t-prop">info</span>
+
+	<span class="t-key">local</span> toast = template:<span class="t-fn">Clone</span>()
+	nextOrder += <span class="t-num">1</span>
+	toast.<span class="t-prop">LayoutOrder</span> = nextOrder
+	toast.<span class="t-prop">Name</span> = <span class="t-str">"Toast"</span>
+	toast.<span class="t-prop">BackgroundColor3</span> = look.<span class="t-prop">colour</span>
+	toast.<span class="t-prop">Message</span>.<span class="t-prop">Text</span> = <span class="t-glob">tostring</span>(message)
+	toast.<span class="t-prop">Visible</span> = <span class="t-key">true</span>
+
+	<span class="t-key">local</span> stripe = toast:<span class="t-fn">FindFirstChild</span>(<span class="t-str">"Accent"</span>)
+	<span class="t-key">if</span> stripe <span class="t-key">then</span>
+		stripe.<span class="t-prop">BackgroundColor3</span> = look.<span class="t-prop">accent</span>
+	<span class="t-key">end</span>
+
+	<span class="t-com">-- animate in</span>
+	toast.<span class="t-prop">BackgroundTransparency</span> = <span class="t-num">1</span>
+	toast.<span class="t-prop">Position</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0.25</span>, <span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-num">0</span>)
+	toast.<span class="t-prop">Parent</span> = container
+
+	TweenService:<span class="t-fn">Create</span>(
+		toast,
+		<span class="t-glob">TweenInfo</span>.<span class="t-fn">new</span>(FADE, <span class="t-glob">Enum</span>.<span class="t-prop">EasingStyle</span>.<span class="t-prop">Quad</span>, <span class="t-glob">Enum</span>.<span class="t-prop">EasingDirection</span>.<span class="t-prop">Out</span>),
+		{ BackgroundTransparency = <span class="t-num">0.1</span>, Position = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-num">0</span>) }
+	):<span class="t-fn">Play</span>()
+
+	<span class="t-glob">table</span>.<span class="t-fn">insert</span>(active, toast)
+
+	<span class="t-com">-- oldest out if we are over the cap</span>
+	<span class="t-key">while</span> #active &gt; MAX_VISIBLE <span class="t-key">do</span>
+		dismiss(active[<span class="t-num">1</span>])
+		<span class="t-glob">table</span>.<span class="t-fn">remove</span>(active, <span class="t-num">1</span>)
+	<span class="t-key">end</span>
+
+	<span class="t-glob">task</span>.<span class="t-fn">delay</span>(LIFETIME, <span class="t-key">function</span>()
+		<span class="t-key">if</span> toast.<span class="t-prop">Parent</span> <span class="t-key">then</span>
+			dismiss(toast)
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>)
+<span class="t-key">end</span>
+
+notify.<span class="t-prop">OnClientEvent</span>:<span class="t-fn">Connect</span>(show)</code></pre></div>
+<h2 id="the-server">The server<a class="anchor" href="#the-server" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService/Notify.server.lua</span>
+<span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+<span class="t-key">local</span> notify = ReplicatedStorage.<span class="t-prop">Remotes</span>.<span class="t-prop">Notify</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> notifyPlayer(player, message, style)
+	notify:<span class="t-fn">FireClient</span>(player, message, style <span class="t-key">or</span> <span class="t-str">"info"</span>)
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> notifyAll(message, style)
+	notify:<span class="t-fn">FireAllClients</span>(message, style <span class="t-key">or</span> <span class="t-str">"info"</span>)
+<span class="t-key">end</span>
+
+<span class="t-com">-- usage</span>
+notifyPlayer(player, <span class="t-str">"You earned 50 coins"</span>, <span class="t-str">"success"</span>)
+notifyAll(<span class="t-str">"Round starting in 10 seconds"</span>, <span class="t-str">"info"</span>)</code></pre></div>
+<h2 id="the-parts-that-matter">The parts that matter<a class="anchor" href="#the-parts-that-matter" aria-label="Link to this section">#</a></h2>
+<p><strong><code>LayoutOrder</code> increments forever.</strong> A <code>UIListLayout</code> sorts by it, so an ever-increasing counter keeps new toasts in the right place without renumbering anything. Reusing numbers, or relying on child order, produces toasts that jump around as others expire.</p>
+<p><strong>The <code>Dismissing</code> attribute guards double-dismissal.</strong> A toast can be dismissed by the lifetime timer and by the over-cap logic at nearly the same moment. Without the guard you get two tweens and a <code>Destroy</code> on an already-destroyed instance.</p>
+<p><strong><code>toast.Parent</code> is checked inside <code>task.delay</code>.</strong> Four seconds is a long time in UI terms — the toast may already be gone, and touching a destroyed instance errors.</p>
+<p><strong><code>table.remove</code> in the completion handler.</strong> Removing from <code>active</code> when the animation finishes rather than when dismissal starts keeps the cap accurate while things are fading out.</p>
+<h2 id="never-trust-the-client-to-notify-itself">Never trust the client to notify itself<a class="anchor" href="#never-trust-the-client-to-notify-itself" aria-label="Link to this section">#</a></h2>
+<p>The remote fires <strong>server → client</strong> only. There is no <code>OnServerEvent</code> handler here on purpose.</p>
+<p>If you add one so clients can trigger their own notifications, a player can spam <code>FireServer</code> and — if you broadcast it — put arbitrary text on everyone's screen. Games have shipped that bug. Keep the direction one-way.</p>
+<h2 id="deduplicating-repeats">Deduplicating repeats<a class="anchor" href="#deduplicating-repeats" aria-label="Link to this section">#</a></h2>
+<p>Ten coin pickups in two seconds should not be ten toasts:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> recent = {}
+<span class="t-key">local</span> DEDUPE_WINDOW = <span class="t-num">1.5</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> show(message, style)
+	<span class="t-key">local</span> key = <span class="t-glob">tostring</span>(message)
+	<span class="t-key">local</span> now = <span class="t-glob">os</span>.<span class="t-fn">clock</span>()
+
+	<span class="t-key">if</span> recent[key] <span class="t-key">and</span> now - recent[key] &lt; DEDUPE_WINDOW <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+	recent[key] = now
+
+	<span class="t-com">-- ...rest as above</span>
+<span class="t-key">end</span></code></pre></div>
+<p>For counters specifically, it is better to accumulate on the server and send one message — "You earned 250 coins" — than to dedupe identical strings on the client.</p>
+<h2 id="positioning">Positioning<a class="anchor" href="#positioning" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code>container.<span class="t-prop">AnchorPoint</span> = <span class="t-glob">Vector2</span>.<span class="t-fn">new</span>(<span class="t-num">1</span>, <span class="t-num">1</span>)
+container.<span class="t-prop">Position</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">1</span>, -<span class="t-num">16</span>, <span class="t-num">1</span>, -<span class="t-num">16</span>)     <span class="t-com">-- bottom right</span>
+container.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">300</span>, <span class="t-num">0</span>, <span class="t-num">400</span>)
+container.<span class="t-prop">BackgroundTransparency</span> = <span class="t-num">1</span></code></pre></div>
+<p>Bottom-right is conventional on desktop. On phones, bottom-centre reads better and avoids the thumb resting area on the right — worth branching on <code>UserInputService.TouchEnabled</code>.</p>
+<p>Set <code>container.Active = false</code> and <code>BackgroundTransparency = 1</code> so the invisible container does not swallow taps meant for buttons behind it. That is a real bug and an easy one to miss, because it only shows up on touch.</p>
+<h2 id="testing-it">Testing it<a class="anchor" href="#testing-it" aria-label="Link to this section">#</a></h2>
+<p>Fire ten at once from the Command Bar and watch what happens:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">for</span> i = <span class="t-num">1</span>, <span class="t-num">10</span> <span class="t-key">do</span>
+	<span class="t-glob">game</span>.<span class="t-prop">ReplicatedStorage</span>.<span class="t-prop">Remotes</span>.<span class="t-prop">Notify</span>:<span class="t-fn">FireAllClients</span>(<span class="t-str">"Message "</span> .. <span class="t-prop">i</span>, <span class="t-str">"info"</span>)
+<span class="t-key">end</span></code></pre></div>
+<p>You should see four, stacked, with the rest arriving as the earlier ones expire — and no errors in the console as they overlap. That burst is the case the naive single-label version fails, and it is the reason for the queue.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

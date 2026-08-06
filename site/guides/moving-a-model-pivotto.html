@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moving a model without it exploding: PrimaryPart and PivotTo — Baseplate Wiki</title>
+<meta name="description" content="Setting a model&#x27;s position part by part tears welded assemblies apart. Move the whole thing at once instead.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../recipes.html">Recipes</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/building.html">Building</a>
+  </p>
+  <h1>Moving a model without it exploding: PrimaryPart and PivotTo</h1>
+  <p class="lede">Setting a model&#x27;s position part by part tears welded assemblies apart. Move the whole thing at once instead.</p>
+  <p class="doc-meta"><span>Building</span><span>Intermediate</span><span>8 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-answer">The answer</a></li><li><a href="#set-a-primarypart-first">Set a PrimaryPart first</a></li><li><a href="#order-matters-multiplication-is-not-commutative">Order matters: multiplication is not commutative</a></li><li><a href="#moveto-is-a-different-tool">MoveTo is a different tool</a></li><li><a href="#moving-smoothly">Moving smoothly</a></li><li><a href="#anchored-unanchored-and-which-to-use">Anchored, unanchored, and which to use</a></li><li><a href="#if-the-model-still-comes-apart">If the model still comes apart</a></li></ul></aside>
+  <div class="prose">
+<p>You have a model — a car, a door, a platform — and you need to move it in a script. You try the obvious thing:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>model.<span class="t-prop">Position</span> = <span class="t-glob">Vector3</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">10</span>, <span class="t-num">0</span>)</code></pre></div>
+<p>That errors, because a <code>Model</code> has no <code>Position</code> property. So you loop over the parts and move each one, and the model arrives at its destination in pieces.</p>
+<p>The fix is to move the model as a single unit.</p>
+<h2 id="the-answer">The answer<a class="anchor" href="#the-answer" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> model = <span class="t-glob">workspace</span>.<span class="t-prop">Door</span>
+
+<span class="t-com">-- absolute placement</span>
+model:<span class="t-fn">PivotTo</span>(<span class="t-glob">CFrame</span>.<span class="t-fn">new</span>(<span class="t-num">10</span>, <span class="t-num">5</span>, -<span class="t-num">20</span>))
+
+<span class="t-com">-- relative to where it already is</span>
+model:<span class="t-fn">PivotTo</span>(model:<span class="t-fn">GetPivot</span>() * <span class="t-glob">CFrame</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">5</span>, <span class="t-num">0</span>))
+
+<span class="t-com">-- rotate 90 degrees around its own centre</span>
+model:<span class="t-fn">PivotTo</span>(model:<span class="t-fn">GetPivot</span>() * <span class="t-glob">CFrame</span>.<span class="t-fn">Angles</span>(<span class="t-num">0</span>, <span class="t-glob">math</span>.<span class="t-fn">rad</span>(<span class="t-num">90</span>), <span class="t-num">0</span>))</code></pre></div>
+<p><code>PivotTo</code> moves every part in the model together and preserves the offsets between them, so welds survive.</p>
+<h2 id="set-a-primarypart-first">Set a PrimaryPart first<a class="anchor" href="#set-a-primarypart-first" aria-label="Link to this section">#</a></h2>
+<p>A model's pivot is the CFrame of its <code>PrimaryPart</code>. If <code>PrimaryPart</code> is <code>nil</code>, Roblox falls back to the centre of the model's bounding box — which shifts if you add or remove parts, and is rarely where you actually want the origin.</p>
+<p>Set it explicitly:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>model.<span class="t-prop">PrimaryPart</span> = model:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Base"</span>)</code></pre></div>
+<p>You can set it in Studio too: select the model, and in Properties click the <code>PrimaryPart</code> field, then click the part you want in the viewport.</p>
+<p>Pick something meaningful. For a car, the chassis base. For a door, the hinge edge — then rotating the pivot rotates the door around its hinge rather than its middle, which is almost always what you wanted.</p>
+<aside class="note note-note"><p class="note-label">note</p><p><code>Model:GetPivot()</code> returns the current pivot CFrame, and <code>PivotTo</code> sets it. They are a matched pair, and <code>GetPivot() * offset</code> is the idiom for "move relative to where it is now."</p></aside>
+<h2 id="order-matters-multiplication-is-not-commutative">Order matters: multiplication is not commutative<a class="anchor" href="#order-matters-multiplication-is-not-commutative" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> pivot = model:<span class="t-fn">GetPivot</span>()
+
+model:<span class="t-fn">PivotTo</span>(pivot * <span class="t-glob">CFrame</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, -<span class="t-num">10</span>))   <span class="t-com">-- 10 studs along the model's OWN forward</span>
+model:<span class="t-fn">PivotTo</span>(<span class="t-glob">CFrame</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, -<span class="t-num">10</span>) * pivot)   <span class="t-com">-- 10 studs along the WORLD's -Z</span></code></pre></div>
+<p><code>pivot * offset</code> applies the offset in the model's local space. <code>offset * pivot</code> applies it in world space. Getting these the wrong way round produces a model that moves in a strange direction when rotated, and is worth checking first when movement looks almost-but-not-quite right.</p>
+<h2 id="moveto-is-a-different-tool">MoveTo is a different tool<a class="anchor" href="#moveto-is-a-different-tool" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code>model:<span class="t-fn">MoveTo</span>(<span class="t-glob">Vector3</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-num">0</span>))</code></pre></div>
+<p><code>MoveTo</code> places the model's centre at a position, but it also shifts the model <strong>upward</strong> if something is already there, to avoid overlapping. That makes it handy for dropping something onto terrain and unusable when you need an exact position.</p>
+<p>If a model keeps ending up higher than you asked, <code>MoveTo</code> is why. Use <code>PivotTo</code>.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p><code>Model:SetPrimaryPartCFrame()</code> appears in a lot of older tutorials. It is deprecated in favour of <code>PivotTo</code>, and it had rounding behaviour that could drift a model slightly over many calls. New code should use <code>PivotTo</code>.</p></aside>
+<h2 id="moving-smoothly">Moving smoothly<a class="anchor" href="#moving-smoothly" aria-label="Link to this section">#</a></h2>
+<p><code>PivotTo</code> is instant. For animated movement, tween a value and apply it each frame:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> RunService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"RunService"</span>)
+
+<span class="t-key">local</span> <span class="t-key">function</span> slideModel(model, targetCFrame, seconds)
+	<span class="t-key">local</span> startCFrame = model:<span class="t-fn">GetPivot</span>()
+	<span class="t-key">local</span> elapsed = <span class="t-num">0</span>
+
+	<span class="t-key">local</span> connection
+	connection = RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(dt)
+		elapsed += dt
+		<span class="t-key">local</span> alpha = <span class="t-glob">math</span>.<span class="t-fn">min</span>(elapsed / seconds, <span class="t-num">1</span>)
+		model:<span class="t-fn">PivotTo</span>(startCFrame:<span class="t-fn">Lerp</span>(targetCFrame, alpha))
+
+		<span class="t-key">if</span> alpha &gt;= <span class="t-num">1</span> <span class="t-key">then</span>
+			connection:<span class="t-fn">Disconnect</span>()
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>)
+<span class="t-key">end</span>
+
+slideModel(<span class="t-glob">workspace</span>.<span class="t-prop">Platform</span>, <span class="t-glob">CFrame</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">20</span>, <span class="t-num">0</span>), <span class="t-num">2</span>)</code></pre></div>
+<p><code>CFrame:Lerp</code> interpolates position and rotation together, so this works for rotating movement as well as straight lines.</p>
+<p>You cannot pass a <code>Model</code> to <code>TweenService</code> directly, because tweens animate <em>properties</em> and the pivot is not one. The usual workaround is to tween the <code>PrimaryPart</code>'s <code>CFrame</code> and weld everything else to it — the welds carry the rest of the model along. That is often simpler than the loop above, and it gets you TweenService's easing styles for free.</p>
+<h2 id="anchored-unanchored-and-which-to-use">Anchored, unanchored, and which to use<a class="anchor" href="#anchored-unanchored-and-which-to-use" aria-label="Link to this section">#</a></h2>
+<ul><li><strong><a class="term-link" href="../terms/anchored.html" title="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a> root, <code>PivotTo</code> each frame</strong> — full control, no physics interference.</li></ul>
+<p>  Right for doors, lifts, moving platforms.</p>
+<ul><li><strong>Unanchored root, physics constraints</strong> — right for vehicles and anything that</li></ul>
+<p>  should collide and be pushed around.</p>
+<p>Calling <code>PivotTo</code> repeatedly on an <em>unanchored</em> assembly fights the physics solver: you set a position, physics moves it, you set it again. The result stutters. If you are driving movement from a script, anchor the root.</p>
+<h2 id="if-the-model-still-comes-apart">If the model still comes apart<a class="anchor" href="#if-the-model-still-comes-apart" aria-label="Link to this section">#</a></h2>
+<ol><li>Is <code>PrimaryPart</code> set, and is it one of the parts actually welded to the rest?</li><li>Are the welds <code><a class="term-link" href="../terms/weldconstraint.html" title="Locks two parts' relative positions so they move as one body. The modern way to hold an assembly together.">WeldConstraint</a></code>s created <strong>after</strong> all parts were positioned?</li><li>Is any part still <code>Anchored</code> while the root is not? That part will stay behind.</li><li>Are you calling <code>PivotTo</code> on the <code>Model</code> — not on a part inside it?</li></ol>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

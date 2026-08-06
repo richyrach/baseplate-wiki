@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A currency system the client cannot edit — Baseplate Wiki</title>
+<meta name="description" content="Where the number lives, who is allowed to change it, and the request shape that stops players awarding themselves money.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/scripting.html">Scripting</a>
+  </p>
+  <h1>A currency system the client cannot edit</h1>
+  <p class="lede">Where the number lives, who is allowed to change it, and the request shape that stops players awarding themselves money.</p>
+  <p class="doc-meta"><span>Scripting</span><span>Intermediate</span><span>11 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-mistake">The mistake</a></li><li><a href="#the-shape-that-works">The shape that works</a></li><li><a href="#where-the-balance-lives">Where the balance lives</a></li><li><a href="#spending">Spending</a></li><li><a href="#rate-limiting">Rate limiting</a></li><li><a href="#client-side-prediction-is-fine">Client-side prediction is fine</a></li><li><a href="#the-audit">The audit</a></li></ul></aside>
+  <div class="prose">
+<p>Every game with money eventually gets a player who has an impossible amount of it. It is almost always the same mistake, and it is a design mistake rather than a missing security feature.</p>
+<h2 id="the-mistake">The mistake<a class="anchor" href="#the-mistake" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- LocalScript</span>
+<span class="t-key">local</span> coins = <span class="t-num">0</span>
+
+coinPart.<span class="t-prop">Touched</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+	coins += <span class="t-num">10</span>
+	updateCoins:<span class="t-fn">FireServer</span>(coins)     <span class="t-com">-- "here is my new total"</span>
+<span class="t-key">end</span>)</code></pre></div>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService</span>
+updateCoins.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player, newTotal)
+	player.<span class="t-prop">leaderstats</span>.<span class="t-prop">Coins</span>.<span class="t-prop">Value</span> = newTotal
+<span class="t-key">end</span>)</code></pre></div>
+<p>The server is being <em>told</em> the answer. A player can fire that remote with any number they like, from the developer console or an injected script, and the server will write it down. No amount of validation on the number fixes this, because there is no legitimate value to compare against — the server never computed one.</p>
+<h2 id="the-shape-that-works">The shape that works<a class="anchor" href="#the-shape-that-works" aria-label="Link to this section">#</a></h2>
+<p>The client reports <strong>what happened</strong>. The server decides <strong>what it is worth</strong>.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- LocalScript: no amount, just which coin</span>
+coinPart.<span class="t-prop">Touched</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(hit)
+	<span class="t-key">if</span> hit.<span class="t-prop">Parent</span> == player.<span class="t-prop">Character</span> <span class="t-key">then</span>
+		collectCoin:<span class="t-fn">FireServer</span>(coinPart)
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)</code></pre></div>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService</span>
+<span class="t-key">local</span> COIN_VALUE = <span class="t-num">10</span>
+<span class="t-key">local</span> MAX_REACH = <span class="t-num">14</span>
+
+<span class="t-key">local</span> collected = {}     <span class="t-com">-- [coinPart] = true</span>
+
+collectCoin.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player, coin)
+	<span class="t-com">-- 1. is it the right kind of thing at all?</span>
+	<span class="t-key">if</span> <span class="t-glob">typeof</span>(coin) ~= <span class="t-str">"Instance"</span> <span class="t-key">or</span> <span class="t-key">not</span> coin:<span class="t-fn">IsA</span>(<span class="t-str">"BasePart"</span>) <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	<span class="t-com">-- 2. is it actually one of our coins?</span>
+	<span class="t-key">if</span> <span class="t-key">not</span> coin:<span class="t-fn">IsDescendantOf</span>(<span class="t-glob">workspace</span>.<span class="t-prop">Coins</span>) <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	<span class="t-com">-- 3. has it already been taken?</span>
+	<span class="t-key">if</span> collected[coin] <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	<span class="t-com">-- 4. is the player near enough to plausibly have touched it?</span>
+	<span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
+	<span class="t-key">if</span> <span class="t-key">not</span> character <span class="t-key">or</span> <span class="t-key">not</span> character.<span class="t-prop">PrimaryPart</span> <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+	<span class="t-key">if</span> (character.<span class="t-prop">PrimaryPart</span>.<span class="t-prop">Position</span> - coin.<span class="t-prop">Position</span>).<span class="t-prop">Magnitude</span> &gt; MAX_REACH <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	<span class="t-com">-- only now does anything change</span>
+	collected[coin] = <span class="t-key">true</span>
+	coin:<span class="t-fn">Destroy</span>()
+	addBalance(player, COIN_VALUE)
+<span class="t-key">end</span>)</code></pre></div>
+<p>Four checks, and each one closes a specific attack:</p>
+<ol><li><strong>Type check.</strong> Prevents a crash, and stops arbitrary objects being passed.</li><li><strong>Membership check.</strong> Stops a player passing a coin-shaped part they created</li></ol>
+<p>   themselves.</p>
+<ol><li><strong>Double-spend check.</strong> Stops the same coin being claimed twenty times in one</li></ol>
+<p>   frame. <code>OnServerEvent</code> can be called as fast as the attacker likes.</p>
+<ol><li><strong>Distance check.</strong> Stops a player collecting every coin on the map from spawn.</li></ol>
+<p>The amount — <code>COIN_VALUE</code> — never crosses the network. It only exists on the server.</p>
+<h2 id="where-the-balance-lives">Where the balance lives<a class="anchor" href="#where-the-balance-lives" aria-label="Link to this section">#</a></h2>
+<p>Not in <code>leaderstats</code>. That is a display surface. Keep the real number in a server-only table and mirror it out:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService/Economy.server.lua</span>
+<span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+
+<span class="t-key">local</span> balances = {}     <span class="t-com">-- [userId] = number</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> getBalance(player)
+	<span class="t-key">return</span> balances[player.<span class="t-prop">UserId</span>] <span class="t-key">or</span> <span class="t-num">0</span>
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> mirror(player)
+	<span class="t-key">local</span> stats = player:<span class="t-fn">FindFirstChild</span>(<span class="t-str">"leaderstats"</span>)
+	<span class="t-key">local</span> coins = stats <span class="t-key">and</span> stats:<span class="t-fn">FindFirstChild</span>(<span class="t-str">"Coins"</span>)
+	<span class="t-key">if</span> coins <span class="t-key">then</span>
+		coins.<span class="t-prop">Value</span> = getBalance(player)
+	<span class="t-key">end</span>
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> addBalance(player, amount)
+	<span class="t-key">if</span> <span class="t-key">type</span>(amount) ~= <span class="t-str">"number"</span> <span class="t-key">or</span> amount ~= amount <span class="t-key">then</span>   <span class="t-com">-- NaN check</span>
+		<span class="t-key">return</span> <span class="t-key">false</span>
+	<span class="t-key">end</span>
+	amount = <span class="t-glob">math</span>.<span class="t-fn">floor</span>(amount)
+
+	<span class="t-key">local</span> current = getBalance(player)
+	<span class="t-key">local</span> newValue = <span class="t-glob">math</span>.<span class="t-fn">clamp</span>(current + amount, <span class="t-num">0</span>, <span class="t-num">1e12</span>)
+
+	balances[player.<span class="t-prop">UserId</span>] = newValue
+	mirror(player)
+	<span class="t-key">return</span> <span class="t-key">true</span>
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> trySpend(player, cost)
+	<span class="t-key">if</span> <span class="t-key">type</span>(cost) ~= <span class="t-str">"number"</span> <span class="t-key">or</span> cost &lt;= <span class="t-num">0</span> <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-key">false</span>
+	<span class="t-key">end</span>
+	<span class="t-key">local</span> current = getBalance(player)
+	<span class="t-key">if</span> current &lt; cost <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-key">false</span>
+	<span class="t-key">end</span>
+
+	balances[player.<span class="t-prop">UserId</span>] = current - cost
+	mirror(player)
+	<span class="t-key">return</span> <span class="t-key">true</span>
+<span class="t-key">end</span></code></pre></div>
+<p>Details worth keeping:</p>
+<ul><li><strong><code>amount ~= amount</code></strong> is the NaN test. <code>NaN</code> propagates through arithmetic and can</li></ul>
+<p>  corrupt a balance permanently, and it survives a DataStore round trip.</p>
+<ul><li><strong><code>math.floor</code></strong> stops fractional currency appearing from any source that produces</li></ul>
+<p>  a float.</p>
+<ul><li><strong><code>math.clamp</code></strong> with an upper bound catches overflow-style bugs before they reach</li></ul>
+<p>  the save file.</p>
+<ul><li><strong><code>trySpend</code> returns a boolean.</strong> Callers must check it. A spend function that</li></ul>
+<p>  silently does nothing on failure produces free items.</p>
+<h2 id="spending">Spending<a class="anchor" href="#spending" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> prices = {
+	HealthPotion = <span class="t-num">50</span>,
+	SpeedBoost = <span class="t-num">120</span>,
+}
+
+buyItem.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">function</span>(player, itemName)
+	<span class="t-key">if</span> <span class="t-glob">typeof</span>(itemName) ~= <span class="t-str">"string"</span> <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-key">false</span>, <span class="t-str">"Invalid request"</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> price = prices[itemName]
+	<span class="t-key">if</span> <span class="t-key">not</span> price <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-key">false</span>, <span class="t-str">"No such item"</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">if</span> <span class="t-key">not</span> trySpend(player, price) <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-key">false</span>, <span class="t-str">"Not enough coins"</span>
+	<span class="t-key">end</span>
+
+	grantItem(player, itemName)
+	<span class="t-key">return</span> <span class="t-key">true</span>, <span class="t-str">"Purchased"</span>
+<span class="t-key">end</span></code></pre></div>
+<p>The client sends an item <strong>name</strong>, looked up in a server-side price table. It never sends a price. This is the same principle as the coin: names in, values decided server-side.</p>
+<h2 id="rate-limiting">Rate limiting<a class="anchor" href="#rate-limiting" aria-label="Link to this section">#</a></h2>
+<p>Every remote a client can fire needs a floor on how often:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> lastCall = {}
+<span class="t-key">local</span> MIN_INTERVAL = <span class="t-num">0.1</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> rateLimited(player)
+	<span class="t-key">local</span> now = <span class="t-glob">os</span>.<span class="t-fn">clock</span>()
+	<span class="t-key">local</span> last = lastCall[player.<span class="t-prop">UserId</span>]
+	<span class="t-key">if</span> last <span class="t-key">and</span> now - last &lt; MIN_INTERVAL <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-key">true</span>
+	<span class="t-key">end</span>
+	lastCall[player.<span class="t-prop">UserId</span>] = now
+	<span class="t-key">return</span> <span class="t-key">false</span>
+<span class="t-key">end</span></code></pre></div>
+<p>Check it first thing in every handler. Without this, even a correct handler can be used to pin your server's CPU at 100%.</p>
+<p>Clean up on leave, or these tables grow forever:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>Players.<span class="t-prop">PlayerRemoving</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	balances[player.<span class="t-prop">UserId</span>] = <span class="t-key">nil</span>
+	lastCall[player.<span class="t-prop">UserId</span>] = <span class="t-key">nil</span>
+<span class="t-key">end</span>)</code></pre></div>
+<h2 id="client-side-prediction-is-fine">Client-side prediction is fine<a class="anchor" href="#client-side-prediction-is-fine" aria-label="Link to this section">#</a></h2>
+<p>Showing the new balance instantly, before the server confirms, is good practice — it makes the game feel responsive. Just treat it as a guess:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- LocalScript</span>
+<span class="t-key">local</span> displayed = <span class="t-num">0</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> optimisticAdd(amount)
+	displayed += amount
+	redraw()
+<span class="t-key">end</span>
+
+<span class="t-com">-- the server's number always wins</span>
+coinsValue.<span class="t-prop">Changed</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+	displayed = coinsValue.<span class="t-prop">Value</span>
+	redraw()
+<span class="t-key">end</span>)</code></pre></div>
+<p>The client displays; the server decides. When they disagree, the server is right.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>Do not put your price table in <code><a class="term-link" href="../terms/replicatedstorage.html" title="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code> if the prices are meant to be authoritative. Clients can read everything in there. The client can have a copy for display; the server must use its own.</p></aside>
+<h2 id="the-audit">The audit<a class="anchor" href="#the-audit" aria-label="Link to this section">#</a></h2>
+<p>Go through every remote in your game and ask:</p>
+<ol><li>Does the client send an <strong>amount</strong>, a <strong>price</strong>, or a <strong>total</strong>? If yes, that is</li></ol>
+<p>   the bug. Change it to send an identifier and look the value up server-side.</p>
+<ol><li>Is there a rate limit?</li><li>Is there a type check on every argument?</li><li>For anything world-related, is there a distance or possession check?</li><li>Can the same request be replayed to get the reward twice?</li><li>Does the authoritative number live in a server-only table, rather than in</li></ol>
+<p>   <code>leaderstats</code> or a <code>Value</code> object the client can see?</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

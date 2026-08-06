@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeldConstraint — Baseplate Wiki reference</title>
+<meta name="description" content="Locks two parts&#x27; relative positions so they move as one body. The modern way to hold an assembly together.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a class="on" href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc doc-term">
+  <p class="crumbs"><a href="index.html">Reference</a>
+    <span aria-hidden="true">/</span><a href="../c/building.html">Building</a></p>
+  <h1><code class="term-title">WeldConstraint</code></h1>
+  <p class="lede">Locks two parts&#x27; relative positions so they move as one body. The modern way to hold an assembly together.</p>
+  <!-- ad slot 'term-top': paste AdSense code here AFTER approval -->
+  <div class="prose">
+<p>A <code>WeldConstraint</code> fixes the relative position of two parts. Move one and the other follows.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> weld = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"WeldConstraint"</span>)
+weld.<span class="t-prop">Part0</span> = chassis
+weld.<span class="t-prop">Part1</span> = wheelHousing
+weld.<span class="t-prop">Parent</span> = chassis</code></pre></div>
+<p>It records the offset between the two parts <strong>at the moment it is created and enabled</strong>, and works it out itself — you do not supply any CFrames.</p>
+<h2 id="the-star-pattern">The star pattern<a class="anchor" href="#the-star-pattern" aria-label="Link to this section">#</a></h2>
+<p>Weld everything to one root part rather than chaining part to part:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> root = model.<span class="t-prop">PrimaryPart</span> <span class="t-key">or</span> model:<span class="t-fn">FindFirstChildWhichIsA</span>(<span class="t-str">"BasePart"</span>)
+
+<span class="t-key">for</span> _, part <span class="t-key">in</span> <span class="t-glob">ipairs</span>(model:<span class="t-fn">GetDescendants</span>()) <span class="t-key">do</span>
+	<span class="t-key">if</span> part:<span class="t-fn">IsA</span>(<span class="t-str">"BasePart"</span>) <span class="t-key">and</span> part ~= root <span class="t-key">then</span>
+		<span class="t-key">local</span> w = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"WeldConstraint"</span>)
+		w.<span class="t-prop">Part0</span> = root
+		w.<span class="t-prop">Part1</span> = part
+		w.<span class="t-prop">Parent</span> = root
+	<span class="t-key">end</span>
+<span class="t-key">end</span></code></pre></div>
+<p>Chains work but are harder to reason about, and a single broken link splits the assembly in two.</p>
+<h2 id="the-three-things-that-break-it">The three things that break it<a class="anchor" href="#the-three-things-that-break-it" aria-label="Link to this section">#</a></h2>
+<p><strong>Welding before positioning.</strong> The offset is captured at creation. Create the weld, then move a part, and it snaps back or drags its partner along. Position everything first.</p>
+<p><strong>A part left anchored.</strong> If any part in the assembly is <code><a class="term-link" href="../terms/anchored.html" title="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a></code>, the whole assembly is effectively immovable — the weld ties it to something that cannot move. This is the most common cause of a welded vehicle that will not budge.</p>
+<p><strong>Moving individual parts afterwards.</strong> Once welded, move the model as a unit with <code>PivotTo</code>, not by setting one part's <code>CFrame</code>.</p>
+<h2 id="weldconstraint-vs-weld">WeldConstraint vs Weld<a class="anchor" href="#weldconstraint-vs-weld" aria-label="Link to this section">#</a></h2>
+<ul><li><strong><code>WeldConstraint</code></strong> — <code>Part0</code>, <code>Part1</code>, offset computed automatically. Use this.</li><li><strong><code>Weld</code></strong> — <code>Part0</code>, <code>Part1</code>, plus explicit <code>C0</code> and <code>C1</code> CFrame offsets you set</li></ul>
+<p>  yourself. Powerful, fiddly, and mostly encountered in older vehicle code.</p>
+<p>There is also a much older surface-based system (<code>SurfaceType</code>, studs and inlets) and Studio's Model-tab <strong>Weld</strong> button. Mixing systems in one model produces assemblies that behave differently depending on assembly order, which is miserable to debug. Pick one approach per model.</p>
+<aside class="note note-note"><p class="note-label">note</p><p><code>WeldConstraint</code> has an <code>Enabled</code> property. Setting it to <code>false</code> releases the connection without destroying the object, which is a clean way to make something break apart on demand and be reassembled later.</p></aside>
+<h2 id="checking-your-welds-at-runtime">Checking your welds at runtime<a class="anchor" href="#checking-your-welds-at-runtime" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">for</span> _, d <span class="t-key">in</span> <span class="t-glob">ipairs</span>(model:<span class="t-fn">GetDescendants</span>()) <span class="t-key">do</span>
+	<span class="t-key">if</span> d:<span class="t-fn">IsA</span>(<span class="t-str">"WeldConstraint"</span>) <span class="t-key">then</span>
+		<span class="t-glob">print</span>(d.<span class="t-prop">Part0</span> <span class="t-key">and</span> d.<span class="t-prop">Part0</span>.<span class="t-prop">Name</span>, <span class="t-str">"&lt;-&gt;"</span>, d.<span class="t-prop">Part1</span> <span class="t-key">and</span> d.<span class="t-prop">Part1</span>.<span class="t-prop">Name</span>,
+			<span class="t-str">"enabled:"</span>, d.<span class="t-prop">Enabled</span>)
+	<span class="t-key">end</span>
+<span class="t-key">end</span></code></pre></div>
+<p>A <code>nil</code> on either side is a weld doing nothing — usually because the part it pointed at was destroyed or renamed.</p>
+<h2 id="related">Related<a class="anchor" href="#related" aria-label="Link to this section">#</a></h2>
+<p><code>Anchored</code> for anything static, which is cheaper and simpler than welding a building together. Welds are for assemblies that need to <strong>move</strong> as one piece: doors, vehicles, platforms. Scenery should just be anchored.</p>
+  </div>
+  <section class="related"><h2>Guides that use this</h2><ul><li><a href="../guides/day-night-cycle.html">A day and night cycle that looks good and stays in sync</a></li><li><a href="../guides/moving-a-model-pivotto.html">Moving a model without it exploding: PrimaryPart and PivotTo</a></li><li><a href="../guides/welds-weldconstraints-anchored.html">Welds, WeldConstraints and Anchored: why your build falls apart on Play</a></li></ul></section>
+  <footer class="doc-foot">
+    <p>Something wrong or missing here?
+       <a href="../contribute.html">Send a correction</a>.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

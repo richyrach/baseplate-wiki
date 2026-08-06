@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClockTime — Baseplate Wiki reference</title>
+<meta name="description" content="The hour of the in-game day, 0 to 24, on Lighting. Drives the sun and moon.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a class="on" href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc doc-term">
+  <p class="crumbs"><a href="index.html">Reference</a>
+    <span aria-hidden="true">/</span><a href="../c/building.html">Building</a></p>
+  <h1><code class="term-title">ClockTime</code></h1>
+  <p class="lede">The hour of the in-game day, 0 to 24, on Lighting. Drives the sun and moon.</p>
+  <!-- ad slot 'term-top': paste AdSense code here AFTER approval -->
+  <div class="prose">
+<p><code>Lighting.ClockTime</code> is the in-game hour as a number from 0 to 24.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> Lighting = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Lighting"</span>)
+
+Lighting.<span class="t-prop">ClockTime</span> = <span class="t-num">14</span>        <span class="t-com">-- 2pm</span>
+Lighting.<span class="t-prop">ClockTime</span> = <span class="t-num">0</span>         <span class="t-com">-- midnight</span></code></pre></div>
+<p><code>6</code> is roughly dawn, <code>12</code> noon, <code>18</code> dusk. Values outside 0–24 wrap, so <code>% 24</code> on anything you compute is a good habit.</p>
+<h2 id="the-three-ways-to-say-the-same-thing">The three ways to say the same thing<a class="anchor" href="#the-three-ways-to-say-the-same-thing" aria-label="Link to this section">#</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Property / method</th><th>Form</th></tr></thead><tbody><tr><td><code>ClockTime</code></td><td>number, <code>14.5</code></td></tr><tr><td><code>TimeOfDay</code></td><td>string, <code>"14:30:00"</code></td></tr><tr><td><code>SetMinutesAfterMidnight(n)</code></td><td>minutes, <code>870</code></td></tr><tr><td><code>GetMinutesAfterMidnight()</code></td><td>minutes</td></tr></tbody></table></div>
+<p>They are views onto the same underlying value. Setting one updates the others.</p>
+<h2 id="the-replication-quirk">The replication quirk<a class="anchor" href="#the-replication-quirk" aria-label="Link to this section">#</a></h2>
+<p><code>ClockTime</code> is documented as <strong>Not Replicated</strong>, which reads like it cannot be driven from the server. In practice setting it server-side does update every client, because it writes through to <code>TimeOfDay</code>, which is replicated.</p>
+<p>Because that is a documented-behaviour-versus-observed-behaviour gap, verify it in your own game with <strong>two clients</strong> from the Test tab before shipping a cycle built on it. If you see clients drift apart, set <code>TimeOfDay</code> instead.</p>
+<p>Either way, run the cycle on the <strong>server</strong>. A client-side loop gives every player their own private time of day.</p>
+<h2 id="frame-rate-independent-advancement">Frame-rate independent advancement<a class="anchor" href="#frame-rate-independent-advancement" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> DAY_LENGTH = <span class="t-num">20</span> * <span class="t-num">60</span>           <span class="t-com">-- real seconds for a full cycle</span>
+<span class="t-key">local</span> hoursPerSecond = <span class="t-num">24</span> / DAY_LENGTH
+
+<span class="t-key">while</span> <span class="t-key">true</span> <span class="t-key">do</span>
+	<span class="t-key">local</span> dt = <span class="t-glob">task</span>.<span class="t-fn">wait</span>()
+	Lighting.<span class="t-prop">ClockTime</span> = (Lighting.<span class="t-prop">ClockTime</span> + hoursPerSecond * dt) % <span class="t-num">24</span>
+<span class="t-key">end</span></code></pre></div>
+<p>Multiplying by <code>dt</code> is what keeps the day the same length regardless of server load. The common alternative — <code>ClockTime += 0.01</code> with a fixed <code>task.wait(0.1)</code> — runs at whatever rate the server happens to tick.</p>
+<h2 id="clocktime-alone-looks-flat">ClockTime alone looks flat<a class="anchor" href="#clocktime-alone-looks-flat" aria-label="Link to this section">#</a></h2>
+<p>Moving the sun gives you a dark blue night and nothing else. The look comes from moving the other <code>Lighting</code> properties in step: <code>Ambient</code>, <code>OutdoorAmbient</code>, <code>Brightness</code>, <code>FogColor</code>, <code>FogEnd</code>, <code>ColorShift_Top</code>, <code>ExposureCompensation</code>.</p>
+<p>Interpolating between a handful of keyframed values with <code>Color3:Lerp</code> gets you a convincing dawn and dusk for about forty lines of code.</p>
+<h2 id="geographiclatitude">GeographicLatitude<a class="anchor" href="#geographiclatitude" aria-label="Link to this section">#</a></h2>
+<p><code>Lighting.GeographicLatitude</code> changes the angle the sun travels across the sky. Higher values give a lower, more raking sun — useful for a specific mood, and easy to forget about when wondering why noon shadows look wrong.</p>
+<h2 id="watching-for-changes">Watching for changes<a class="anchor" href="#watching-for-changes" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code>Lighting:<span class="t-fn">GetPropertyChangedSignal</span>(<span class="t-str">"ClockTime"</span>):<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+	<span class="t-com">-- fires every frame while a cycle is running</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>Guard anything expensive behind a check that the <em>visible</em> result actually changed — a clock UI should only rebuild its text when the displayed minute rolls over, not sixty times a second.</p>
+  </div>
+  <section class="related"><h2>Guides that use this</h2><ul><li><a href="../guides/day-night-cycle.html">A day and night cycle that looks good and stays in sync</a></li><li><a href="../guides/moving-a-model-pivotto.html">Moving a model without it exploding: PrimaryPart and PivotTo</a></li><li><a href="../guides/welds-weldconstraints-anchored.html">Welds, WeldConstraints and Anchored: why your build falls apart on Play</a></li></ul></section>
+  <footer class="doc-foot">
+    <p>Something wrong or missing here?
+       <a href="../contribute.html">Send a correction</a>.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

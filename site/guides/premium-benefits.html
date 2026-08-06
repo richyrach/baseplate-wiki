@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Giving Premium players benefits, and the Roblox Plus problem — Baseplate Wiki</title>
+<meta name="description" content="How to detect Premium in 2026 — including why the usual MembershipType check now also returns true for Roblox Plus subscribers.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/monetization.html">Monetization</a>
+  </p>
+  <h1>Giving Premium players benefits, and the Roblox Plus problem</h1>
+  <p class="lede">How to detect Premium in 2026 — including why the usual MembershipType check now also returns true for Roblox Plus subscribers.</p>
+  <p class="doc-meta"><span>Monetization</span><span>Intermediate</span><span>11 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-check-everyone-shows-you">The check everyone shows you</a></li><li><a href="#problem-1-membershiptype-is-deprecated">Problem 1: MembershipType is deprecated</a></li><li><a href="#problem-2-it-now-returns-premium-for-roblox-plus-subscribers">Problem 2: it now returns Premium for Roblox Plus subscribers</a></li><li><a href="#what-to-do-in-the-meantime">What to do in the meantime</a></li><li><a href="#reacting-to-a-mid-session-purchase">Reacting to a mid-session purchase</a></li><li><a href="#prompting-for-premium">Prompting for Premium</a></li><li><a href="#do-not-gate-core-gameplay-behind-it">Do not gate core gameplay behind it</a></li><li><a href="#client-side-display">Client-side display</a></li><li><a href="#where-this-stands">Where this stands</a></li><li><a href="#sources">Sources</a></li></ul></aside>
+  <div class="prose">
+<p>Premium benefits are a good deal for developers: you get paid through engagement-based payouts for time Premium players spend in your game, so giving them a visible perk is directly worth doing.</p>
+<p>The detection, however, is currently messier than every tutorial online says.</p>
+<h2 id="the-check-everyone-shows-you">The check everyone shows you<a class="anchor" href="#the-check-everyone-shows-you" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">if</span> player.<span class="t-prop">MembershipType</span> == <span class="t-glob">Enum</span>.<span class="t-prop">MembershipType</span>.<span class="t-prop">Premium</span> <span class="t-key">then</span>
+	grantPremiumPerks(player)
+<span class="t-key">end</span></code></pre></div>
+<p>This is the pattern in essentially every guide and video. There are two problems with it as of 2026.</p>
+<h2 id="problem-1-membershiptype-is-deprecated">Problem 1: MembershipType is deprecated<a class="anchor" href="#problem-1-membershiptype-is-deprecated" aria-label="Link to this section">#</a></h2>
+<p><code>Player.MembershipType</code> is marked deprecated in the current API reference. Deprecated properties keep working for a long time, so this is not urgent — but it does mean any code built on it has a shelf life.</p>
+<h2 id="problem-2-it-now-returns-premium-for-roblox-plus-subscribers">Problem 2: it now returns Premium for Roblox Plus subscribers<a class="anchor" href="#problem-2-it-now-returns-premium-for-roblox-plus-subscribers" aria-label="Link to this section">#</a></h2>
+<p>Roblox introduced <strong>Roblox Plus</strong> on 30 April 2026 as a separate subscription from Premium. <code>Player.MembershipType</code> returns <code>Enum.MembershipType.Premium</code> for Plus subscribers as well as Premium ones.</p>
+<p>This was raised as a bug, and Roblox staff confirmed it is <strong>intentional, for backwards compatibility</strong>, recommending <code>HasRobloxSubscription</code> instead for distinguishing the two.</p>
+<p>The practical consequence: if you use the standard check, Roblox Plus subscribers get your Premium perks. Whether that matters depends on your game. If the perk is cosmetic, it is probably fine. If it is a currency multiplier tied to payouts you only receive for actual Premium members, you are giving away value you are not being paid for.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p><code>Player.HasRobloxSubscription</code> is a boolean, but the API reference lists its security level as <strong>Roblox Security</strong> — which normally means scripts in your game cannot read it. I have not been able to confirm whether developer scripts can actually access it in a live game. Before building anything on it, test it in your own published place and see whether reading it errors. Do not take my word, or a forum post's, for this one.</p></aside>
+<p>That caveat is the honest state of it. The situation is in flux, and I would rather say so than hand you a confident snippet that throws.</p>
+<h2 id="what-to-do-in-the-meantime">What to do in the meantime<a class="anchor" href="#what-to-do-in-the-meantime" aria-label="Link to this section">#</a></h2>
+<p>Use <code>MembershipType</code>, and know what it includes:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService/PremiumPerks.server.lua</span>
+<span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+
+<span class="t-key">local</span> COIN_MULTIPLIER = <span class="t-num">2</span>
+
+<span class="t-key">local</span> isPremium = {}      <span class="t-com">-- [userId] = boolean</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> hasSubscription(player)
+	<span class="t-com">-- NOTE: as of Aug 2026 this is true for both Premium and Roblox Plus.</span>
+	<span class="t-key">return</span> player.<span class="t-prop">MembershipType</span> == <span class="t-glob">Enum</span>.<span class="t-prop">MembershipType</span>.<span class="t-prop">Premium</span>
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> applyPerks(player)
+	<span class="t-key">if</span> <span class="t-key">not</span> isPremium[player.<span class="t-prop">UserId</span>] <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	player:<span class="t-fn">SetAttribute</span>(<span class="t-str">"CoinMultiplier"</span>, COIN_MULTIPLIER)
+
+	<span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
+	<span class="t-key">local</span> humanoid = character <span class="t-key">and</span> character:<span class="t-fn">FindFirstChildOfClass</span>(<span class="t-str">"Humanoid"</span>)
+	<span class="t-key">if</span> humanoid <span class="t-key">then</span>
+		humanoid.<span class="t-prop">WalkSpeed</span> = <span class="t-num">20</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span>
+
+Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	isPremium[player.<span class="t-prop">UserId</span>] = hasSubscription(player)
+	applyPerks(player)
+
+	player.<span class="t-prop">CharacterAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+		<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">0.1</span>)
+		applyPerks(player)
+	<span class="t-key">end</span>)
+<span class="t-key">end</span>)
+
+Players.<span class="t-prop">PlayerRemoving</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	isPremium[player.<span class="t-prop">UserId</span>] = <span class="t-key">nil</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>Using an <strong>attribute</strong> for the multiplier rather than a <code>Value</code> object is convenient: attributes replicate to clients automatically, so your UI can read <code>player:GetAttribute("CoinMultiplier")</code> and show a badge, while the server remains the only thing that writes it.</p>
+<p>Re-apply on <code>CharacterAdded</code>, because <code>WalkSpeed</code> lives on the <code>Humanoid</code> and the character is rebuilt on every respawn.</p>
+<h2 id="reacting-to-a-mid-session-purchase">Reacting to a mid-session purchase<a class="anchor" href="#reacting-to-a-mid-session-purchase" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code>Players.<span class="t-prop">PlayerMembershipChanged</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	isPremium[player.<span class="t-prop">UserId</span>] = hasSubscription(player)
+	applyPerks(player)
+<span class="t-key">end</span>)</code></pre></div>
+<p>This event has a significant limitation worth knowing: in practice it fires when the player's membership changes <strong>during the session after being prompted</strong>, not as a general-purpose subscription watcher. Do not rely on it to catch every possible change. The join-time check is what carries the weight.</p>
+<h2 id="prompting-for-premium">Prompting for Premium<a class="anchor" href="#prompting-for-premium" aria-label="Link to this section">#</a></h2>
+<p><code><a class="term-link" href="../terms/marketplaceservice.html" title="Handles game passes, developer products and receipts. Several of its most-used methods are now deprecated in favour of Async versions.">MarketplaceService</a>:PromptPremiumPurchase(player)</code> is <strong>deprecated</strong>.</p>
+<p>I do not have a verified current replacement to give you. If you want to advertise Premium, the reliable approach today is a normal in-game UI panel explaining the benefit, rather than an engine-provided prompt — and check the current MarketplaceService reference before building around any prompt method, because this area of the API has changed more than once.</p>
+<h2 id="do-not-gate-core-gameplay-behind-it">Do not gate core gameplay behind it<a class="anchor" href="#do-not-gate-core-gameplay-behind-it" aria-label="Link to this section">#</a></h2>
+<p>Worth saying because it is a design mistake more than a coding one: perks that make the game <em>unplayable</em> without Premium read badly and lose you non-Premium players, who are the overwhelming majority.</p>
+<p>Things that work well:</p>
+<ul><li>a currency or XP multiplier</li><li>a cosmetic — a trail, a name colour, a chat tag</li><li>an extra inventory slot or save slot</li><li>access to a lounge area</li></ul>
+<p>Things that go badly: extra damage in a competitive mode, meaningfully faster progression in a leaderboard game, or anything that makes free players feel like the game is worse on purpose.</p>
+<h2 id="client-side-display">Client-side display<a class="anchor" href="#client-side-display" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- LocalScript</span>
+<span class="t-key">local</span> player = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>).<span class="t-prop">LocalPlayer</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> refreshBadge()
+	<span class="t-key">local</span> multiplier = player:<span class="t-fn">GetAttribute</span>(<span class="t-str">"CoinMultiplier"</span>) <span class="t-key">or</span> <span class="t-num">1</span>
+	badge.<span class="t-prop">Visible</span> = multiplier &gt; <span class="t-num">1</span>
+	badge.<span class="t-prop">Text</span> = <span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"%dx coins"</span>, multiplier)
+<span class="t-key">end</span>
+
+player:<span class="t-fn">GetAttributeChangedSignal</span>(<span class="t-str">"CoinMultiplier"</span>):<span class="t-fn">Connect</span>(refreshBadge)
+refreshBadge()</code></pre></div>
+<p>The client reads and displays; the server decides and writes. Same rule as every other system — see the guide on a currency the client cannot edit.</p>
+<h2 id="where-this-stands">Where this stands<a class="anchor" href="#where-this-stands" aria-label="Link to this section">#</a></h2>
+<ol><li><code>MembershipType</code> works, is deprecated, and currently includes Roblox Plus.</li><li><code>HasRobloxSubscription</code> is the recommended replacement but is documented as</li></ol>
+<p>   Roblox-security restricted — <strong>test whether you can read it before relying on it.</strong></p>
+<ol><li><code>PromptPremiumPurchase</code> is deprecated with no replacement I can confirm.</li><li>Check membership on join, cache it, re-apply perks on respawn.</li><li>Keep perks additive, never gate core gameplay.</li></ol>
+<p>If you test the <code>HasRobloxSubscription</code> access question and find a definitive answer, that is exactly the kind of correction this site wants — <a href="../contribute.html">send it in</a>.</p>
+<h2 id="sources">Sources<a class="anchor" href="#sources" aria-label="Link to this section">#</a></h2>
+<ul><li><a href="https://create.roblox.com/docs/reference/engine/classes/Player">Player.MembershipType — Roblox API reference</a></li><li><a href="https://devforum.roblox.com/t/playermembershiptype-returns-premium-for-roblox-plus-subscribers/4607269">MembershipType returns Premium for Roblox Plus subscribers — Roblox DevForum</a></li><li><a href="https://create.roblox.com/docs/production/monetization/engagement-based-payouts">Engagement-based payouts — Roblox documentation</a></li></ul>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

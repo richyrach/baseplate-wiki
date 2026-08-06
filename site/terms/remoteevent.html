@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RemoteEvent — Baseplate Wiki reference</title>
+<meta name="description" content="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a class="on" href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc doc-term">
+  <p class="crumbs"><a href="index.html">Reference</a>
+    <span aria-hidden="true">/</span><a href="../c/scripting.html">Scripting</a></p>
+  <h1><code class="term-title">RemoteEvent</code></h1>
+  <p class="lede">One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.</p>
+  <!-- ad slot 'term-top': paste AdSense code here AFTER approval -->
+  <div class="prose">
+<p>A <code>RemoteEvent</code> sends a message between the server and a client and continues immediately. It returns nothing.</p>
+<p>It normally lives in <code><a class="term-link" href="../terms/replicatedstorage.html" title="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code>, because both sides need to be able to find the same object.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+<span class="t-key">local</span> remote = ReplicatedStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Remotes"</span>):<span class="t-fn">WaitForChild</span>(<span class="t-str">"EquipItem"</span>)</code></pre></div>
+<h2 id="the-four-calls">The four calls<a class="anchor" href="#the-four-calls" aria-label="Link to this section">#</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Direction</th><th>Sender calls</th><th>Receiver connects</th></tr></thead><tbody><tr><td>client → server</td><td><code>:FireServer(...)</code></td><td><code>.OnServerEvent</code></td></tr><tr><td>server → one client</td><td><code>:FireClient(player, ...)</code></td><td><code>.OnClientEvent</code></td></tr><tr><td>server → everyone</td><td><code>:FireAllClients(...)</code></td><td><code>.OnClientEvent</code></td></tr></tbody></table></div>
+<p>Connecting <code>OnServerEvent</code> in a <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a> produces no error and never fires. Same in reverse. When a remote "does nothing," check which script type each half is in before checking anything else.</p>
+<h2 id="the-player-argument-is-added-for-you">The player argument is added for you<a class="anchor" href="#the-player-argument-is-added-for-you" aria-label="Link to this section">#</a></h2>
+<p><code>OnServerEvent</code> receives the firing player as its <strong>first</strong> argument, inserted by Roblox:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>remote.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player, itemName)
+	<span class="t-com">-- player is trustworthy; itemName is not</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>The client does not send it, and should not:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>remote:<span class="t-fn">FireServer</span>(<span class="t-glob">game</span>.<span class="t-prop">Players</span>.<span class="t-prop">LocalPlayer</span>, <span class="t-str">"Sword"</span>)   <span class="t-com">-- wrong, sends it twice</span>
+remote:<span class="t-fn">FireServer</span>(<span class="t-str">"Sword"</span>)                             <span class="t-com">-- right</span></code></pre></div>
+<p>That <code>player</code> argument is the one value in the whole call you can trust, because the engine filled it in rather than the client.</p>
+<h2 id="everything-else-is-untrusted">Everything else is untrusted<a class="anchor" href="#everything-else-is-untrusted" aria-label="Link to this section">#</a></h2>
+<p>Any client can fire any remote with any arguments, at any rate. A player does not need to modify your code to do it.</p>
+<p>So every handler needs, in roughly this order:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>remote.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player, itemName)
+	<span class="t-key">if</span> rateLimited(player) <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-key">end</span>              <span class="t-com">-- 1. how often</span>
+	<span class="t-key">if</span> <span class="t-glob">typeof</span>(itemName) ~= <span class="t-str">"string"</span> <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-key">end</span>      <span class="t-com">-- 2. what type</span>
+	<span class="t-key">if</span> <span class="t-key">not</span> allowedItems[itemName] <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-key">end</span>        <span class="t-com">-- 3. is it real</span>
+	<span class="t-com">-- 4. is this player allowed to, and near enough to, do this</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>The design rule that matters more than any individual check: the client sends <strong>identifiers</strong>, never <strong>values</strong>. <code>FireServer(coinPart)</code> is fine; <code>FireServer(500)</code> where 500 is a coin amount is a free money exploit no validation can fix.</p>
+<h2 id="rate-limiting-is-not-optional">Rate limiting is not optional<a class="anchor" href="#rate-limiting-is-not-optional" aria-label="Link to this section">#</a></h2>
+<p><code>FireServer</code> can be called thousands of times a second. Without a limit, a single player can pin your server's CPU using a handler that is otherwise completely correct.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> lastCall = {}
+
+<span class="t-key">local</span> <span class="t-key">function</span> rateLimited(player)
+	<span class="t-key">local</span> now = <span class="t-glob">os</span>.<span class="t-fn">clock</span>()
+	<span class="t-key">local</span> last = lastCall[player.<span class="t-prop">UserId</span>]
+	<span class="t-key">if</span> last <span class="t-key">and</span> now - last &lt; <span class="t-num">0.1</span> <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-key">true</span>
+	<span class="t-key">end</span>
+	lastCall[player.<span class="t-prop">UserId</span>] = now
+	<span class="t-key">return</span> <span class="t-key">false</span>
+<span class="t-key">end</span></code></pre></div>
+<p>Clear the entry on <code>PlayerRemoving</code> or the table grows for the life of the server.</p>
+<h2 id="when-not-to-use-one">When not to use one<a class="anchor" href="#when-not-to-use-one" aria-label="Link to this section">#</a></h2>
+<p><strong>When you need an answer</strong> — use a <code>RemoteFunction</code>, or fire a second RemoteEvent back with the result. <code>FireServer</code> returns nothing; assigning its result gives you <code>nil</code>.</p>
+<p><strong>For state that should just be readable</strong> — a <code>Value</code> object or an attribute replicates automatically and is available to players who join later. A RemoteEvent only reaches whoever was connected when it fired, which is why late joiners see a blank scoreboard.</p>
+<p><strong>Every frame</strong> — <code>FireAllClients</code> in a <code>Heartbeat</code> loop is 60 messages per player per second. Send less often, or use a replicated property.</p>
+  </div>
+  <section class="related"><h2>Guides that use this</h2><ul><li><a href="../guides/currency-the-client-cannot-edit.html">A currency system the client cannot edit</a></li><li><a href="../guides/developer-console-f9.html">The Developer Console (F9): finding the errors Studio never showed you</a></li><li><a href="../guides/remoteevent-vs-remotefunction.html">RemoteEvent vs RemoteFunction: which one to use, and when the difference bites</a></li><li><a href="../guides/x-is-not-a-valid-member.html">&#x27;X is not a valid member of Y&#x27;: every cause, in order of likelihood</a></li></ul></section>
+  <footer class="doc-foot">
+    <p>Something wrong or missing here?
+       <a href="../contribute.html">Send a correction</a>.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

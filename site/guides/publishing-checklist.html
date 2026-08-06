@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The publishing checklist people forget before release — Baseplate Wiki</title>
+<meta name="description" content="The settings that are off by default and quietly break DataStores, badges, purchases and mobile play once you publish.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../recipes.html">Recipes</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/performance.html">Performance</a>
+  </p>
+  <h1>The publishing checklist people forget before release</h1>
+  <p class="lede">The settings that are off by default and quietly break DataStores, badges, purchases and mobile play once you publish.</p>
+  <p class="doc-meta"><span>Performance</span><span>Beginner</span><span>8 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#settings-that-break-things-silently">Settings that break things silently</a></li><li><a href="#avatar-and-rig">Avatar and rig</a></li><li><a href="#streaming">Streaming</a></li><li><a href="#playable-devices">Playable devices</a></li><li><a href="#before-you-publish">Before you publish</a></li><li><a href="#store-page-basics">Store page basics</a></li><li><a href="#after-publishing">After publishing</a></li><li><a href="#the-short-version">The short version</a></li></ul></aside>
+  <div class="prose">
+<p>Your game works in Studio. Several things that work in Studio do not work in a published game until you turn them on, and each one fails in its own confusing way.</p>
+<p>Go through this before telling anyone to play.</p>
+<h2 id="settings-that-break-things-silently">Settings that break things silently<a class="anchor" href="#settings-that-break-things-silently" aria-label="Link to this section">#</a></h2>
+<h3 id="studio-access-to-api-services">Studio Access to API Services<a class="anchor" href="#studio-access-to-api-services" aria-label="Link to this section">#</a></h3>
+<p><strong>Home → Game Settings → Security → Enable Studio Access to API Services</strong></p>
+<p>Without it, every DataStore call fails <strong>in Studio</strong>. People turn this on, get DataStores working in Studio, and forget that it only ever affected Studio — a published game can always use DataStores.</p>
+<p>The inverse trap is more common: testing in Studio with this off, concluding DataStores are broken, and rewriting working code.</p>
+<h3 id="allow-http-requests">Allow HTTP Requests<a class="anchor" href="#allow-http-requests" aria-label="Link to this section">#</a></h3>
+<p><strong>Game Settings → Security → Allow HTTP Requests</strong></p>
+<p>Needed for <code>HttpService</code>. Off by default. If you are using any external API or webhook, this is why it returns an error about HTTP requests not being enabled.</p>
+<h3 id="third-party-sales-and-teleports">Third-party sales and teleports<a class="anchor" href="#third-party-sales-and-teleports" aria-label="Link to this section">#</a></h3>
+<p>Under the same Security section:</p>
+<ul><li><strong>Allow Third Party Sales</strong> — needed to sell items you do not own.</li><li><strong>Allow Third Party Teleports</strong> — needed to teleport players to a place you do not</li></ul>
+<p>  own.</p>
+<p>Both off by default, both fail with a permissions error that does not obviously point at a setting.</p>
+<h2 id="avatar-and-rig">Avatar and rig<a class="anchor" href="#avatar-and-rig" aria-label="Link to this section">#</a></h2>
+<p><strong>Game Settings → Avatar</strong></p>
+<p>Pick R6 or R15 deliberately. If your animations were authored for one rig and the game is set to the other, they will not play correctly — and the symptom is silence, not an error.</p>
+<p>Also check the avatar scaling settings if your map has tight spaces. Default settings allow a range of body sizes, and a doorway that fits your avatar may not fit everyone's.</p>
+<h2 id="streaming">Streaming<a class="anchor" href="#streaming" aria-label="Link to this section">#</a></h2>
+<p><strong>Game Settings → World → Streaming Enabled</strong></p>
+<p>Streaming loads only nearby parts on each client. It is a large performance win for big maps and it <strong>will</strong> break code that assumes every part exists:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- may be nil on a client with streaming on</span>
+<span class="t-key">local</span> part = <span class="t-glob">workspace</span>.<span class="t-prop">FarAwayThing</span></code></pre></div>
+<p>If you turn it on, audit every client-side reference into <code>Workspace</code> for <code><a class="term-link" href="../terms/waitforchild.html" title="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a></code> with a timeout and a <code>nil</code> check. Turning streaming on the day before release is how you ship a game full of intermittent client errors.</p>
+<p>Decide early and test with it on for a while.</p>
+<h2 id="playable-devices">Playable devices<a class="anchor" href="#playable-devices" aria-label="Link to this section">#</a></h2>
+<p><strong>Game Settings → Basic Info → Playable Devices</strong></p>
+<p>Every device is ticked by default. If your game genuinely does not work on phones — no touch controls, unreadable UI — untick them rather than shipping a bad experience that collects one-star ratings.</p>
+<p>If you do support phones, actually test in the device emulator first. See the UI guides on Offset sizing and touch input, which cause most mobile failures.</p>
+<h2 id="before-you-publish">Before you publish<a class="anchor" href="#before-you-publish" aria-label="Link to this section">#</a></h2>
+<h3 id="check-the-developer-console-on-both-sides">Check the Developer Console on both sides<a class="anchor" href="#check-the-developer-console-on-both-sides" aria-label="Link to this section">#</a></h3>
+<p>Join your own game, press <code>F9</code>, and read <strong>both</strong> the Client and Server tabs. A red error you have never seen because you only looked at the Studio output is the classic launch-day surprise.</p>
+<h3 id="test-with-more-than-one-client">Test with more than one client<a class="anchor" href="#test-with-more-than-one-client" aria-label="Link to this section">#</a></h3>
+<p><strong>Test tab → Clients: 2 → Start.</strong> This runs a real server process and two real client processes. Client-server bugs that are invisible in single-player Play mode show up here immediately.</p>
+<h3 id="confirm-data-actually-saves">Confirm data actually saves<a class="anchor" href="#confirm-data-actually-saves" aria-label="Link to this section">#</a></h3>
+<ol><li>Join the published game, not Studio.</li><li>Change something that should persist.</li><li>Leave properly, by closing the client.</li><li>Rejoin and check.</li></ol>
+<p>Step 3 matters — stopping a Studio playtest does not run <code>game:BindToClose</code>, so shutdown saving is untested in Studio by definition.</p>
+<h3 id="count-your-parts-and-check-what-is-anchored">Count your parts and check what is anchored<a class="anchor" href="#count-your-parts-and-check-what-is-anchored" aria-label="Link to this section">#</a></h3>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> total, unanchored = <span class="t-num">0</span>, <span class="t-num">0</span>
+<span class="t-key">for</span> _, d <span class="t-key">in</span> <span class="t-glob">ipairs</span>(<span class="t-glob">workspace</span>:<span class="t-fn">GetDescendants</span>()) <span class="t-key">do</span>
+	<span class="t-key">if</span> d:<span class="t-fn">IsA</span>(<span class="t-str">"BasePart"</span>) <span class="t-key">then</span>
+		total += <span class="t-num">1</span>
+		<span class="t-key">if</span> <span class="t-key">not</span> d.<span class="t-prop">Anchored</span> <span class="t-key">then</span> unanchored += <span class="t-num">1</span> <span class="t-key">end</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span>
+<span class="t-glob">print</span>(total, <span class="t-str">"parts,"</span>, unanchored, <span class="t-str">"unanchored"</span>)</code></pre></div>
+<p>Static scenery that is not anchored is both a physics cost and a visual bug waiting to happen.</p>
+<h3 id="remove-your-debug-output">Remove your debug output<a class="anchor" href="#remove-your-debug-output" aria-label="Link to this section">#</a></h3>
+<p>Search for <code>print(</code> and decide about each one. Anything in a per-frame loop should go. Remember that players can open <code>F9</code> and read everything you print — including anything that hints at how your anti-exploit checks work.</p>
+<h2 id="store-page-basics">Store page basics<a class="anchor" href="#store-page-basics" aria-label="Link to this section">#</a></h2>
+<ul><li><strong>Icon and thumbnails.</strong> These are most of whether anyone clicks. A screenshot of</li></ul>
+<p>  actual gameplay beats a render.</p>
+<ul><li><strong>Description.</strong> Say what the player does. Plainly.</li><li><strong>Genre</strong>, so it appears in the right places.</li></ul>
+<h2 id="after-publishing">After publishing<a class="anchor" href="#after-publishing" aria-label="Link to this section">#</a></h2>
+<p>Set the place's version live properly: <strong>File → Publish to Roblox</strong>, then check in the Creator Dashboard that the version you expect is the one serving. Publishing a place is not the same as making that version current if you have used version history.</p>
+<aside class="note note-note"><p class="note-label">note</p><p>Roblox caches assets aggressively. If a change does not appear immediately in the live game, that is usually normal propagation rather than a failed publish. Check the version in the dashboard before re-publishing repeatedly.</p></aside>
+<h2 id="the-short-version">The short version<a class="anchor" href="#the-short-version" aria-label="Link to this section">#</a></h2>
+<ol><li>API Services on, if you want DataStores working in Studio.</li><li>HTTP Requests on, if you use <code>HttpService</code>.</li><li>Avatar rig matches your animations.</li><li>Streaming decided early, and audited if on.</li><li>Playable devices match reality.</li><li>Two-client test passes.</li><li>Both <code>F9</code> tabs clean.</li><li>Save/rejoin verified in the <strong>live</strong> game.</li><li>Static parts anchored.</li><li>Debug prints removed.</li></ol>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

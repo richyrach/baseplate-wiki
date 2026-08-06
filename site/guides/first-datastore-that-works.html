@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your first DataStore that doesn&#x27;t lose player data — Baseplate Wiki</title>
+<meta name="description" content="A save system that handles failures, retries, and server shutdown — the three things a naive DataStore script gets wrong.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/data.html">Data</a>
+  </p>
+  <h1>Your first DataStore that doesn&#x27;t lose player data</h1>
+  <p class="lede">A save system that handles failures, retries, and server shutdown — the three things a naive DataStore script gets wrong.</p>
+  <p class="doc-meta"><span>Data</span><span>Intermediate</span><span>13 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#turn-the-api-access-on-first">Turn the API access on first</a></li><li><a href="#wrap-every-call">Wrap every call</a></li><li><a href="#load-with-a-default-and-a-failure-flag">Load, with a default and a failure flag</a></li><li><a href="#save-refusing-when-the-load-failed">Save, refusing when the load failed</a></li><li><a href="#handle-server-shutdown">Handle server shutdown</a></li><li><a href="#autosave">Autosave</a></li><li><a href="#the-limits-you-will-hit">The limits you will hit</a></li><li><a href="#what-to-store">What to store</a></li><li><a href="#verifying-it-actually-works">Verifying it actually works</a></li></ul></aside>
+  <div class="prose">
+<p>Most first DataStore scripts look like this:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> DataStoreService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"DataStoreService"</span>)
+<span class="t-key">local</span> store = DataStoreService:<span class="t-fn">GetDataStore</span>(<span class="t-str">"PlayerData"</span>)
+
+<span class="t-glob">game</span>.<span class="t-prop">Players</span>.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	<span class="t-key">local</span> data = store:<span class="t-fn">GetAsync</span>(player.<span class="t-prop">UserId</span>)
+	player.<span class="t-prop">Coins</span>.<span class="t-prop">Value</span> = data <span class="t-key">or</span> <span class="t-num">0</span>
+<span class="t-key">end</span>)
+
+<span class="t-glob">game</span>.<span class="t-prop">Players</span>.<span class="t-prop">PlayerRemoving</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	store:<span class="t-fn">SetAsync</span>(player.<span class="t-prop">UserId</span>, player.<span class="t-prop">Coins</span>.<span class="t-prop">Value</span>)
+<span class="t-key">end</span>)</code></pre></div>
+<p>It works when you test it. It loses data in production, for three specific reasons:</p>
+<ol><li><code>GetAsync</code> can fail. If it does, this errors, and <code>Coins</code> never gets set — and</li></ol>
+<p>   then the save on exit writes the default over their real data.</p>
+<ol><li><code>PlayerRemoving</code> does not fire for everyone when a server shuts down.</li><li>Nothing retries, so one network blip is permanent data loss.</li></ol>
+<p>Here is a version that handles all three.</p>
+<h2 id="turn-the-api-access-on-first">Turn the API access on first<a class="anchor" href="#turn-the-api-access-on-first" aria-label="Link to this section">#</a></h2>
+<p>DataStores do not work in Studio until you allow it:</p>
+<p><strong>Home → Game Settings → Security → Enable Studio Access to API Services.</strong></p>
+<p>Without this, every call fails with a message about API services, and you will spend an hour debugging code that is fine.</p>
+<p>Also note that DataStores do not work at all in an unpublished place. Publish once before testing.</p>
+<h2 id="wrap-every-call">Wrap every call<a class="anchor" href="#wrap-every-call" aria-label="Link to this section">#</a></h2>
+<p>Every DataStore call goes over the network and can fail. <code>pcall</code> is not optional here:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> DataStoreService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"DataStoreService"</span>)
+<span class="t-key">local</span> store = DataStoreService:<span class="t-fn">GetDataStore</span>(<span class="t-str">"PlayerData_v1"</span>)
+
+<span class="t-key">local</span> <span class="t-key">function</span> safeCall(fn, ...)
+	<span class="t-key">local</span> attempts = <span class="t-num">0</span>
+	<span class="t-key">while</span> attempts &lt; <span class="t-num">3</span> <span class="t-key">do</span>
+		attempts += <span class="t-num">1</span>
+		<span class="t-key">local</span> ok, result = <span class="t-glob">pcall</span>(fn, ...)
+		<span class="t-key">if</span> ok <span class="t-key">then</span>
+			<span class="t-key">return</span> <span class="t-key">true</span>, result
+		<span class="t-key">end</span>
+		<span class="t-glob">warn</span>(<span class="t-str">"[Data] attempt"</span>, attempts, <span class="t-str">"failed:"</span>, result)
+		<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">2</span> ^ attempts)   <span class="t-com">-- 2s, 4s, 8s</span>
+	<span class="t-key">end</span>
+	<span class="t-key">return</span> <span class="t-key">false</span>, <span class="t-key">nil</span>
+<span class="t-key">end</span></code></pre></div>
+<p>The doubling wait is deliberate. Retrying immediately usually fails again for the same reason; backing off gives a transient problem time to clear.</p>
+<aside class="note note-note"><p class="note-label">note</p><p>Note the <code>_v1</code> in the store name. When you eventually change your data format in a way old saves cannot handle, bumping to <code>_v2</code> is far easier than writing a migration. Decide this on day one — renaming later abandons everyone's progress.</p></aside>
+<h2 id="load-with-a-default-and-a-failure-flag">Load, with a default and a failure flag<a class="anchor" href="#load-with-a-default-and-a-failure-flag" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> DEFAULT_DATA = {
+	Coins = <span class="t-num">0</span>,
+	Level = <span class="t-num">1</span>,
+	Inventory = {},
+}
+
+<span class="t-key">local</span> cache = {}         <span class="t-com">-- [userId] = data table</span>
+<span class="t-key">local</span> dataFailed = {}    <span class="t-com">-- [userId] = true if the load failed</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> copyDefaults()
+	<span class="t-key">return</span> {
+		Coins = DEFAULT_DATA.<span class="t-prop">Coins</span>,
+		Level = DEFAULT_DATA.<span class="t-prop">Level</span>,
+		Inventory = {},
+	}
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> loadData(player)
+	<span class="t-key">local</span> ok, result = safeCall(<span class="t-key">function</span>()
+		<span class="t-key">return</span> store:<span class="t-fn">GetAsync</span>(player.<span class="t-prop">UserId</span>)
+	<span class="t-key">end</span>)
+
+	<span class="t-key">if</span> <span class="t-key">not</span> ok <span class="t-key">then</span>
+		<span class="t-com">-- Could not reach the DataStore. Give them a working session but</span>
+		<span class="t-com">-- REFUSE to save, or we would overwrite real data with defaults.</span>
+		dataFailed[player.<span class="t-prop">UserId</span>] = <span class="t-key">true</span>
+		cache[player.<span class="t-prop">UserId</span>] = copyDefaults()
+		<span class="t-glob">warn</span>(<span class="t-str">"[Data] load failed for"</span>, player.<span class="t-prop">Name</span>, <span class="t-str">"- saving disabled"</span>)
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> data = result <span class="t-key">or</span> copyDefaults()
+
+	<span class="t-com">-- fill in any key added since this save was written</span>
+	<span class="t-key">for</span> key, value <span class="t-key">in</span> <span class="t-glob">pairs</span>(DEFAULT_DATA) <span class="t-key">do</span>
+		<span class="t-key">if</span> data[key] == <span class="t-key">nil</span> <span class="t-key">then</span>
+			data[key] = <span class="t-glob">typeof</span>(value) == <span class="t-str">"table"</span> <span class="t-key">and</span> {} <span class="t-key">or</span> value
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+
+	cache[player.<span class="t-prop">UserId</span>] = data
+<span class="t-key">end</span></code></pre></div>
+<p>That <code>dataFailed</code> flag is the most important part of this whole guide. <strong>A failed load must disable saving for that session.</strong> Otherwise the sequence is: load fails → player gets defaults → player leaves → defaults get saved → their real progress is gone forever. This single check prevents the worst class of data loss.</p>
+<h2 id="save-refusing-when-the-load-failed">Save, refusing when the load failed<a class="anchor" href="#save-refusing-when-the-load-failed" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> saveData(player)
+	<span class="t-key">local</span> userId = player.<span class="t-prop">UserId</span>
+	<span class="t-key">local</span> data = cache[userId]
+
+	<span class="t-key">if</span> <span class="t-key">not</span> data <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+	<span class="t-key">if</span> dataFailed[userId] <span class="t-key">then</span>
+		<span class="t-glob">warn</span>(<span class="t-str">"[Data] not saving"</span>, player.<span class="t-prop">Name</span>, <span class="t-str">"- load had failed"</span>)
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> ok = safeCall(<span class="t-key">function</span>()
+		<span class="t-key">return</span> store:<span class="t-fn">SetAsync</span>(userId, data)
+	<span class="t-key">end</span>)
+
+	<span class="t-key">if</span> <span class="t-key">not</span> ok <span class="t-key">then</span>
+		<span class="t-glob">warn</span>(<span class="t-str">"[Data] SAVE FAILED for"</span>, player.<span class="t-prop">Name</span>)
+	<span class="t-key">end</span>
+<span class="t-key">end</span></code></pre></div>
+<h2 id="handle-server-shutdown">Handle server shutdown<a class="anchor" href="#handle-server-shutdown" aria-label="Link to this section">#</a></h2>
+<p><code>PlayerRemoving</code> fires when one player leaves. When the whole server shuts down — which happens constantly, on updates and when a server empties — it may not fire for everyone before the process ends.</p>
+<p><code>game:BindToClose</code> is the hook for that. Roblox gives the server a short window (around 30 seconds) to finish up:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+
+Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(loadData)
+Players.<span class="t-prop">PlayerRemoving</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	saveData(player)
+	cache[player.<span class="t-prop">UserId</span>] = <span class="t-key">nil</span>
+	dataFailed[player.<span class="t-prop">UserId</span>] = <span class="t-key">nil</span>
+<span class="t-key">end</span>)
+
+<span class="t-glob">game</span>:<span class="t-fn">BindToClose</span>(<span class="t-key">function</span>()
+	<span class="t-key">for</span> _, player <span class="t-key">in</span> <span class="t-glob">ipairs</span>(Players:<span class="t-fn">GetPlayers</span>()) <span class="t-key">do</span>
+		<span class="t-glob">task</span>.<span class="t-fn">spawn</span>(saveData, player)
+	<span class="t-key">end</span>
+	<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">3</span>)   <span class="t-com">-- give the spawned saves a moment to land</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p><code>task.spawn</code> matters here: saving twenty players one after another at two seconds each would exceed the shutdown window. Firing them in parallel fits.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p><code>BindToClose</code> does <strong>not</strong> run in Studio when you stop a playtest with the stop button, so you cannot verify it there. Test it in a real server by joining, earning something, and closing the client — then rejoin and check.</p></aside>
+<h2 id="autosave">Autosave<a class="anchor" href="#autosave" aria-label="Link to this section">#</a></h2>
+<p>Even with both hooks, a server crash loses everything since the last save. Autosave puts a floor on how much:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-glob">task</span>.<span class="t-fn">spawn</span>(<span class="t-key">function</span>()
+	<span class="t-key">while</span> <span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">120</span>) <span class="t-key">do</span>
+		<span class="t-key">for</span> _, player <span class="t-key">in</span> <span class="t-glob">ipairs</span>(Players:<span class="t-fn">GetPlayers</span>()) <span class="t-key">do</span>
+			saveData(player)
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>Two minutes is a reasonable starting point. Do not go much below 60 seconds — you will run into request limits.</p>
+<h2 id="the-limits-you-will-hit">The limits you will hit<a class="anchor" href="#the-limits-you-will-hit" aria-label="Link to this section">#</a></h2>
+<p>Roblox caps how many DataStore requests a server may make. The budget scales with player count, and exceeding it queues your requests rather than failing them, which looks like the game hanging.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> budget = DataStoreService:<span class="t-fn">GetRequestBudgetForRequestType</span>(
+	<span class="t-glob">Enum</span>.<span class="t-prop">DataStoreRequestType</span>.<span class="t-prop">SetIncrementAsync</span>
+)
+<span class="t-glob">print</span>(<span class="t-str">"remaining save budget:"</span>, budget)</code></pre></div>
+<p>The practical rules that keep you inside it:</p>
+<ul><li>One save per player per autosave cycle, not one per stat.</li><li>Save the whole table in a single <code>SetAsync</code>, never a call per field.</li><li>Never call a DataStore inside a loop that runs per frame or on <code>Touched</code>.</li></ul>
+<h2 id="what-to-store">What to store<a class="anchor" href="#what-to-store" aria-label="Link to this section">#</a></h2>
+<p>Store plain data: numbers, strings, booleans, and tables of those.</p>
+<p>You cannot store instances, <code>Vector3</code>, <code>CFrame</code>, <code>Color3</code>, or functions. Convert them:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- instead of storing a CFrame</span>
+data.<span class="t-prop">SpawnPosition</span> = { pos.<span class="t-prop">X</span>, pos.<span class="t-prop">Y</span>, pos.<span class="t-prop">Z</span> }
+
+<span class="t-com">-- reading it back</span>
+<span class="t-key">local</span> pos = <span class="t-glob">Vector3</span>.<span class="t-fn">new</span>(<span class="t-glob">unpack</span>(data.<span class="t-prop">SpawnPosition</span>))</code></pre></div>
+<p>Tables with non-string, non-sequential keys also serialise badly. If a save comes back with keys missing, that is usually why — keep keys as strings or a clean array.</p>
+<h2 id="verifying-it-actually-works">Verifying it actually works<a class="anchor" href="#verifying-it-actually-works" aria-label="Link to this section">#</a></h2>
+<ol><li>Enable Studio API access and publish the place.</li><li>Join the live game, change a value, leave, rejoin. The value should persist.</li><li>Rename the store to something that has never existed and rejoin — you should get</li></ol>
+<p>   defaults, with no errors.</p>
+<ol><li>Check the server log (<code>F9</code> → Server) for any <code>[Data]</code> warnings. Those lines are</li></ol>
+<p>   there so that a failure is visible instead of silent.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

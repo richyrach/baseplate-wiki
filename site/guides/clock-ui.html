@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A clock UI that shows in-game time without redrawing every frame — Baseplate Wiki</title>
+<meta name="description" content="Reading Lighting.ClockTime into a HUD label, formatting it as 12- or 24-hour, and only updating when the visible text actually changes.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../recipes.html">Recipes</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/ui.html">UI</a>
+  </p>
+  <h1>A clock UI that shows in-game time without redrawing every frame</h1>
+  <p class="lede">Reading Lighting.ClockTime into a HUD label, formatting it as 12- or 24-hour, and only updating when the visible text actually changes.</p>
+  <p class="doc-meta"><span>UI</span><span>Beginner</span><span>7 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-naive-version">The naive version</a></li><li><a href="#the-version-to-use">The version to use</a></li><li><a href="#the-12-hour-conversion-carefully">The 12-hour conversion, carefully</a></li><li><a href="#adding-an-icon-for-day-and-night">Adding an icon for day and night</a></li><li><a href="#styling-it-so-it-survives-phones">Styling it so it survives phones</a></li><li><a href="#showing-a-real-world-clock-instead">Showing a real-world clock instead</a></li><li><a href="#checking-it">Checking it</a></li></ul></aside>
+  <div class="prose">
+<p>You have a day/night cycle running and you want a clock on screen. The naive version works and quietly wastes a lot of frames.</p>
+<h2 id="the-naive-version">The naive version<a class="anchor" href="#the-naive-version" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> Lighting = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Lighting"</span>)
+
+<span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"RunService"</span>).<span class="t-prop">RenderStepped</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+	label.<span class="t-prop">Text</span> = formatTime(Lighting.<span class="t-prop">ClockTime</span>)
+<span class="t-key">end</span>)</code></pre></div>
+<p>At 60fps this rebuilds a string and assigns <code>Text</code> sixty times a second to show a number that changes once a minute of game time. Setting <code>Text</code> forces the UI to re-measure and re-render that label.</p>
+<h2 id="the-version-to-use">The version to use<a class="anchor" href="#the-version-to-use" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- LocalScript inside your HUD</span>
+<span class="t-key">local</span> Lighting = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Lighting"</span>)
+
+<span class="t-key">local</span> label = <span class="t-glob">script</span>.<span class="t-prop">Parent</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"ClockLabel"</span>)
+
+<span class="t-key">local</span> USE_24_HOUR = <span class="t-key">false</span>
+<span class="t-key">local</span> lastText = <span class="t-key">nil</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> formatTime(clockTime)
+	<span class="t-key">local</span> totalMinutes = <span class="t-glob">math</span>.<span class="t-fn">floor</span>(clockTime * <span class="t-num">60</span>)
+	<span class="t-key">local</span> hour = <span class="t-glob">math</span>.<span class="t-fn">floor</span>(totalMinutes / <span class="t-num">60</span>) % <span class="t-num">24</span>
+	<span class="t-key">local</span> minute = totalMinutes % <span class="t-num">60</span>
+
+	<span class="t-key">if</span> USE_24_HOUR <span class="t-key">then</span>
+		<span class="t-key">return</span> <span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"%02d:%02d"</span>, hour, minute)
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> suffix = hour &lt; <span class="t-num">12</span> <span class="t-key">and</span> <span class="t-str">"AM"</span> <span class="t-key">or</span> <span class="t-str">"PM"</span>
+	<span class="t-key">local</span> display = hour % <span class="t-num">12</span>
+	<span class="t-key">if</span> display == <span class="t-num">0</span> <span class="t-key">then</span>
+		display = <span class="t-num">12</span>
+	<span class="t-key">end</span>
+	<span class="t-key">return</span> <span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"%d:%02d %s"</span>, display, minute, suffix)
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> redraw()
+	<span class="t-key">local</span> text = formatTime(Lighting.<span class="t-prop">ClockTime</span>)
+	<span class="t-key">if</span> text ~= lastText <span class="t-key">then</span>
+		lastText = text
+		label.<span class="t-prop">Text</span> = text
+	<span class="t-key">end</span>
+<span class="t-key">end</span>
+
+Lighting:<span class="t-fn">GetPropertyChangedSignal</span>(<span class="t-str">"ClockTime"</span>):<span class="t-fn">Connect</span>(redraw)
+redraw()</code></pre></div>
+<p>The <code>lastText</code> guard is the whole point. The signal still fires constantly, but the expensive part — assigning <code>Text</code> — only happens when the minute rolls over.</p>
+<p>The trailing <code>redraw()</code> sets the initial value. Without it the label shows whatever you typed in Studio until the first change fires, which on a paused cycle is never.</p>
+<h2 id="the-12-hour-conversion-carefully">The 12-hour conversion, carefully<a class="anchor" href="#the-12-hour-conversion-carefully" aria-label="Link to this section">#</a></h2>
+<p><code>hour % 12</code> gives <code>0</code> for both midnight and noon, and a clock reading "0:30 AM" looks broken. The <code>if display == 0 then display = 12 end</code> line is what turns that into "12:30 AM".</p>
+<p>Off-by-one errors in this conversion are extremely common. Test it by jumping the cycle to 0.1, 11.9, 12.1 and 23.9 from the Command Bar and reading what the label says.</p>
+<h2 id="adding-an-icon-for-day-and-night">Adding an icon for day and night<a class="anchor" href="#adding-an-icon-for-day-and-night" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> icon = <span class="t-glob">script</span>.<span class="t-prop">Parent</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"PhaseIcon"</span>)
+
+<span class="t-key">local</span> SUN = <span class="t-str">"rbxassetid://0000000"</span>      <span class="t-com">-- your icons</span>
+<span class="t-key">local</span> MOON = <span class="t-str">"rbxassetid://0000000"</span>
+
+<span class="t-key">local</span> lastPhase = <span class="t-key">nil</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> redrawPhase()
+	<span class="t-key">local</span> hour = Lighting.<span class="t-prop">ClockTime</span>
+	<span class="t-key">local</span> isDay = hour &gt;= <span class="t-num">6</span> <span class="t-key">and</span> hour &lt; <span class="t-num">18</span>
+
+	<span class="t-key">if</span> isDay ~= lastPhase <span class="t-key">then</span>
+		lastPhase = isDay
+		icon.<span class="t-prop">Image</span> = isDay <span class="t-key">and</span> SUN <span class="t-key">or</span> MOON
+	<span class="t-key">end</span>
+<span class="t-key">end</span></code></pre></div>
+<p>Same guard pattern. Setting <code>Image</code> to the value it already holds still triggers work, and on an image it can cause a visible flicker.</p>
+<h2 id="styling-it-so-it-survives-phones">Styling it so it survives phones<a class="anchor" href="#styling-it-so-it-survives-phones" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code>label.<span class="t-prop">AnchorPoint</span> = <span class="t-glob">Vector2</span>.<span class="t-fn">new</span>(<span class="t-num">1</span>, <span class="t-num">0</span>)
+label.<span class="t-prop">Position</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">1</span>, -<span class="t-num">12</span>, <span class="t-num">0</span>, <span class="t-num">12</span>)      <span class="t-com">-- top right, 12px margin</span>
+label.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">110</span>, <span class="t-num">0</span>, <span class="t-num">32</span>)          <span class="t-com">-- fixed: text does not need to scale</span>
+label.<span class="t-prop">TextScaled</span> = <span class="t-key">false</span>
+label.<span class="t-prop">TextSize</span> = <span class="t-num">18</span>
+label.<span class="t-prop">Font</span> = <span class="t-glob">Enum</span>.<span class="t-prop">Font</span>.<span class="t-prop">GothamMedium</span>
+label.<span class="t-prop">BackgroundTransparency</span> = <span class="t-num">0.4</span>
+label.<span class="t-prop">BackgroundColor3</span> = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-num">0</span>)
+label.<span class="t-prop">TextColor3</span> = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">255</span>, <span class="t-num">255</span>, <span class="t-num">255</span>)</code></pre></div>
+<p>A clock is one of the few cases where fixed <code>Offset</code> sizing is correct — it holds a predictable short string, and it should stay a small readable badge rather than growing to a fifth of the screen on a monitor.</p>
+<p><code>AnchorPoint</code> of <code>(1, 0)</code> anchors the top-<strong>right</strong> corner, so the negative X offset insets it from the edge. Without that, positioning by the top-left corner puts most of the label off screen.</p>
+<p>Add a <code>UICorner</code> for rounded edges:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> corner = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"UICorner"</span>)
+corner.<span class="t-prop">CornerRadius</span> = <span class="t-glob">UDim</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">6</span>)
+corner.<span class="t-prop">Parent</span> = label</code></pre></div>
+<aside class="note note-note"><p class="note-label">note</p><p>Keep the clock out of the very top strip on phones — the Roblox menu button lives there. Leaving <code>ScreenGui.IgnoreGuiInset</code> at its default <code>false</code> handles this for you.</p></aside>
+<h2 id="showing-a-real-world-clock-instead">Showing a real-world clock instead<a class="anchor" href="#showing-a-real-world-clock-instead" aria-label="Link to this section">#</a></h2>
+<p>If you want the player's actual local time rather than game time:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> realLocalTime()
+	<span class="t-key">local</span> t = <span class="t-glob">os</span>.<span class="t-fn">date</span>(<span class="t-str">"*t"</span>)          <span class="t-com">-- client's local time</span>
+	<span class="t-key">return</span> <span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"%02d:%02d"</span>, t.<span class="t-prop">hour</span>, t.<span class="t-prop">min</span>)
+<span class="t-key">end</span>
+
+<span class="t-glob">task</span>.<span class="t-fn">spawn</span>(<span class="t-key">function</span>()
+	<span class="t-key">while</span> <span class="t-key">true</span> <span class="t-key">do</span>
+		label.<span class="t-prop">Text</span> = realLocalTime()
+		<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">20</span>)
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p><code>os.date("*t")</code> on the client returns that machine's local time, which differs per player — fine for a clock, useless for anything you need players to agree on. For a shared timestamp use <code>workspace:GetServerTimeNow()</code>.</p>
+<p>Twenty seconds is a reasonable poll for a minute-resolution clock; there is no point checking more often.</p>
+<h2 id="checking-it">Checking it<a class="anchor" href="#checking-it" aria-label="Link to this section">#</a></h2>
+<ol><li>Jump the time from the Command Bar and confirm the label follows:</li></ol>
+<p>   <code>game:GetService("Lighting").<a class="term-link" href="../terms/clocktime.html" title="The hour of the in-game day, 0 to 24, on Lighting. Drives the sun and moon.">ClockTime</a> = 23.98</code></p>
+<ol><li>Watch it roll past midnight. <code>23:59 → 00:00</code> in 24-hour mode,</li></ol>
+<p>   <code>11:59 PM → 12:00 AM</code> in 12-hour.</p>
+<ol><li>Add a temporary <code>print</code> inside the <code>if text ~= lastText</code> block and confirm it fires</li></ol>
+<p>   about once per game minute, not once per frame. That is the whole optimisation, and    it is worth confirming it works.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

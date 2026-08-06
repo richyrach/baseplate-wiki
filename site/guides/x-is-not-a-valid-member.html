@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&#x27;X is not a valid member of Y&#x27;: every cause, in order of likelihood — Baseplate Wiki</title>
+<meta name="description" content="The most common error in Roblox scripting has about six causes. Here they are ordered by how often they are actually the problem.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/scripting.html">Scripting</a>
+  </p>
+  <h1>&#x27;X is not a valid member of Y&#x27;: every cause, in order of likelihood</h1>
+  <p class="lede">The most common error in Roblox scripting has about six causes. Here they are ordered by how often they are actually the problem.</p>
+  <p class="doc-meta"><span>Scripting</span><span>Beginner</span><span>10 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#1-it-exists-but-not-yet">1. It exists, but not yet</a></li><li><a href="#2-the-name-is-spelled-differently-than-you-think">2. The name is spelled differently than you think</a></li><li><a href="#3-it-is-on-the-other-side-of-the-client-server-boundary">3. It is on the other side of the client-server boundary</a></li><li><a href="#4-something-destroyed-it">4. Something destroyed it</a></li><li><a href="#5-you-are-indexing-the-wrong-parent">5. You are indexing the wrong parent</a></li><li><a href="#6-streamingenabled-removed-it">6. StreamingEnabled removed it</a></li><li><a href="#the-thirty-second-diagnosis">The thirty-second diagnosis</a></li><li><a href="#what-to-check-if-it-still-happens">What to check if it still happens</a></li></ul></aside>
+  <div class="prose">
+<p>The error looks like this:</p>
+<p><code>MainMenu is not a valid member of PlayerGui "Players.YourName.PlayerGui"</code></p>
+<p>It means exactly one thing: at the moment that line ran, the thing on the left did not contain a child with that name. Nothing more mysterious than that.</p>
+<p>The useful question is <em>why</em> it wasn't there, and there are about six answers. They are listed here in the order you should actually check them, which is roughly how often each one turns out to be the culprit.</p>
+<h2 id="1-it-exists-but-not-yet">1. It exists, but not yet<a class="anchor" href="#1-it-exists-but-not-yet" aria-label="Link to this section">#</a></h2>
+<p>This is the most common cause by a wide margin, and it is the one that makes the error look random — it happens on some joins and not others.</p>
+<p>Your client script starts running while objects are still arriving from the server. Direct indexing does not wait:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- runs the instant the script starts, whether MainMenu has arrived or not</span>
+<span class="t-key">local</span> gui = <span class="t-glob">game</span>.<span class="t-prop">Players</span>.<span class="t-prop">LocalPlayer</span>.<span class="t-prop">PlayerGui</span>.<span class="t-prop">MainMenu</span></code></pre></div>
+<p>Fix it by waiting for the child instead of assuming it:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+<span class="t-key">local</span> player = Players.<span class="t-prop">LocalPlayer</span>
+
+<span class="t-key">local</span> playerGui = player:<span class="t-fn">WaitForChild</span>(<span class="t-str">"PlayerGui"</span>)
+<span class="t-key">local</span> gui = playerGui:<span class="t-fn">WaitForChild</span>(<span class="t-str">"MainMenu"</span>, <span class="t-num">10</span>)
+
+<span class="t-key">if</span> <span class="t-key">not</span> gui <span class="t-key">then</span>
+	<span class="t-glob">warn</span>(<span class="t-str">"MainMenu never replicated"</span>)
+	<span class="t-key">return</span>
+<span class="t-key">end</span></code></pre></div>
+<p>Always pass the timeout. Without it the script waits forever, which turns a loud error into a silent hang — harder to debug, not easier.</p>
+<aside class="note note-note"><p class="note-label">note</p><p>A strong signal for this cause: the error happens in the live game but never in Studio. Studio loads everything instantly, so the race never opens.</p></aside>
+<h2 id="2-the-name-is-spelled-differently-than-you-think">2. The name is spelled differently than you think<a class="anchor" href="#2-the-name-is-spelled-differently-than-you-think" aria-label="Link to this section">#</a></h2>
+<p>Instance names are case-sensitive and can contain trailing spaces that are invisible in the Explorer.</p>
+<p><code>Mainmenu</code> is not <code>MainMenu</code>. <code>"MainMenu "</code> is not <code>"MainMenu"</code>.</p>
+<p>The fastest way to check is to stop trusting your eyes and print what is actually there:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">for</span> _, child <span class="t-key">in</span> <span class="t-glob">ipairs</span>(playerGui:<span class="t-fn">GetChildren</span>()) <span class="t-key">do</span>
+	<span class="t-glob">print</span>(<span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"[%s] %q"</span>, child.<span class="t-prop">ClassName</span>, child.<span class="t-prop">Name</span>))
+<span class="t-key">end</span></code></pre></div>
+<p><code>%q</code> wraps the name in quotes, so a trailing space becomes visible as <code>"MainMenu "</code> instead of looking identical to the correct name.</p>
+<h2 id="3-it-is-on-the-other-side-of-the-client-server-boundary">3. It is on the other side of the client-server boundary<a class="anchor" href="#3-it-is-on-the-other-side-of-the-client-server-boundary" aria-label="Link to this section">#</a></h2>
+<p>Some containers never replicate to clients:</p>
+<div class="table-scroll"><table><thead><tr><th>Container</th><th>Server</th><th>Client</th></tr></thead><tbody><tr><td><code><a class="term-link" href="../terms/replicatedstorage.html" title="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code></td><td>yes</td><td>yes</td></tr><tr><td><code>Workspace</code></td><td>yes</td><td>yes</td></tr><tr><td><code>ServerStorage</code></td><td>yes</td><td><strong>no</strong></td></tr><tr><td><code>ServerScriptService</code></td><td>yes</td><td><strong>no</strong></td></tr></tbody></table></div>
+<p>If a <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a> tries to read something out of <code>ServerStorage</code>, it will always error, on every run, with total consistency. That consistency is the tell: cause 1 is intermittent, cause 3 never works at all.</p>
+<p>Move whatever both sides need into <code>ReplicatedStorage</code>.</p>
+<h2 id="4-something-destroyed-it">4. Something destroyed it<a class="anchor" href="#4-something-destroyed-it" aria-label="Link to this section">#</a></h2>
+<p>If a variable holds a reference to an instance that has since been destroyed, reading a property of it errors — and the message names the <em>parent</em> as <code>nil</code>, which is confusing the first time you see it.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> part = <span class="t-glob">workspace</span>:<span class="t-fn">FindFirstChild</span>(<span class="t-str">"Coin"</span>)
+part:<span class="t-fn">Destroy</span>()
+<span class="t-glob">print</span>(part.<span class="t-prop">Position</span>)   <span class="t-com">-- errors: Position is not a valid member</span></code></pre></div>
+<p>This shows up most often with characters. A player dies, your saved reference to their <code>Humanoid</code> is now pointing at a destroyed instance, and the next line that touches it fails. Re-fetch instead of caching across a respawn:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> onDied()
+	<span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
+	<span class="t-key">if</span> <span class="t-key">not</span> character <span class="t-key">or</span> <span class="t-key">not</span> character.<span class="t-prop">Parent</span> <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+	<span class="t-key">local</span> humanoid = character:<span class="t-fn">FindFirstChildOfClass</span>(<span class="t-str">"Humanoid"</span>)
+	<span class="t-key">if</span> <span class="t-key">not</span> humanoid <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+	<span class="t-com">-- safe to use humanoid here</span>
+<span class="t-key">end</span></code></pre></div>
+<h2 id="5-you-are-indexing-the-wrong-parent">5. You are indexing the wrong parent<a class="anchor" href="#5-you-are-indexing-the-wrong-parent" aria-label="Link to this section">#</a></h2>
+<p>Two versions of this:</p>
+<p><strong>Off by one level.</strong> <code>script.Parent.Frame.Button</code> when the actual hierarchy is <code>script.Parent.Frame.Container.Button</code>. Print <code>child:GetFullName()</code> to see the real path:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-glob">print</span>(button:<span class="t-fn">GetFullName</span>())
+<span class="t-com">--&gt; Players.YourName.PlayerGui.MainMenu.Frame.Container.Button</span></code></pre></div>
+<p><strong>Confusing the template with the copy.</strong> Objects in <code>StarterGui</code>, <code>StarterPack</code> and <code>StarterPlayerScripts</code> are templates. Each player gets a <strong>copy</strong>. A LocalScript that reads <code>game.StarterGui.MainMenu</code> is reading the template, not the player's live copy in <code>PlayerGui</code>. The template exists, so this one does not always error — it just silently does nothing useful, which is worse.</p>
+<h2 id="6-streamingenabled-removed-it">6. StreamingEnabled removed it<a class="anchor" href="#6-streamingenabled-removed-it" aria-label="Link to this section">#</a></h2>
+<p>If <code>Workspace.StreamingEnabled</code> is on, parts far from the player may not be loaded on that client at all. Code that assumes every part in the world is present will error unpredictably depending on where the player is standing.</p>
+<p>This one is worth checking last, because it only applies if you turned streaming on — but if you did, and errors started appearing in places that used to work, this is very likely why.</p>
+<h2 id="the-thirty-second-diagnosis">The thirty-second diagnosis<a class="anchor" href="#the-thirty-second-diagnosis" aria-label="Link to this section">#</a></h2>
+<p>Before changing any code, run this at the line that errors:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> parent = playerGui   <span class="t-com">-- whatever is on the left of the dot</span>
+<span class="t-glob">print</span>(<span class="t-str">"parent:"</span>, parent <span class="t-key">and</span> parent:<span class="t-fn">GetFullName</span>() <span class="t-key">or</span> <span class="t-str">"nil"</span>)
+<span class="t-glob">print</span>(<span class="t-str">"children:"</span>)
+<span class="t-key">for</span> _, c <span class="t-key">in</span> <span class="t-glob">ipairs</span>(parent:<span class="t-fn">GetChildren</span>()) <span class="t-key">do</span>
+	<span class="t-glob">print</span>(<span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"  [%s] %q"</span>, c.<span class="t-prop">ClassName</span>, c.<span class="t-prop">Name</span>))
+<span class="t-key">end</span></code></pre></div>
+<p>Three outcomes, and each one points at a different cause:</p>
+<ul><li><strong>The list is empty</strong> → cause 1 (not replicated yet) or cause 3 (wrong side).</li><li><strong>The name is in the list but slightly different</strong> → cause 2 (spelling).</li><li><strong>The name is there and looks right</strong> → you are looking at a different parent</li></ul>
+<p>  than you think. Cause 5.</p>
+<p>That covers nearly every instance of this error. It is a boring error with a boring cause, which is genuinely good news: the fix is almost always one line.</p>
+<h2 id="what-to-check-if-it-still-happens">What to check if it still happens<a class="anchor" href="#what-to-check-if-it-still-happens" aria-label="Link to this section">#</a></h2>
+<ul><li>Is the error from the client or the server? Client errors appear in the</li></ul>
+<p>  <strong>Developer Console</strong> (<code>F9</code>) in a live game, never in the Studio output window.</p>
+<ul><li>Does it happen every time, or sometimes? Every time points at causes 2, 3 or 5.</li></ul>
+<p>  Sometimes points at cause 1 or 6.</p>
+<ul><li>Test with two clients from the <strong>Test</strong> tab rather than single-player Play.</li></ul>
+<p>  Several of these causes cannot occur in a shared Studio process at all.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

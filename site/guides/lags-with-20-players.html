@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why your game lags with 20 players when it was fine with 2 — Baseplate Wiki</title>
+<meta name="description" content="Most Roblox performance problems scale with player count for one of five reasons. How to find which one you have instead of guessing.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/performance.html">Performance</a>
+  </p>
+  <h1>Why your game lags with 20 players when it was fine with 2</h1>
+  <p class="lede">Most Roblox performance problems scale with player count for one of five reasons. How to find which one you have instead of guessing.</p>
+  <p class="doc-meta"><span>Performance</span><span>Intermediate</span><span>12 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#first-is-it-the-server-or-the-client">First: is it the server or the client?</a></li><li><a href="#1-per-player-loops">1. Per-player loops</a></li><li><a href="#2-connections-that-are-never-disconnected">2. Connections that are never disconnected</a></li><li><a href="#3-remoteevent-traffic">3. RemoteEvent traffic</a></li><li><a href="#4-part-count-and-unanchored-parts">4. Part count and unanchored parts</a></li><li><a href="#5-characters-are-expensive">5. Characters are expensive</a></li><li><a href="#measure-then-fix">Measure, then fix</a></li><li><a href="#the-order-to-work-in">The order to work in</a></li></ul></aside>
+  <div class="prose">
+<p>Two players: smooth. Twenty players: unplayable.</p>
+<p>Something in your game costs per-player, and twenty is ten times two. The useful move is to find out <em>which</em> thing rather than optimising at random — and Roblox gives you the numbers to find out.</p>
+<h2 id="first-is-it-the-server-or-the-client">First: is it the server or the client?<a class="anchor" href="#first-is-it-the-server-or-the-client" aria-label="Link to this section">#</a></h2>
+<p>These have completely different causes, and the answer takes ten seconds.</p>
+<p>Press <code>F9</code>, or <code>Shift+F5</code> for the performance stats overlay, and look at:</p>
+<ul><li><strong>Server frame time / heartbeat</strong> — how long the server takes per tick. Should sit</li></ul>
+<p>  near 16ms. Climbing means the server is the bottleneck.</p>
+<ul><li><strong>Client frame time</strong> — the same, on your machine.</li><li><strong>Ping</strong> — network latency.</li></ul>
+<p>Then:</p>
+<ul><li><strong>Server high, client fine</strong> → server-side logic. Causes 1, 2, 3 below.</li><li><strong>Client high, server fine</strong> → rendering or client scripts. Causes 4, 5.</li><li><strong>Both fine but it feels bad</strong> → network. Cause 3.</li></ul>
+<p>Guessing without this split wastes hours. A rendering fix will do nothing for a server-bound game.</p>
+<h2 id="1-per-player-loops">1. Per-player loops<a class="anchor" href="#1-per-player-loops" aria-label="Link to this section">#</a></h2>
+<p>Something running per player per frame is 10x the work at 20 players:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- 20 players x 60 fps = 1200 executions a second</span>
+RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+	<span class="t-key">for</span> _, player <span class="t-key">in</span> <span class="t-glob">ipairs</span>(Players:<span class="t-fn">GetPlayers</span>()) <span class="t-key">do</span>
+		<span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
+		<span class="t-key">if</span> character <span class="t-key">then</span>
+			checkZone(character)      <span class="t-com">-- and this loops over 50 zones...</span>
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>Twenty players against fifty zones every frame is 60,000 checks a second.</p>
+<p>Two fixes, and they compose:</p>
+<p><strong>Run it less often.</strong> Zone checks do not need 60Hz:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-glob">task</span>.<span class="t-fn">spawn</span>(<span class="t-key">function</span>()
+	<span class="t-key">while</span> <span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">0.25</span>) <span class="t-key">do</span>
+		<span class="t-key">for</span> _, player <span class="t-key">in</span> <span class="t-glob">ipairs</span>(Players:<span class="t-fn">GetPlayers</span>()) <span class="t-key">do</span>
+			<span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
+			<span class="t-key">if</span> character <span class="t-key">then</span>
+				checkZone(character)
+			<span class="t-key">end</span>
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>Four times a second instead of sixty. For zone detection nobody can tell.</p>
+<p><strong>Use the engine's spatial queries instead of your own loop.</strong> <code>Region3</code> scanning by hand is slow; <code>GetPartBoundsInBox</code> is implemented in C++:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> parts = <span class="t-glob">workspace</span>:<span class="t-fn">GetPartBoundsInBox</span>(zone.<span class="t-prop">CFrame</span>, zone.<span class="t-prop">Size</span>)</code></pre></div>
+<p>Better still, <code>Touched</code>/<code>TouchEnded</code> on a zone part is event-driven and costs nothing when nobody moves.</p>
+<h2 id="2-connections-that-are-never-disconnected">2. Connections that are never disconnected<a class="anchor" href="#2-connections-that-are-never-disconnected" aria-label="Link to this section">#</a></h2>
+<p>This is the one that produces the distinctive symptom of a server getting slower the longer it stays up, rather than being slow immediately.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- a new connection every respawn, and the old one still runs</span>
+Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	player.<span class="t-prop">CharacterAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(character)
+		RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+			track(character)
+		<span class="t-key">end</span>)
+	<span class="t-key">end</span>)
+<span class="t-key">end</span>)</code></pre></div>
+<p>After ten respawns that player has ten <code>Heartbeat</code> connections, nine of them tracking destroyed characters.</p>
+<p>Keep the connection and clean it up:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	player.<span class="t-prop">CharacterAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(character)
+		<span class="t-key">local</span> connection
+		connection = RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+			<span class="t-key">if</span> <span class="t-key">not</span> character.<span class="t-prop">Parent</span> <span class="t-key">then</span>
+				connection:<span class="t-fn">Disconnect</span>()
+				<span class="t-key">return</span>
+			<span class="t-key">end</span>
+			track(character)
+		<span class="t-key">end</span>)
+	<span class="t-key">end</span>)
+<span class="t-key">end</span>)</code></pre></div>
+<p>To confirm you have this problem, watch <strong>Memory</strong> in the Developer Console over fifteen minutes on a populated server. A number that only ever climbs is a leak.</p>
+<h2 id="3-remoteevent-traffic">3. RemoteEvent traffic<a class="anchor" href="#3-remoteevent-traffic" aria-label="Link to this section">#</a></h2>
+<p>Every <a class="term-link" href="../terms/remoteevent.html" title="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvent</a> call is network traffic, and <code>FireAllClients</code> multiplies by player count.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- 60 fps x 20 players = 1200 messages a second</span>
+RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+	updatePosition:<span class="t-fn">FireAllClients</span>(vehicle.<span class="t-prop">Position</span>)
+<span class="t-key">end</span>)</code></pre></div>
+<p>Three fixes:</p>
+<p><strong>Send less often.</strong> Most state does not need 60Hz. 10Hz is plenty for a scoreboard.</p>
+<p><strong>Send to who needs it.</strong> <code>FireClient(player, ...)</code> beats <code>FireAllClients</code> when only one player cares.</p>
+<p><strong>Use replicated properties instead of events.</strong> A <code>Value</code> object, or an attribute, replicates automatically and is not something you can accidentally spam:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>scoreValue.<span class="t-prop">Value</span> = newScore     <span class="t-com">-- replicates once, to everyone, automatically</span></code></pre></div>
+<p>Check the <strong>Network</strong> tab in the Developer Console to see what is actually being sent. It is usually surprising.</p>
+<h2 id="4-part-count-and-unanchored-parts">4. Part count and unanchored parts<a class="anchor" href="#4-part-count-and-unanchored-parts" aria-label="Link to this section">#</a></h2>
+<p>Client-side frame time is often just rendering too much.</p>
+<ul><li><strong>Unanchored parts</strong> are simulated every frame. Anchor everything static. This is</li></ul>
+<p>  frequently the single biggest win available.</p>
+<ul><li><strong>Total part count.</strong> Thousands of individual parts is expensive; unions and meshes</li></ul>
+<p>  render far more cheaply than the parts they replace.</p>
+<ul><li><strong>Transparent and reflective surfaces</strong> cost more than opaque ones.</li><li><strong>Particle emitters</strong> are expensive per particle. Twenty players with a trail each</li></ul>
+<p>  is a lot of particles.</p>
+<p>The audit:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> total, unanchored = <span class="t-num">0</span>, <span class="t-num">0</span>
+<span class="t-key">for</span> _, d <span class="t-key">in</span> <span class="t-glob">ipairs</span>(<span class="t-glob">workspace</span>:<span class="t-fn">GetDescendants</span>()) <span class="t-key">do</span>
+	<span class="t-key">if</span> d:<span class="t-fn">IsA</span>(<span class="t-str">"BasePart"</span>) <span class="t-key">then</span>
+		total += <span class="t-num">1</span>
+		<span class="t-key">if</span> <span class="t-key">not</span> d.<span class="t-prop">Anchored</span> <span class="t-key">then</span>
+			unanchored += <span class="t-num">1</span>
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span>
+<span class="t-glob">print</span>(<span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"%d parts, %d unanchored (%.0f%%)"</span>,
+	total, unanchored, unanchored / total * <span class="t-num">100</span>))</code></pre></div>
+<p>If a meaningful share of a static map is unanchored, fix that before anything else.</p>
+<h2 id="5-characters-are-expensive">5. Characters are expensive<a class="anchor" href="#5-characters-are-expensive" aria-label="Link to this section">#</a></h2>
+<p>Each character is roughly 15 parts plus a <code>Humanoid</code>, and <code>Humanoid</code> is one of the most expensive objects in the engine — it does state machines, physics and animation every frame.</p>
+<p>Twenty players is 300 parts and 20 Humanoids that all have to be simulated and rendered by every client.</p>
+<p>You cannot avoid player characters, but you can avoid <em>extra</em> Humanoids. NPCs are often the real cost:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- an NPC that does not need to walk does not need a Humanoid</span>
+npc.<span class="t-prop">Humanoid</span>:<span class="t-fn">Destroy</span>()</code></pre></div>
+<p>If the NPC is purely decorative, removing the <code>Humanoid</code> removes most of its cost. If it needs to move, <code>Humanoid.WalkSpeed = 0</code> does not help — the state machine still runs.</p>
+<h2 id="measure-then-fix">Measure, then fix<a class="anchor" href="#measure-then-fix" aria-label="Link to this section">#</a></h2>
+<p>The MicroProfiler (<code>Ctrl+F6</code>) shows where frame time actually goes. It looks intimidating and you only need one skill: find the widest bar and read its label. That label is your bottleneck. Fix it, measure again.</p>
+<p>Optimising the second-widest bar has no measurable effect, which is why "I optimised loads of things and it is still slow" is such a common outcome.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>Do not optimise from a two-player Studio test. Several of these problems only appear with real player counts, and two of them — connection leaks and memory growth — only appear over time. Test in a live server with people in it.</p></aside>
+<h2 id="the-order-to-work-in">The order to work in<a class="anchor" href="#the-order-to-work-in" aria-label="Link to this section">#</a></h2>
+<ol><li><code>Shift+F5</code> and split server versus client. Do not skip this.</li><li>Anchor everything static. Cheap, big, no downside.</li><li>Count your <code>Heartbeat</code> and <code>RenderStepped</code> connections. Every one should have a</li></ol>
+<p>   disconnect path.</p>
+<ol><li>Move per-frame loops to a slower timer, or to events.</li><li>Check the Network tab for RemoteEvent spam.</li><li>Watch Memory over fifteen minutes for a leak.</li><li>Only now open the MicroProfiler, and only fix the widest bar.</li></ol>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

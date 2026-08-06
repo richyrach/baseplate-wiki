@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scale vs Offset: building a GUI that survives phone screens — Baseplate Wiki</title>
+<meta name="description" content="Your menu is perfect on your monitor and unusable on a phone. The cause is almost always Offset, and the fix is one property.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/ui.html">UI</a>
+  </p>
+  <h1>Scale vs Offset: building a GUI that survives phone screens</h1>
+  <p class="lede">Your menu is perfect on your monitor and unusable on a phone. The cause is almost always Offset, and the fix is one property.</p>
+  <p class="doc-meta"><span>UI</span><span>Beginner</span><span>9 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-two-numbers-in-every-udim2">The two numbers in every UDim2</a></li><li><a href="#use-scale-for-layout-offset-for-details">Use Scale for layout, Offset for details</a></li><li><a href="#anchorpoint-the-missing-half-of-positioning">AnchorPoint: the missing half of positioning</a></li><li><a href="#keeping-proportions-with-uiaspectratioconstraint">Keeping proportions with UIAspectRatioConstraint</a></li><li><a href="#text-needs-its-own-attention">Text needs its own attention</a></li><li><a href="#the-status-bar-eats-your-top-row">The status bar eats your top row</a></li><li><a href="#testing-without-a-phone">Testing without a phone</a></li><li><a href="#minimum-tap-size">Minimum tap size</a></li><li><a href="#the-audit">The audit</a></li></ul></aside>
+  <div class="prose">
+<p>You build a menu in Studio. It looks right. A player opens it on a phone and the buttons are off the edge of the screen, or the whole panel is a postage stamp in one corner.</p>
+<p>The cause is nearly always the same: the GUI was sized in <strong>Offset</strong> — fixed pixels — on a screen that is a different number of pixels wide.</p>
+<h2 id="the-two-numbers-in-every-udim2">The two numbers in every UDim2<a class="anchor" href="#the-two-numbers-in-every-udim2" aria-label="Link to this section">#</a></h2>
+<p>Every <code>Size</code> and <code>Position</code> on a GUI object is a <code><a class="term-link" href="../terms/udim2.html" title="The two-part size and position type for GUI objects. Scale is a fraction of the parent, Offset is fixed pixels.">UDim2</a></code>, and it holds two values per axis:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(xScale, xOffset, yScale, yOffset)</code></pre></div>
+<ul><li><strong>Scale</strong> is a fraction of the parent. <code>0.5</code> means half the parent's width,</li></ul>
+<p>  whatever that is.</p>
+<ul><li><strong>Offset</strong> is a number of pixels. <code>400</code> means 400 pixels, on every device.</li></ul>
+<p>A 400-pixel-wide panel is 21% of a 1920px monitor and 111% of a 360px phone. Same number, completely different result. That is the entire bug.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- fragile: fixed pixels</span>
+frame.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0</span>, <span class="t-num">400</span>, <span class="t-num">0</span>, <span class="t-num">300</span>)
+
+<span class="t-com">-- adapts: half the parent, 30% tall</span>
+frame.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0.5</span>, <span class="t-num">0</span>, <span class="t-num">0.3</span>, <span class="t-num">0</span>)</code></pre></div>
+<p>There are shorthand constructors that make the intent obvious:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>frame.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">0.3</span>)     <span class="t-com">-- scale only</span>
+frame.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">fromOffset</span>(<span class="t-num">400</span>, <span class="t-num">300</span>)    <span class="t-com">-- pixels only</span></code></pre></div>
+<h2 id="use-scale-for-layout-offset-for-details">Use Scale for layout, Offset for details<a class="anchor" href="#use-scale-for-layout-offset-for-details" aria-label="Link to this section">#</a></h2>
+<p>Scale is not always right. The rule that works in practice:</p>
+<p><strong>Scale</strong> for anything that should grow with the screen — panels, columns, the overall menu, spacing between big blocks.</p>
+<p><strong>Offset</strong> for things that should stay a fixed physical size — a 2-pixel border, an 8-pixel gap, an icon that should not become a blurry giant on a 4K monitor.</p>
+<p>Mixing them on one axis is fine and often exactly right:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- 80% of the parent's width, minus 20 pixels of margin</span>
+frame.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0.8</span>, -<span class="t-num">20</span>, <span class="t-num">0</span>, <span class="t-num">44</span>)</code></pre></div>
+<p>That is a full-width-ish bar with a fixed 44-pixel height — the height stays tappable on a phone instead of collapsing to nothing.</p>
+<h2 id="anchorpoint-the-missing-half-of-positioning">AnchorPoint: the missing half of positioning<a class="anchor" href="#anchorpoint-the-missing-half-of-positioning" aria-label="Link to this section">#</a></h2>
+<p><code>Position</code> sets where an object's <strong>top-left corner</strong> goes by default. So this does not centre anything:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>frame.<span class="t-prop">Position</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">0.5</span>)   <span class="t-com">-- top-left corner at the centre</span></code></pre></div>
+<p><code>AnchorPoint</code> changes which point of the object is being positioned. It runs from <code>(0, 0)</code> for top-left to <code>(1, 1)</code> for bottom-right:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>frame.<span class="t-prop">AnchorPoint</span> = <span class="t-glob">Vector2</span>.<span class="t-fn">new</span>(<span class="t-num">0.5</span>, <span class="t-num">0.5</span>)
+frame.<span class="t-prop">Position</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">0.5</span>)   <span class="t-com">-- now genuinely centred</span></code></pre></div>
+<p>This is the fix for "my GUI is roughly centred but visibly off," and it scales correctly on every screen, which manual pixel nudging does not.</p>
+<h2 id="keeping-proportions-with-uiaspectratioconstraint">Keeping proportions with UIAspectRatioConstraint<a class="anchor" href="#keeping-proportions-with-uiaspectratioconstraint" aria-label="Link to this section">#</a></h2>
+<p>Scale on both axes distorts, because screens are not all the same shape. A square icon becomes a rectangle on a wide phone.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> constraint = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"UIAspectRatioConstraint"</span>)
+constraint.<span class="t-prop">AspectRatio</span> = <span class="t-num">1</span>        <span class="t-com">-- width / height</span>
+constraint.<span class="t-prop">Parent</span> = frame</code></pre></div>
+<p>Now set the size on one axis and let the constraint compute the other:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>frame.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.3</span>, <span class="t-num">0</span>)   <span class="t-com">-- height follows from the ratio</span></code></pre></div>
+<p>This is how you get a card or an avatar that keeps its shape everywhere. For a 16:9 panel, set <code>AspectRatio = 16/9</code>.</p>
+<h2 id="text-needs-its-own-attention">Text needs its own attention<a class="anchor" href="#text-needs-its-own-attention" aria-label="Link to this section">#</a></h2>
+<p>Text does not scale with its container. A label sized in Scale gets bigger; the text inside stays the same pixel height and starts overflowing or looking lost.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>label.<span class="t-prop">TextScaled</span> = <span class="t-key">true</span></code></pre></div>
+<p><code>TextScaled</code> makes the text fill the label. Add a minimum so it does not become unreadable in a small container:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> size = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"UITextSizeConstraint"</span>)
+size.<span class="t-prop">MinTextSize</span> = <span class="t-num">12</span>
+size.<span class="t-prop">MaxTextSize</span> = <span class="t-num">28</span>
+size.<span class="t-prop">Parent</span> = label</code></pre></div>
+<p>Without <code>MaxTextSize</code>, a big label on a monitor produces comically large text. Without <code>MinTextSize</code>, a small one produces text nobody can read.</p>
+<h2 id="the-status-bar-eats-your-top-row">The status bar eats your top row<a class="anchor" href="#the-status-bar-eats-your-top-row" aria-label="Link to this section">#</a></h2>
+<p>On phones, the top of the screen has the Roblox button and system UI over it. A frame at <code>Position = UDim2.fromScale(0, 0)</code> can end up underneath.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>screenGui.<span class="t-prop">IgnoreGuiInset</span> = <span class="t-key">false</span>   <span class="t-com">-- default: the safe area is respected</span></code></pre></div>
+<p>Leaving <code>IgnoreGuiInset</code> at <code>false</code> keeps your GUI below the inset. Set it to <code>true</code> only for full-screen backgrounds that are meant to run edge to edge, and keep interactive elements out of the top strip either way.</p>
+<h2 id="testing-without-a-phone">Testing without a phone<a class="anchor" href="#testing-without-a-phone" aria-label="Link to this section">#</a></h2>
+<p>Studio has this built in and it takes ten seconds:</p>
+<ol><li>Open the <strong>Test</strong> tab.</li><li>Click <strong>Device</strong>.</li><li>Pick a phone from the emulator list — a small one like an older iPhone is the</li></ol>
+<p>   harshest useful test.</p>
+<p>Check both orientations. Landscape phones are short, which breaks vertical layouts that assumed plenty of height.</p>
+<aside class="note note-note"><p class="note-label">note</p><p>The device emulator changes the viewport, which is what actually matters for UDim2 maths. It does not emulate touch input precisely, so a button that looks right here can still fail to respond on a real phone for unrelated reasons.</p></aside>
+<h2 id="minimum-tap-size">Minimum tap size<a class="anchor" href="#minimum-tap-size" aria-label="Link to this section">#</a></h2>
+<p>A button that is 20 pixels tall is comfortable with a mouse and nearly impossible with a thumb. Keep interactive elements at least around 44 pixels on their shortest side:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>button.<span class="t-prop">Size</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">new</span>(<span class="t-num">0.4</span>, <span class="t-num">0</span>, <span class="t-num">0</span>, <span class="t-num">48</span>)   <span class="t-com">-- flexible width, fixed tappable height</span></code></pre></div>
+<p>This is why the mixed Scale/Offset pattern earns its keep: the width adapts, the height stays usable.</p>
+<h2 id="the-audit">The audit<a class="anchor" href="#the-audit" aria-label="Link to this section">#</a></h2>
+<p>Open your GUI and check each object:</p>
+<ol><li>Any <code>Size</code> or <code>Position</code> with a large Offset number and a <code>0</code> Scale is suspect.</li><li>Anything meant to be centred should have an <code>AnchorPoint</code> other than <code>(0, 0)</code>.</li><li>Anything meant to keep its shape needs a <code>UIAspectRatioConstraint</code>.</li><li>Every <code>TextLabel</code> and <code>TextButton</code> should have <code>TextScaled</code> on with a</li></ol>
+<p>   <code>UITextSizeConstraint</code>.</p>
+<ol><li>Then run the device emulator on the smallest phone in the list.</li></ol>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

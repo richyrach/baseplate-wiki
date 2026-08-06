@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MarketplaceService — Baseplate Wiki reference</title>
+<meta name="description" content="Handles game passes, developer products and receipts. Several of its most-used methods are now deprecated in favour of Async versions.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a class="on" href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc doc-term">
+  <p class="crumbs"><a href="index.html">Reference</a>
+    <span aria-hidden="true">/</span><a href="../c/monetization.html">Monetization</a></p>
+  <h1><code class="term-title">MarketplaceService</code></h1>
+  <p class="lede">Handles game passes, developer products and receipts. Several of its most-used methods are now deprecated in favour of Async versions.</p>
+  <!-- ad slot 'term-top': paste AdSense code here AFTER approval -->
+  <div class="prose">
+<p><code>MarketplaceService</code> is the entry point for everything involving Robux. It is also one of the services where the most widely-copied tutorial code is now calling deprecated methods.</p>
+<h2 id="the-deprecations-as-of-august-2026">The deprecations, as of August 2026<a class="anchor" href="#the-deprecations-as-of-august-2026" aria-label="Link to this section">#</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Deprecated</th><th>Use instead</th></tr></thead><tbody><tr><td><code>GetProductInfo()</code></td><td><code>GetProductInfoAsync()</code></td></tr><tr><td><code>PlayerOwnsAsset()</code></td><td><code>PlayerOwnsAssetAsync()</code></td></tr><tr><td><code>PlayerOwnsBundle()</code></td><td><code>PlayerOwnsBundleAsync()</code></td></tr><tr><td><code>PromptPremiumPurchase()</code></td><td>deprecated; no confirmed replacement</td></tr></tbody></table></div>
+<p>If you copied a monetization script from a video, it very likely uses at least one of these. They still work, which is exactly why nobody notices.</p>
+<h2 id="what-is-current">What is current<a class="anchor" href="#what-is-current" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> MarketplaceService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"MarketplaceService"</span>)
+
+<span class="t-com">-- game passes</span>
+MarketplaceService:<span class="t-fn">PromptGamePassPurchase</span>(player, gamePassId)
+MarketplaceService:<span class="t-fn">UserOwnsGamePassAsync</span>(userId, gamePassId)   <span class="t-com">-- yields</span>
+
+<span class="t-com">-- developer products</span>
+MarketplaceService:<span class="t-fn">PromptProductPurchase</span>(player, productId)
+
+<span class="t-com">-- info about either</span>
+MarketplaceService:<span class="t-fn">GetProductInfoAsync</span>(assetId, infoType)      <span class="t-com">-- yields</span></code></pre></div>
+<p><code>infoType</code> is an <code>Enum.InfoType</code> — <code>GamePass</code>, <code>Product</code>, <code>Asset</code>, <code>Bundle</code>, <code>Subscription</code>. Passing the wrong one returns data that looks plausible and has the wrong price in it.</p>
+<h2 id="every-async-method-needs-a-pcall">Every Async method needs a pcall<a class="anchor" href="#every-async-method-needs-a-pcall" aria-label="Link to this section">#</a></h2>
+<p>These are web requests. They fail.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> ok, owns = <span class="t-glob">pcall</span>(<span class="t-key">function</span>()
+	<span class="t-key">return</span> MarketplaceService:<span class="t-fn">UserOwnsGamePassAsync</span>(player.<span class="t-prop">UserId</span>, PASS_ID)
+<span class="t-key">end</span>)
+
+<span class="t-key">if</span> <span class="t-key">not</span> ok <span class="t-key">then</span>
+	<span class="t-glob">warn</span>(<span class="t-str">"check failed:"</span>, owns)
+	<span class="t-key">return</span>              <span class="t-com">-- do NOT treat this as "does not own"</span>
+<span class="t-key">end</span></code></pre></div>
+<p>Collapsing a failed check into <code>false</code> means prompting someone who already paid. Collapsing it into <code>true</code> means giving the benefit away. Treat failure as its own third state.</p>
+<h2 id="the-events-are-for-ui-only">The events are for UI only<a class="anchor" href="#the-events-are-for-ui-only" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code>MarketplaceService.<span class="t-prop">PromptGamePassPurchaseFinished</span>:<span class="t-fn">Connect</span>(
+	<span class="t-key">function</span>(player, gamePassId, wasPurchased) <span class="t-key">end</span>
+)
+MarketplaceService.<span class="t-prop">PromptProductPurchaseFinished</span>:<span class="t-fn">Connect</span>(
+	<span class="t-key">function</span>(userId, productId, isPurchased) <span class="t-key">end</span>
+)</code></pre></div>
+<p>Note the inconsistency: the game pass event gives you a <strong><code>player</code></strong>, the product event gives you a <strong><code>userId</code></strong>. Getting this wrong produces code that looks right and errors at runtime.</p>
+<p>Both fire for every player when connected on the server, so filter on the arguments. And neither is a payment confirmation — for developer products, only <code>ProcessReceipt</code> is authoritative.</p>
+<h2 id="processreceipt-is-a-callback-not-an-event">ProcessReceipt is a callback, not an event<a class="anchor" href="#processreceipt-is-a-callback-not-an-event" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code>MarketplaceService.<span class="t-prop">ProcessReceipt</span> = handler       <span class="t-com">-- assign</span></code></pre></div>
+<p>There is exactly one, it must be assigned rather than connected, and a second assignment anywhere in your codebase silently replaces the first. If some products stopped granting after you added a script, look for a second assignment.</p>
+<p>It must return an <code>Enum.ProductPurchaseDecision</code>: <code>PurchaseGranted</code> or <code>NotProcessedYet</code>. Returning nothing, or erroring, counts as not granted and Roblox retries — which is why de-duplicating on <code>receiptInfo.PurchaseId</code> is mandatory.</p>
+<h2 id="newer-surface-worth-knowing-about">Newer surface worth knowing about<a class="anchor" href="#newer-surface-worth-knowing-about" aria-label="Link to this section">#</a></h2>
+<p><code>BindReceiptHandler(transactionType, handler, filter)</code> returns a connection and allows multiple filtered handlers. <code>PromptSubscriptionPurchase</code> and <code>PromptBulkPurchase</code> exist for subscriptions and multi-item carts.</p>
+<p>These are newer than the patterns most guides cover, including this site's. Check the current reference before building on them.</p>
+<h2 id="nothing-works-in-studio">Nothing works in Studio<a class="anchor" href="#nothing-works-in-studio" aria-label="Link to this section">#</a></h2>
+<p>Purchase prompts appear in Studio and never complete. <code>ProcessReceipt</code> never fires. Monetization can only be tested in a published place, and real purchases cost real Robux — though purchases in your own game largely return to you.</p>
+<p>Test the <em>logic</em> by calling your receipt handler directly with a fake receipt table, then delete that code before publishing.</p>
+  </div>
+  <section class="related"><h2>Guides that use this</h2><ul><li><a href="../guides/click-a-part-to-buy.html">Click a part to buy a game pass, with ProximityPrompt or ClickDetector</a></li><li><a href="../guides/developer-products-processreceipt.html">Developer products and ProcessReceipt without double-granting</a></li><li><a href="../guides/gamepass-purchase-button.html">A game pass button that checks ownership before prompting</a></li><li><a href="../guides/premium-benefits.html">Giving Premium players benefits, and the Roblox Plus problem</a></li></ul></section>
+  <footer class="doc-foot">
+    <p>Something wrong or missing here?
+       <a href="../contribute.html">Send a correction</a>.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

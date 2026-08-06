@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WaitForChild — Baseplate Wiki reference</title>
+<meta name="description" content="Pauses until a named child exists, instead of erroring because it has not replicated yet.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a class="on" href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc doc-term">
+  <p class="crumbs"><a href="index.html">Reference</a>
+    <span aria-hidden="true">/</span><a href="../c/scripting.html">Scripting</a></p>
+  <h1><code class="term-title">WaitForChild</code></h1>
+  <p class="lede">Pauses until a named child exists, instead of erroring because it has not replicated yet.</p>
+  <!-- ad slot 'term-top': paste AdSense code here AFTER approval -->
+  <div class="prose">
+<p><code>WaitForChild</code> looks for a child by name and yields until it appears, rather than erroring immediately when it is not there yet.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> gui = player:<span class="t-fn">WaitForChild</span>(<span class="t-str">"PlayerGui"</span>):<span class="t-fn">WaitForChild</span>(<span class="t-str">"MainMenu"</span>)</code></pre></div>
+<p>It exists because of replication timing. In Studio everything is present instantly, so direct indexing appears to work. In a live game the client starts running scripts while objects are still arriving from the server, and direct indexing throws:</p>
+<p><code>MainMenu is not a valid member of PlayerGui</code></p>
+<h2 id="always-pass-a-timeout">Always pass a timeout<a class="anchor" href="#always-pass-a-timeout" aria-label="Link to this section">#</a></h2>
+<p>With no second argument, <code>WaitForChild</code> waits <strong>forever</strong>. If the object never arrives, the script hangs silently — which is harder to debug than the error you were trying to avoid, because there is nothing in the output at all.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> menu = player.<span class="t-prop">PlayerGui</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"MainMenu"</span>, <span class="t-num">10</span>)
+<span class="t-key">if</span> <span class="t-key">not</span> menu <span class="t-key">then</span>
+    <span class="t-glob">warn</span>(<span class="t-str">"MainMenu never arrived"</span>)
+    <span class="t-key">return</span>
+<span class="t-key">end</span></code></pre></div>
+<p>With a timeout it returns <code>nil</code> on failure, so you can handle it.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>A <code>WaitForChild</code> with no timeout inside a loop that runs per player, or on a Touched event, can leave threads parked indefinitely. Every one of them holds its captured variables in memory.</p></aside>
+<h2 id="where-you-need-it-and-where-you-do-not">Where you need it, and where you do not<a class="anchor" href="#where-you-need-it-and-where-you-do-not" aria-label="Link to this section">#</a></h2>
+<p>Use it <strong>on the client</strong>, for anything the server created or that streams in.</p>
+<p>You usually do <strong>not</strong> need it on the server for objects that already exist in the published place file — the server has the whole data model from the moment it starts. Wrapping every server-side lookup in <code>WaitForChild</code> is a common habit that adds noise and can mask a genuine typo, because a misspelled name now hangs instead of erroring.</p>
+<h2 id="the-alternatives">The alternatives<a class="anchor" href="#the-alternatives" aria-label="Link to this section">#</a></h2>
+<ul><li><code>FindFirstChild(name)</code> — returns <code>nil</code> immediately, never waits. Right when the</li></ul>
+<p>  object is optional and you want to branch on its absence.</p>
+<ul><li><code>ChildAdded</code> — an event, for reacting to things that appear later.</li><li>Direct indexing (<code>parent.Name</code>) — fine for objects you are certain exist right</li></ul>
+<p>  now, and it fails loudly if you are wrong, which is sometimes what you want.</p>
+<p>The rule of thumb: <code>WaitForChild</code> when it <em>will</em> exist and you need to wait, <code>FindFirstChild</code> when it <em>might not</em> exist and you need to check.</p>
+  </div>
+  <section class="related"><h2>Guides that use this</h2><ul><li><a href="../guides/currency-the-client-cannot-edit.html">A currency system the client cannot edit</a></li><li><a href="../guides/developer-console-f9.html">The Developer Console (F9): finding the errors Studio never showed you</a></li><li><a href="../guides/remoteevent-vs-remotefunction.html">RemoteEvent vs RemoteFunction: which one to use, and when the difference bites</a></li><li><a href="../guides/x-is-not-a-valid-member.html">&#x27;X is not a valid member of Y&#x27;: every cause, in order of likelihood</a></li></ul></section>
+  <footer class="doc-foot">
+    <p>Something wrong or missing here?
+       <a href="../contribute.html">Send a correction</a>.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

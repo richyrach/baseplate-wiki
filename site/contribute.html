@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contribute to Baseplate Wiki — Baseplate Wiki</title>
+<meta name="description" content="How to correct a guide, add a missing one, or become an editor. Every page here is open to correction.">
+<link rel="stylesheet" href="assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="" class="">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <button class="menu" aria-expanded="false" aria-controls="side">Menu</button>
+  <a class="brand" href="index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="learn.html">Learn</a><a href="recipes.html">Recipes</a><a href="terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="about.html">About</a>
+    <a href="contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell"><aside class="side" id="side">
+  <form class="search" role="search" onsubmit="return false">
+    <label class="sr" for="q">Search the wiki</label>
+    <input id="q" type="search" placeholder="Search&hellip;  /"
+           autocomplete="off" spellcheck="false">
+    <div id="results" class="results" hidden></div>
+  </form>
+  <nav class="side-nav">
+    <p class="side-label">Categories</p>
+    <ul class="side-list side-cats"><li><a href="c/scripting.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 6.6 4.8 12l4.3 5.5"/><path d="M14.9 6.5 19.3 12 15 17.5"/><path d="M13.2 5.9 11 18.2"/></svg><span>Scripting</span><em>5</em></a></li><li><a href="c/building.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 14.4h6.1v5.1H3.7z"/><path d="M13.9 14.3h6.2v5.2h-6.1z"/><path d="M8.7 8.9h6.2v5.2H8.8z"/></svg><span>Building</span><em>3</em></a></li><li><a href="c/vehicles.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.2 14.7c.3-1.4.7-3.1 1.9-3.6 1.6-.7 3.6-1 6.7-1 2.5 0 4.2 1.1 5.7 2.3l2.4.7c1 .3 1.2.9 1.2 1.5v1.2h-2.2"/><path d="M9.6 15.8H14"/><circle cx="7.4" cy="16.1" r="2"/><circle cx="16.4" cy="16" r="2"/></svg><span>Vehicles</span><em>2</em></a></li><li><a href="c/ui.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.1 5.6h15.8v12.9H4.2z"/><path d="M4.2 9.3h15.6"/><path d="M6.9 12.4h5.2v3.1H6.9z"/></svg><span>UI</span><em>5</em></a></li><li><a href="c/data.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.1 7.3c0-1.3 3.1-2.3 6.9-2.3 3.9 0 7 1 7 2.3 0 1.2-3.1 2.2-7 2.2-3.8 0-6.9-1-6.9-2.2z"/><path d="M5.1 7.4v9.4c0 1.3 3.1 2.3 6.9 2.3 3.9 0 7-1 7-2.3V7.3"/><path d="M5.2 12.1c0 1.2 3 2.2 6.8 2.2 3.9 0 7-1 7-2.2"/></svg><span>Data</span><em>6</em></a></li><li><a href="c/multiplayer.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9.1" cy="9.2" r="2.7"/><path d="M4.2 18.9c0-2.9 2.1-4.6 4.8-4.6 2.8 0 4.9 1.7 4.9 4.6"/><circle cx="16.6" cy="10.6" r="2.1"/><path d="M14.6 18.9c.2-2.3 1.3-3.6 3-3.6 1.8 0 2.9 1.3 3.1 3.6"/></svg><span>Multiplayer</span><em>2</em></a></li><li><a href="c/animation.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.6 19h16.6"/><path d="M7.4 8.1l2.3 2.3-2.3 2.4-2.3-2.4z"/><path d="M11.4 13.1c2.1-1.1 3.6-2.9 4.7-5.4"/><circle cx="17.6" cy="6.1" r="1.5"/></svg><span>Animation</span><em>2</em></a></li><li><a href="c/monetization.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.6"/><path d="M12 7.6v8.8"/><path d="M14.5 9.8c-.5-.8-1.4-1.3-2.5-1.3-1.4 0-2.4.7-2.4 1.8 0 1 .8 1.5 2.4 1.8 1.7.3 2.6.8 2.6 1.9 0 1.2-1.1 1.9-2.6 1.9-1.2 0-2.2-.5-2.7-1.4"/></svg><span>Monetization</span><em>4</em></a></li><li><a href="c/performance.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 17.1a7.6 7.6 0 0 1 15.2 0"/><path d="M12 17.1 15.7 11.6"/><path d="M6.4 11.3l.9.9"/><path d="M12 8.6v1.3"/><path d="M17.6 11.3l-.9.9"/></svg><span>Performance</span><em>2</em></a></li></ul>
+  </nav>
+</aside>
+<main id="main">
+<article class="doc">
+  <h1>Contribute to Baseplate Wiki</h1>
+  <div class="prose">
+<p>Baseplate Wiki is open to correction. Roblox changes constantly, and a guide that was accurate when it was written can quietly stop being accurate six months later. If you find something wrong, I would genuinely rather know than keep a tidy site.</p>
+<p>There are three ways in, in rough order of how much effort they take.</p>
+<h2 id="1-just-tell-me-easiest">1. Just tell me (easiest)<a class="anchor" href="#1-just-tell-me-easiest" aria-label="Link to this section">#</a></h2>
+<p>Email <code>richyrachfansgmial@gmail.com</code> with the guide name and what's wrong. You do not need a GitHub account, you do not need to know git, and you do not need to write the fix yourself — "the code in section 3 errors on line 2" is a completely useful message.</p>
+<p>To make a correction fast to verify, it helps if you include:</p>
+<ul><li>which guide, and roughly which section</li><li>what you expected to happen</li><li>the exact error text, if there was one</li><li>your Roblox Studio version, if the guide touches a recent API</li></ul>
+<h2 id="2-send-an-edit-for-anything-substantial">2. Send an edit (for anything substantial)<a class="anchor" href="#2-send-an-edit-for-anything-substantial" aria-label="Link to this section">#</a></h2>
+<p>Every page on this site is a Markdown file in a public git repository. You can propose a change the same way you would to any open source project:</p>
+<ol><li>Fork the repository.</li><li>Edit the <code>.md</code> file for the guide under <code>content/guides/</code>.</li><li>Open a pull request describing what you changed and why.</li></ol>
+<p>I review every pull request myself. Nothing goes live without being read first, which is deliberate — see <em>Why this is not an open wiki</em> below.</p>
+<p>You don't need to build the site to contribute. If your Markdown is valid, it will render. If you do want to check it locally, it's one command and needs nothing but Python:</p>
+<div class="code"><span class="code-lang">Shell</span><pre><code>python3 build.py</code></pre></div>
+<h2 id="3-become-an-editor">3. Become an editor<a class="anchor" href="#3-become-an-editor" aria-label="Link to this section">#</a></h2>
+<p>If you send a few good corrections, or write a guide that gets published, I will add you to the repository as a reviewer. Editors get their name on the guides they wrote, and can approve other people's corrections.</p>
+<p>There is no application form and no minimum. Send one useful thing and you're effectively already in.</p>
+<h2 id="what-makes-a-guide-publishable-here">What makes a guide publishable here<a class="anchor" href="#what-makes-a-guide-publishable-here" aria-label="Link to this section">#</a></h2>
+<p>The standard is narrow on purpose, and it is the reason this site exists at all:</p>
+<ul><li><strong>The code has been run.</strong> Not "should work" — actually pasted into Studio and</li></ul>
+<p>  executed. If it has a caveat, the guide says so.</p>
+<ul><li><strong>Errors are quoted exactly</strong> as Roblox prints them. Searching the literal error</li></ul>
+<p>  string is how most readers arrive at a page.</p>
+<ul><li><strong>It says when it doesn't know.</strong> Where behaviour is version-dependent, or only</li></ul>
+<p>  one path was tested, that is stated rather than papered over.</p>
+<ul><li><strong>It contains something first-hand.</strong> The hours you lost, the wrong guess you</li></ul>
+<p>  made first, the number you measured. A guide that could have been assembled   without touching Studio is not useful to anyone.</p>
+<p>That last point is the one I hold hardest. There is already an enormous amount of generic, confidently-wrong Roblox content online. This site is meant to be the other thing.</p>
+<h2 id="why-this-is-not-an-open-wiki">Why this is not an open wiki<a class="anchor" href="#why-this-is-not-an-open-wiki" aria-label="Link to this section">#</a></h2>
+<p>The name says wiki and the contribution model is real, but there is no "edit this page" button that publishes instantly, and that is a considered decision rather than laziness:</p>
+<ul><li><strong>Every change gets read.</strong> An unreviewed edit on a technical guide can put code</li></ul>
+<p>  in front of a beginner that silently corrupts their save data. Review is cheap   and the alternative is not.</p>
+<ul><li><strong>Spam.</strong> Open-edit sites with any traffic attract link spam within days, and</li></ul>
+<p>  fighting it is a full-time job I do not have.</p>
+<ul><li><strong>Attribution stays clean.</strong> Pull requests carry a permanent, public record of</li></ul>
+<p>  who wrote what.</p>
+<p>Reviewed contribution gets essentially all the value of an open wiki without the failure modes. If this site ever grows enough to need real editor accounts, that will be a good problem to have, and it can be built then.</p>
+<h2 id="reporting-something-other-than-a-mistake">Reporting something other than a mistake<a class="anchor" href="#reporting-something-other-than-a-mistake" aria-label="Link to this section">#</a></h2>
+<ul><li><strong>Guide requests</strong> — tell me what you're stuck on. A specific stuck problem is</li></ul>
+<p>  far more useful to me than a broad topic suggestion; being stuck is the origin of   every guide here.</p>
+<ul><li><strong>Roblox account problems</strong> (bans, purchases, Robux) — only Roblox Support can</li></ul>
+<p>  help. This site has no connection to Roblox Corporation.</p>
+<ul><li><strong>Exploits, or scripts meant to break other people's games</strong> — not welcome here,</li></ul>
+<p>  and pull requests adding them will be closed.</p>
+  </div>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="privacy.html">Privacy</a></p>
+</footer>
+<script src="assets/search.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&#x27;DataStore request was added to queue&#x27;: what throttling actually means — Baseplate Wiki</title>
+<meta name="description" content="This warning means you are over your request budget. Here is how the budget works and how to get back under it.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/data.html">Data</a>
+  </p>
+  <h1>&#x27;DataStore request was added to queue&#x27;: what throttling actually means</h1>
+  <p class="lede">This warning means you are over your request budget. Here is how the budget works and how to get back under it.</p>
+  <p class="doc-meta"><span>Data</span><span>Intermediate</span><span>9 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-budget">The budget</a></li><li><a href="#the-four-things-that-actually-cause-it">The four things that actually cause it</a></li><li><a href="#checking-the-budget-before-you-spend-it">Checking the budget before you spend it</a></li><li><a href="#setasync-vs-updateasync">SetAsync vs UpdateAsync</a></li><li><a href="#reading-the-diagnosis">Reading the diagnosis</a></li><li><a href="#the-short-checklist">The short checklist</a></li></ul></aside>
+  <div class="prose">
+<p>The message reads roughly:</p>
+<p><code>DataStore request was added to queue. If request queue fills, further requests will be dropped.</code></p>
+<p>It is a warning, not an error, and the important word is <strong>queue</strong>. Your request was not rejected. It was parked, and it will run later — possibly seconds later. That delay is why the symptom people describe is "my game freezes when someone joins" rather than "saving failed."</p>
+<p>If the queue fills, requests do start getting dropped. That is when data loss begins.</p>
+<h2 id="the-budget">The budget<a class="anchor" href="#the-budget" aria-label="Link to this section">#</a></h2>
+<p>Every server gets an allowance of DataStore requests per minute, and it scales with the number of players. Roughly: a base amount plus an amount per player.</p>
+<p>You can read what is left:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> DataStoreService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"DataStoreService"</span>)
+
+<span class="t-key">local</span> budget = DataStoreService:<span class="t-fn">GetRequestBudgetForRequestType</span>(
+	<span class="t-glob">Enum</span>.<span class="t-prop">DataStoreRequestType</span>.<span class="t-prop">SetIncrementAsync</span>
+)
+<span class="t-glob">print</span>(<span class="t-str">"save budget remaining:"</span>, budget)</code></pre></div>
+<p>The request types are counted separately:</p>
+<div class="table-scroll"><table><thead><tr><th>Type</th><th>Covers</th></tr></thead><tbody><tr><td><code>GetAsync</code></td><td>reads</td></tr><tr><td><code>SetIncrementAsync</code></td><td><code>SetAsync</code>, <code>IncrementAsync</code></td></tr><tr><td><code>UpdateAsync</code></td><td><code>UpdateAsync</code></td></tr><tr><td><code>GetSortedAsync</code></td><td>ordered data store reads</td></tr><tr><td><code>SetIncrementSortedAsync</code></td><td>ordered data store writes</td></tr></tbody></table></div>
+<p>So a game that reads a lot and writes rarely can exhaust its read budget while its write budget sits untouched.</p>
+<h2 id="the-four-things-that-actually-cause-it">The four things that actually cause it<a class="anchor" href="#the-four-things-that-actually-cause-it" aria-label="Link to this section">#</a></h2>
+<p><strong>Saving per stat instead of per player.</strong> This is the big one:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- four requests per player</span>
+store:<span class="t-fn">SetAsync</span>(userId .. <span class="t-str">"_coins"</span>, coins)
+store:<span class="t-fn">SetAsync</span>(userId .. <span class="t-str">"_level"</span>, level)
+store:<span class="t-fn">SetAsync</span>(userId .. <span class="t-str">"_xp"</span>, xp)
+store:<span class="t-fn">SetAsync</span>(userId .. <span class="t-str">"_items"</span>, items)</code></pre></div>
+<p>One table, one request:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>store:<span class="t-fn">SetAsync</span>(userId, {
+	Coins = coins,
+	Level = level,
+	XP = xp,
+	Items = items,
+})</code></pre></div>
+<p>Twenty players just went from 80 requests to 20.</p>
+<p><strong>Saving on every change.</strong> A coin pickup that saves immediately means a player running through a coin room generates dozens of writes in seconds.</p>
+<p>Mark the data dirty instead, and let the autosave loop write it:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> dirty = {}
+
+<span class="t-key">local</span> <span class="t-key">function</span> addCoins(player, amount)
+	<span class="t-key">local</span> data = cache[player.<span class="t-prop">UserId</span>]
+	<span class="t-key">if</span> <span class="t-key">not</span> data <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-key">end</span>
+
+	data.<span class="t-prop">Coins</span> += amount
+	dirty[player.<span class="t-prop">UserId</span>] = <span class="t-key">true</span>     <span class="t-com">-- no DataStore call here</span>
+<span class="t-key">end</span>
+
+<span class="t-glob">task</span>.<span class="t-fn">spawn</span>(<span class="t-key">function</span>()
+	<span class="t-key">while</span> <span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">60</span>) <span class="t-key">do</span>
+		<span class="t-key">for</span> userId <span class="t-key">in</span> <span class="t-glob">pairs</span>(dirty) <span class="t-key">do</span>
+			<span class="t-key">local</span> player = Players:<span class="t-fn">GetPlayerByUserId</span>(userId)
+			<span class="t-key">if</span> player <span class="t-key">then</span>
+				saveData(player)
+			<span class="t-key">end</span>
+			dirty[userId] = <span class="t-key">nil</span>
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>The in-memory value is what gameplay reads, so the player sees their coins update instantly. The DataStore is just durable storage, and it does not need to be current to the millisecond.</p>
+<p><strong>Retry loops with no backoff.</strong> A failing call retried every frame burns the whole budget in seconds and guarantees continued failure:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- wrong</span>
+<span class="t-key">while</span> <span class="t-key">not</span> success <span class="t-key">do</span>
+	success = <span class="t-glob">pcall</span>(save)
+<span class="t-key">end</span>
+
+<span class="t-com">-- right</span>
+<span class="t-key">for</span> attempt = <span class="t-num">1</span>, <span class="t-num">3</span> <span class="t-key">do</span>
+	<span class="t-key">if</span> <span class="t-glob">pcall</span>(save) <span class="t-key">then</span> <span class="t-key">break</span> <span class="t-key">end</span>
+	<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">2</span> ^ attempt)
+<span class="t-key">end</span></code></pre></div>
+<p><strong>Reading in a loop.</strong> <code>GetAsync</code> inside anything that repeats — a <code>Touched</code> handler, a leaderboard refresh, a shop opening — should be a cached read instead. Load once on join, keep it in memory.</p>
+<h2 id="checking-the-budget-before-you-spend-it">Checking the budget before you spend it<a class="anchor" href="#checking-the-budget-before-you-spend-it" aria-label="Link to this section">#</a></h2>
+<p>For non-urgent writes, wait for budget rather than queueing:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> waitForBudget(requestType)
+	<span class="t-key">local</span> start = <span class="t-glob">os</span>.<span class="t-fn">clock</span>()
+	<span class="t-key">while</span> DataStoreService:<span class="t-fn">GetRequestBudgetForRequestType</span>(requestType) &lt; <span class="t-num">1</span> <span class="t-key">do</span>
+		<span class="t-key">if</span> <span class="t-glob">os</span>.<span class="t-fn">clock</span>() - start &gt; <span class="t-num">30</span> <span class="t-key">then</span>
+			<span class="t-key">return</span> <span class="t-key">false</span>      <span class="t-com">-- give up rather than block forever</span>
+		<span class="t-key">end</span>
+		<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">1</span>)
+	<span class="t-key">end</span>
+	<span class="t-key">return</span> <span class="t-key">true</span>
+<span class="t-key">end</span>
+
+<span class="t-key">if</span> waitForBudget(<span class="t-glob">Enum</span>.<span class="t-prop">DataStoreRequestType</span>.<span class="t-prop">SetIncrementAsync</span>) <span class="t-key">then</span>
+	safeCall(<span class="t-key">function</span>() <span class="t-key">return</span> store:<span class="t-fn">SetAsync</span>(userId, data) <span class="t-key">end</span>)
+<span class="t-key">end</span></code></pre></div>
+<p>Do <strong>not</strong> do this inside <code>BindToClose</code>. There you have a few seconds total and should just fire the saves.</p>
+<h2 id="setasync-vs-updateasync">SetAsync vs UpdateAsync<a class="anchor" href="#setasync-vs-updateasync" aria-label="Link to this section">#</a></h2>
+<p><code>UpdateAsync</code> reads and writes in one operation, which makes it the correct choice when the new value depends on the old one — currency, counters, anything two servers might touch:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>store:<span class="t-fn">UpdateAsync</span>(userId, <span class="t-key">function</span>(old)
+	<span class="t-key">local</span> data = old <span class="t-key">or</span> { Coins = <span class="t-num">0</span> }
+	data.<span class="t-prop">Coins</span> += <span class="t-num">50</span>
+	<span class="t-key">return</span> data
+<span class="t-key">end</span>)</code></pre></div>
+<p>With <code>SetAsync</code>, two servers can both read 100, both add 50, and both write 150 — one increment vanishes. <code>UpdateAsync</code> cannot lose that way.</p>
+<p>It costs one request from a different budget, so it is not a free win, but for anything incremental it is the right tool.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>The function you pass to <code>UpdateAsync</code> must not yield. No <code>task.wait</code>, no DataStore calls, no <code><a class="term-link" href="../terms/waitforchild.html" title="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a></code> inside it. Compute and return.</p></aside>
+<h2 id="reading-the-diagnosis">Reading the diagnosis<a class="anchor" href="#reading-the-diagnosis" aria-label="Link to this section">#</a></h2>
+<p>The warning tells you the request type. Match it to the table above and you know which side is over budget — reads or writes. Then:</p>
+<ul><li><strong>Writes over budget</strong> → you are saving too often, or per-stat instead of per-</li></ul>
+<p>  player.</p>
+<ul><li><strong>Reads over budget</strong> → you are reading in a loop instead of caching on join.</li></ul>
+<p>Add a budget print to your autosave loop and watch it for a few minutes on a busy server. If it trends toward zero, the fix is fewer calls, not longer retries.</p>
+<h2 id="the-short-checklist">The short checklist<a class="anchor" href="#the-short-checklist" aria-label="Link to this section">#</a></h2>
+<ol><li>One <code>SetAsync</code> per player per save, carrying one table.</li><li>Autosave on a timer, 60 seconds or slower. Never save on every change.</li><li>Every retry backs off. No tight retry loops.</li><li><code>GetAsync</code> once on join, cached in memory after that.</li><li><code>UpdateAsync</code> for anything incremental.</li></ol>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

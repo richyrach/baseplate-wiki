@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProximityPrompt — Baseplate Wiki reference</title>
+<meta name="description" content="The cross-platform way to make a world object interactive. Handles keyboard, gamepad and touch with no extra code.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a class="on" href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc doc-term">
+  <p class="crumbs"><a href="index.html">Reference</a>
+    <span aria-hidden="true">/</span><a href="../c/scripting.html">Scripting</a></p>
+  <h1><code class="term-title">ProximityPrompt</code></h1>
+  <p class="lede">The cross-platform way to make a world object interactive. Handles keyboard, gamepad and touch with no extra code.</p>
+  <!-- ad slot 'term-top': paste AdSense code here AFTER approval -->
+  <div class="prose">
+<p>A <code>ProximityPrompt</code> parented to a part gives players a prompt when they get close, and fires <code>Triggered</code> on the server when they act on it.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> prompt = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"ProximityPrompt"</span>)
+prompt.<span class="t-prop">ActionText</span> = <span class="t-str">"Open"</span>
+prompt.<span class="t-prop">ObjectText</span> = <span class="t-str">"Door"</span>
+prompt.<span class="t-prop">KeyboardKeyCode</span> = <span class="t-glob">Enum</span>.<span class="t-prop">KeyCode</span>.<span class="t-prop">E</span>
+prompt.<span class="t-prop">MaxActivationDistance</span> = <span class="t-num">10</span>
+prompt.<span class="t-prop">RequiresLineOfSight</span> = <span class="t-key">false</span>
+prompt.<span class="t-prop">HoldDuration</span> = <span class="t-num">0</span>
+prompt.<span class="t-prop">Parent</span> = door
+
+prompt.<span class="t-prop">Triggered</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	openDoor(player)
+<span class="t-key">end</span>)</code></pre></div>
+<h2 id="why-prefer-it-over-clickdetector">Why prefer it over ClickDetector<a class="anchor" href="#why-prefer-it-over-clickdetector" aria-label="Link to this section">#</a></h2>
+<ul><li><strong>Cross-platform for free.</strong> Keyboard shows the key, gamepad shows a button, touch</li></ul>
+<p>  shows a tappable circle. A <code>ClickDetector</code> needs you to think about touch yourself.</p>
+<ul><li><strong>It advertises itself.</strong> <code>ActionText</code> tells the player the object is interactive,</li></ul>
+<p>  which a click detector does not.</p>
+<ul><li><strong>Distance is enforced by the engine</strong>, so a player cannot trigger it from across the</li></ul>
+<p>  map. That is one validation check you get without writing it.</p>
+<ul><li><strong><code>Triggered</code> provides the player</strong>, already trusted, the same way <code>OnServerEvent</code></li></ul>
+<p>  does.</p>
+<h2 id="the-properties-that-matter">The properties that matter<a class="anchor" href="#the-properties-that-matter" aria-label="Link to this section">#</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Property</th><th>Note</th></tr></thead><tbody><tr><td><code>ActionText</code></td><td>the verb: "Open", "Buy", "Sit"</td></tr><tr><td><code>ObjectText</code></td><td>the noun, shown smaller</td></tr><tr><td><code>MaxActivationDistance</code></td><td>studs; enforced</td></tr><tr><td><code>RequiresLineOfSight</code></td><td><strong>defaults to <code>true</code></strong></td></tr><tr><td><code>HoldDuration</code></td><td>seconds to hold; <code>0</code> is instant</td></tr><tr><td><code>Enabled</code></td><td>turn the prompt off without destroying it</td></tr><tr><td><code>Exclusivity</code></td><td>how it competes with nearby prompts</td></tr></tbody></table></div>
+<p><code>RequiresLineOfSight</code> defaulting to <code>true</code> is the most common surprise. A prompt that vanishes when a decorative railing is between the player and the object is almost always this.</p>
+<p><code>HoldDuration</code> of around <code>0.5</code> is worth setting for anything expensive or destructive — a purchase, deleting a build — so a mistimed keypress does not commit.</p>
+<h2 id="the-events">The events<a class="anchor" href="#the-events" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code>prompt.<span class="t-prop">Triggered</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player) <span class="t-key">end</span>)        <span class="t-com">-- completed</span>
+prompt.<span class="t-prop">TriggerEnded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player) <span class="t-key">end</span>)     <span class="t-com">-- released early</span>
+prompt.<span class="t-prop">PromptShown</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>() <span class="t-key">end</span>)            <span class="t-com">-- client-side</span>
+prompt.<span class="t-prop">PromptHidden</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>() <span class="t-key">end</span>)           <span class="t-com">-- client-side</span></code></pre></div>
+<p><code>Triggered</code> fires on the server and is the one to build on. <code>PromptShown</code> and <code>PromptHidden</code> fire on the client and are for local effects — a highlight, a sound.</p>
+<h2 id="still-validate-everything-else">Still validate everything else<a class="anchor" href="#still-validate-everything-else" aria-label="Link to this section">#</a></h2>
+<p>The engine guarantees the player was in range. It guarantees nothing else:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>prompt.<span class="t-prop">Triggered</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	<span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
+	<span class="t-key">if</span> <span class="t-key">not</span> character <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-key">end</span>
+
+	<span class="t-key">local</span> humanoid = character:<span class="t-fn">FindFirstChildOfClass</span>(<span class="t-str">"Humanoid"</span>)
+	<span class="t-key">if</span> <span class="t-key">not</span> humanoid <span class="t-key">or</span> humanoid.<span class="t-prop">Health</span> &lt;= <span class="t-num">0</span> <span class="t-key">then</span>
+		<span class="t-key">return</span>                    <span class="t-com">-- dead players should not be shopping</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">if</span> <span class="t-key">not</span> hasEnoughCoins(player, PRICE) <span class="t-key">then</span>
+		<span class="t-key">return</span>
+	<span class="t-key">end</span>
+
+	grant(player)
+<span class="t-key">end</span>)</code></pre></div>
+<p>Rate limiting is worth adding too. <code>HoldDuration = 0</code> with a key held down can fire repeatedly.</p>
+<h2 id="one-prompt-many-players">One prompt, many players<a class="anchor" href="#one-prompt-many-players" aria-label="Link to this section">#</a></h2>
+<p>A <code>ProximityPrompt</code> is a single instance shared by everyone in the server. You cannot show different <code>ActionText</code> to different players from a server script.</p>
+<p>If you need per-player text — "Buy" versus "Owned" — create the prompt from a <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a> so each client has its own, and keep a server-side handler for anything that changes state.</p>
+<h2 id="styling-it">Styling it<a class="anchor" href="#styling-it" aria-label="Link to this section">#</a></h2>
+<p>Set <code>Style</code> to <code>Enum.ProximityPromptStyle.Custom</code> and the default UI is suppressed, so you can draw your own from <code>PromptShown</code> and <code>PromptHidden</code> on the client. Worth doing for a game with a strong visual identity; unnecessary otherwise, since the default prompt is clear and already familiar to players.</p>
+  </div>
+  <section class="related"><h2>Guides that use this</h2><ul><li><a href="../guides/currency-the-client-cannot-edit.html">A currency system the client cannot edit</a></li><li><a href="../guides/developer-console-f9.html">The Developer Console (F9): finding the errors Studio never showed you</a></li><li><a href="../guides/remoteevent-vs-remotefunction.html">RemoteEvent vs RemoteFunction: which one to use, and when the difference bites</a></li><li><a href="../guides/x-is-not-a-valid-member.html">&#x27;X is not a valid member of Y&#x27;: every cause, in order of likelihood</a></li></ul></section>
+  <footer class="doc-foot">
+    <p>Something wrong or missing here?
+       <a href="../contribute.html">Send a correction</a>.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

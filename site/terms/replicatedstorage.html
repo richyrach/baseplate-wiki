@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReplicatedStorage — Baseplate Wiki reference</title>
+<meta name="description" content="The container both the server and every client can see. Where shared assets and RemoteEvents live.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a class="on" href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc doc-term">
+  <p class="crumbs"><a href="index.html">Reference</a>
+    <span aria-hidden="true">/</span><a href="../c/scripting.html">Scripting</a></p>
+  <h1><code class="term-title">ReplicatedStorage</code></h1>
+  <p class="lede">The container both the server and every client can see. Where shared assets and RemoteEvents live.</p>
+  <!-- ad slot 'term-top': paste AdSense code here AFTER approval -->
+  <div class="prose">
+<p><code>ReplicatedStorage</code> is a service whose contents are visible to <strong>both</strong> the server and every client. That is the whole point of it, and it is why <a class="term-link" href="../terms/remoteevent.html" title="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvents</a> and RemoteFunctions normally live there — both halves of the conversation need to find the same object.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+<span class="t-key">local</span> remotes = ReplicatedStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Remotes"</span>)
+<span class="t-key">local</span> equipItem = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"EquipItem"</span>)</code></pre></div>
+<p>A typical layout:</p>
+<div class="code"><span class="code-lang">Tree</span><pre><code>ReplicatedStorage
+├── Remotes
+│   ├── EquipItem
+│   └── GetInventory
+├── Modules
+│   └── ItemConfig
+└── Assets
+    └── CoinModel</code></pre></div>
+<h2 id="what-belongs-here">What belongs here<a class="anchor" href="#what-belongs-here" aria-label="Link to this section">#</a></h2>
+<ul><li>RemoteEvents and RemoteFunctions</li><li>ModuleScripts both sides need — shared config, shared maths</li><li>models the client needs to clone for previews or effects</li></ul>
+<h2 id="what-does-not">What does not<a class="anchor" href="#what-does-not" aria-label="Link to this section">#</a></h2>
+<p>Anything the player should not be able to read. Contents of <code>ReplicatedStorage</code> are fully visible to clients, and an exploiter can read every value in it. It is <em>shared</em>, not <em>secret</em>.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>Putting a table of item prices, drop rates, or admin user IDs in ReplicatedStorage means players can read all of it. That is fine for prices you display anyway; it is not fine for anything that is meant to be hidden or authoritative. Use <code>ServerStorage</code> or <code>ServerScriptService</code> for those.</p></aside>
+<h2 id="the-sibling-containers">The sibling containers<a class="anchor" href="#the-sibling-containers" aria-label="Link to this section">#</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Container</th><th>Server sees</th><th>Client sees</th></tr></thead><tbody><tr><td><code>ReplicatedStorage</code></td><td>yes</td><td>yes</td></tr><tr><td><code>ServerStorage</code></td><td>yes</td><td>no</td></tr><tr><td><code>ServerScriptService</code></td><td>yes</td><td>no</td></tr><tr><td><code>Workspace</code></td><td>yes</td><td>yes</td></tr></tbody></table></div>
+<p>Objects in <code>ReplicatedStorage</code> are not in the world, so they do not render, do not collide, and cost nothing to have sitting there. That makes it the normal home for things you will <code>:Clone()</code> into <code>Workspace</code> later.</p>
+  </div>
+  <section class="related"><h2>Guides that use this</h2><ul><li><a href="../guides/currency-the-client-cannot-edit.html">A currency system the client cannot edit</a></li><li><a href="../guides/developer-console-f9.html">The Developer Console (F9): finding the errors Studio never showed you</a></li><li><a href="../guides/remoteevent-vs-remotefunction.html">RemoteEvent vs RemoteFunction: which one to use, and when the difference bites</a></li><li><a href="../guides/x-is-not-a-valid-member.html">&#x27;X is not a valid member of Y&#x27;: every cause, in order of likelihood</a></li></ul></section>
+  <footer class="doc-foot">
+    <p>Something wrong or missing here?
+       <a href="../contribute.html">Send a correction</a>.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

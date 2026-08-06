@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Round-based games: a timer loop that doesn&#x27;t drift — Baseplate Wiki</title>
+<meta name="description" content="Counting down with wait(1) loses seconds every round. Use a deadline instead, and the clock stays honest for hours.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../recipes.html">Recipes</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/multiplayer.html">Multiplayer</a>
+  </p>
+  <h1>Round-based games: a timer loop that doesn&#x27;t drift</h1>
+  <p class="lede">Counting down with wait(1) loses seconds every round. Use a deadline instead, and the clock stays honest for hours.</p>
+  <p class="doc-meta"><span>Multiplayer</span><span>Intermediate</span><span>9 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-pattern">The pattern</a></li><li><a href="#a-full-round-loop">A full round loop</a></li><li><a href="#the-client-side">The client side</a></li><li><a href="#os-clock-not-tick">os.clock, not tick</a></li><li><a href="#interrupting-a-round-early">Interrupting a round early</a></li><li><a href="#verifying-it-does-not-drift">Verifying it does not drift</a></li></ul></aside>
+  <div class="prose">
+<p>The obvious countdown is wrong in a way that only shows up after a while:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">for</span> i = <span class="t-num">60</span>, <span class="t-num">0</span>, -<span class="t-num">1</span> <span class="t-key">do</span>
+	timerValue.<span class="t-prop">Value</span> = i
+	<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">1</span>)
+<span class="t-key">end</span></code></pre></div>
+<p><code>task.wait(1)</code> does not wait exactly one second. It waits <em>at least</em> one second and returns on the next frame after that. On a busy server that might be 1.02 seconds. Sixty iterations of a small overshoot is a round that runs a second or two long, and after twenty rounds your timer and the actual clock have visibly parted company.</p>
+<p>The fix is to stop counting elapsed waits and start comparing against a deadline.</p>
+<h2 id="the-pattern">The pattern<a class="anchor" href="#the-pattern" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> countdown(seconds, onTick)
+	<span class="t-key">local</span> deadline = <span class="t-glob">os</span>.<span class="t-fn">clock</span>() + seconds
+	<span class="t-key">local</span> lastShown = <span class="t-key">nil</span>
+
+	<span class="t-key">while</span> <span class="t-key">true</span> <span class="t-key">do</span>
+		<span class="t-key">local</span> remaining = deadline - <span class="t-glob">os</span>.<span class="t-fn">clock</span>()
+		<span class="t-key">if</span> remaining &lt;= <span class="t-num">0</span> <span class="t-key">then</span>
+			<span class="t-key">break</span>
+		<span class="t-key">end</span>
+
+		<span class="t-key">local</span> whole = <span class="t-glob">math</span>.<span class="t-fn">ceil</span>(remaining)
+		<span class="t-key">if</span> whole ~= lastShown <span class="t-key">then</span>
+			lastShown = whole
+			onTick(whole)
+		<span class="t-key">end</span>
+
+		<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">0.1</span>)
+	<span class="t-key">end</span>
+
+	onTick(<span class="t-num">0</span>)
+<span class="t-key">end</span></code></pre></div>
+<p>The deadline is computed once. Every iteration asks "how much is left?" rather than "how much have I counted?", so a slow frame cannot accumulate error — the next iteration simply reports a slightly smaller number.</p>
+<p>Polling at 0.1s and only firing <code>onTick</code> when the whole second changes means the display is accurate to a tenth of a second without sending ten updates a second to anyone.</p>
+<h2 id="a-full-round-loop">A full round loop<a class="anchor" href="#a-full-round-loop" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService/RoundManager.server.lua</span>
+<span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+<span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+
+<span class="t-key">local</span> state = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"Folder"</span>)
+state.<span class="t-prop">Name</span> = <span class="t-str">"RoundState"</span>
+state.<span class="t-prop">Parent</span> = ReplicatedStorage
+
+<span class="t-key">local</span> phase = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"StringValue"</span>)
+phase.<span class="t-prop">Name</span> = <span class="t-str">"Phase"</span>
+phase.<span class="t-prop">Value</span> = <span class="t-str">"Waiting"</span>
+phase.<span class="t-prop">Parent</span> = state
+
+<span class="t-key">local</span> clockValue = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"IntValue"</span>)
+clockValue.<span class="t-prop">Name</span> = <span class="t-str">"Clock"</span>
+clockValue.<span class="t-prop">Parent</span> = state
+
+<span class="t-key">local</span> MIN_PLAYERS = <span class="t-num">2</span>
+<span class="t-key">local</span> INTERMISSION = <span class="t-num">15</span>
+<span class="t-key">local</span> ROUND_LENGTH = <span class="t-num">120</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> setPhase(name)
+	phase.<span class="t-prop">Value</span> = name
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> enoughPlayers()
+	<span class="t-key">return</span> #Players:<span class="t-fn">GetPlayers</span>() &gt;= MIN_PLAYERS
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> runRound()
+	setPhase(<span class="t-str">"Playing"</span>)
+	<span class="t-com">-- start-of-round work goes here: teleport, assign teams, reset scores</span>
+
+	countdown(ROUND_LENGTH, <span class="t-key">function</span>(remaining)
+		clockValue.<span class="t-prop">Value</span> = remaining
+	<span class="t-key">end</span>)
+
+	setPhase(<span class="t-str">"Ended"</span>)
+	<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">3</span>)
+<span class="t-key">end</span>
+
+<span class="t-glob">task</span>.<span class="t-fn">spawn</span>(<span class="t-key">function</span>()
+	<span class="t-key">while</span> <span class="t-key">true</span> <span class="t-key">do</span>
+		setPhase(<span class="t-str">"Waiting"</span>)
+		clockValue.<span class="t-prop">Value</span> = <span class="t-num">0</span>
+
+		<span class="t-key">while</span> <span class="t-key">not</span> enoughPlayers() <span class="t-key">do</span>
+			<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">1</span>)
+		<span class="t-key">end</span>
+
+		setPhase(<span class="t-str">"Intermission"</span>)
+		countdown(INTERMISSION, <span class="t-key">function</span>(remaining)
+			clockValue.<span class="t-prop">Value</span> = remaining
+		<span class="t-key">end</span>)
+
+		<span class="t-key">if</span> enoughPlayers() <span class="t-key">then</span>
+			runRound()
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>Two details worth noticing:</p>
+<p><strong>The player check happens twice.</strong> Once to leave the waiting phase, and again after the intermission — because someone may have left during those fifteen seconds. Without the second check you start a one-player round.</p>
+<p><strong>Phase and clock are <code>Value</code> objects in <code><a class="term-link" href="../terms/replicatedstorage.html" title="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code></strong>, not <a class="term-link" href="../terms/remoteevent.html" title="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvents</a>. Value objects replicate automatically and the client can read them at any time, including a player who joins mid-round. With RemoteEvents, a late joiner sees nothing until the next event fires.</p>
+<h2 id="the-client-side">The client side<a class="anchor" href="#the-client-side" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- StarterPlayerScripts/RoundHud.client.lua</span>
+<span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+
+<span class="t-key">local</span> state = ReplicatedStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"RoundState"</span>)
+<span class="t-key">local</span> phase = state:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Phase"</span>)
+<span class="t-key">local</span> clockValue = state:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Clock"</span>)
+
+<span class="t-key">local</span> label = <span class="t-glob">script</span>.<span class="t-prop">Parent</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"TimerLabel"</span>)
+
+<span class="t-key">local</span> <span class="t-key">function</span> format(seconds)
+	<span class="t-key">return</span> <span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"%d:%02d"</span>, seconds // <span class="t-num">60</span>, seconds % <span class="t-num">60</span>)
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> redraw()
+	<span class="t-key">if</span> phase.<span class="t-prop">Value</span> == <span class="t-str">"Waiting"</span> <span class="t-key">then</span>
+		label.<span class="t-prop">Text</span> = <span class="t-str">"Waiting for players"</span>
+	<span class="t-key">elseif</span> phase.<span class="t-prop">Value</span> == <span class="t-str">"Intermission"</span> <span class="t-key">then</span>
+		label.<span class="t-prop">Text</span> = <span class="t-str">"Next round in "</span> .. <span class="t-fn">format</span>(clockValue.<span class="t-prop">Value</span>)
+	<span class="t-key">elseif</span> phase.<span class="t-prop">Value</span> == <span class="t-str">"Playing"</span> <span class="t-key">then</span>
+		label.<span class="t-prop">Text</span> = format(clockValue.<span class="t-prop">Value</span>)
+	<span class="t-key">else</span>
+		label.<span class="t-prop">Text</span> = <span class="t-str">"Round over"</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span>
+
+phase.<span class="t-prop">Changed</span>:<span class="t-fn">Connect</span>(redraw)
+clockValue.<span class="t-prop">Changed</span>:<span class="t-fn">Connect</span>(redraw)
+redraw()</code></pre></div>
+<p>The final <code>redraw()</code> call handles the join case — without it the label stays blank until the next change fires.</p>
+<h2 id="os-clock-not-tick">os.clock, not tick<a class="anchor" href="#os-clock-not-tick" aria-label="Link to this section">#</a></h2>
+<p><code>tick()</code> is deprecated. For measuring elapsed time on one machine, <code>os.clock()</code> is the right call and it is monotonic, so it cannot jump if the system clock changes.</p>
+<p>If you need a timestamp the client and server agree on, use <code>workspace:GetServerTimeNow()</code> on both sides. Sending a <em>deadline</em> rather than a <em>remaining count</em> lets each client run its own smooth countdown with no further network traffic:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- server, once per round</span>
+deadlineValue.<span class="t-prop">Value</span> = <span class="t-glob">workspace</span>:<span class="t-fn">GetServerTimeNow</span>() + ROUND_LENGTH
+
+<span class="t-com">-- client, every frame if you want a smooth bar</span>
+<span class="t-key">local</span> remaining = deadlineValue.<span class="t-prop">Value</span> - <span class="t-glob">workspace</span>:<span class="t-fn">GetServerTimeNow</span>()</code></pre></div>
+<p>That is the approach to reach for if you want a millisecond-smooth progress bar.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>Never drive round logic from the client's countdown. The client's clock is under the player's control. The server owns when the round ends; the client only displays it.</p></aside>
+<h2 id="interrupting-a-round-early">Interrupting a round early<a class="anchor" href="#interrupting-a-round-early" aria-label="Link to this section">#</a></h2>
+<p>A team wiping out should not require waiting for the clock. Add a signal the countdown can watch:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> roundOver = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"BindableEvent"</span>)
+<span class="t-key">local</span> finished = <span class="t-key">false</span>
+
+roundOver.<span class="t-prop">Event</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+	finished = <span class="t-key">true</span>
+<span class="t-key">end</span>)
+
+<span class="t-key">local</span> deadline = <span class="t-glob">os</span>.<span class="t-fn">clock</span>() + ROUND_LENGTH
+<span class="t-key">while</span> <span class="t-glob">os</span>.<span class="t-fn">clock</span>() &lt; deadline <span class="t-key">and</span> <span class="t-key">not</span> finished <span class="t-key">do</span>
+	clockValue.<span class="t-prop">Value</span> = <span class="t-glob">math</span>.<span class="t-fn">ceil</span>(deadline - <span class="t-glob">os</span>.<span class="t-fn">clock</span>())
+	<span class="t-glob">task</span>.<span class="t-fn">wait</span>(<span class="t-num">0.1</span>)
+<span class="t-key">end</span></code></pre></div>
+<p>Because the loop checks a flag rather than sleeping through the whole duration, it can exit within a tenth of a second of the condition being met.</p>
+<h2 id="verifying-it-does-not-drift">Verifying it does not drift<a class="anchor" href="#verifying-it-does-not-drift" aria-label="Link to this section">#</a></h2>
+<p>Print the real duration at the end of each round:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> started = <span class="t-glob">os</span>.<span class="t-fn">clock</span>()
+runRound()
+<span class="t-glob">print</span>(<span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"round took %.2fs (expected %d)"</span>, <span class="t-glob">os</span>.<span class="t-fn">clock</span>() - started, ROUND_LENGTH))</code></pre></div>
+<p>Leave it running for ten rounds. With the deadline pattern the number stays within a fraction of a second every time. With the <code>wait(1)</code> loop, watch it grow.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LocalScript — Baseplate Wiki reference</title>
+<meta name="description" content="A script that runs on one player&#x27;s own device, not on the server. Only runs in a few specific places.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a class="on" href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc doc-term">
+  <p class="crumbs"><a href="index.html">Reference</a>
+    <span aria-hidden="true">/</span><a href="../c/scripting.html">Scripting</a></p>
+  <h1><code class="term-title">LocalScript</code></h1>
+  <p class="lede">A script that runs on one player&#x27;s own device, not on the server. Only runs in a few specific places.</p>
+  <!-- ad slot 'term-top': paste AdSense code here AFTER approval -->
+  <div class="prose">
+<p>A <code>LocalScript</code> runs on a single player's machine. Whatever it does, it does only for that player, and the player's own computer is doing the work.</p>
+<p>That has two consequences that cause most of the confusion around it: a LocalScript only runs in certain locations, and nothing it decides can be trusted.</p>
+<h2 id="where-it-actually-runs">Where it actually runs<a class="anchor" href="#where-it-actually-runs" aria-label="Link to this section">#</a></h2>
+<p>A <code>LocalScript</code> executes <strong>only</strong> if it ends up inside one of these:</p>
+<ul><li><code>StarterPlayer &gt; StarterPlayerScripts</code> — runs once when the player joins</li><li><code>StarterPlayer &gt; StarterCharacterScripts</code> — runs each time their character spawns</li><li>the player's <code>PlayerGui</code> (usually via <code>StarterGui</code>)</li><li>the player's <code>Backpack</code> (usually via <code>StarterPack</code>) — tools</li><li>the player's <code>Character</code> model</li></ul>
+<p>Put one in <code>Workspace</code>, <code>ServerScriptService</code>, <code><a class="term-link" href="../terms/replicatedstorage.html" title="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code>, or <code>ServerStorage</code> and it does nothing at all. There is no error and no warning in the output. It simply never starts.</p>
+<aside class="note note-note"><p class="note-label">note</p><p><code>StarterGui</code>, <code>StarterPack</code> and <code>StarterPlayerScripts</code> are templates. Their contents get <strong>copied</strong> into each player when they join. The copy is what runs, which is why editing the original mid-game does not affect players already in the server.</p></aside>
+<h2 id="what-it-can-and-cannot-see">What it can and cannot see<a class="anchor" href="#what-it-can-and-cannot-see" aria-label="Link to this section">#</a></h2>
+<p>A LocalScript can read <code>game.Players.LocalPlayer</code>. A server <code>Script</code> cannot — <code>LocalPlayer</code> is <code>nil</code> on the server, because a server has many players and no single "local" one.</p>
+<p>Going the other way, a LocalScript cannot see anything in <code>ServerStorage</code> or <code>ServerScriptService</code>. Those never replicate to clients. If both sides need something, it goes in <code>ReplicatedStorage</code>.</p>
+<h2 id="changes-it-makes-are-private">Changes it makes are private<a class="anchor" href="#changes-it-makes-are-private" aria-label="Link to this section">#</a></h2>
+<p>If a LocalScript moves a part, recolours it, or deletes it, <strong>only that player sees the change.</strong> It does not travel back to the server or to anyone else.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- LocalScript: only this one player sees the door swing open</span>
+<span class="t-glob">workspace</span>.<span class="t-prop">Door</span>.<span class="t-prop">CFrame</span> = <span class="t-glob">workspace</span>.<span class="t-prop">Door</span>.<span class="t-prop">CFrame</span> * <span class="t-glob">CFrame</span>.<span class="t-fn">Angles</span>(<span class="t-num">0</span>, <span class="t-glob">math</span>.<span class="t-fn">rad</span>(<span class="t-num">90</span>), <span class="t-num">0</span>)</code></pre></div>
+<p>This is often the bug. It is also occasionally exactly what you want — a preview, a personal highlight, a client-only effect.</p>
+<p>To change something everyone sees, the server has to do it. Send a request with a <a class="term-link" href="../terms/remoteevent.html" title="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvent</a> and let the server make the change.</p>
+<h2 id="nothing-it-says-can-be-trusted">Nothing it says can be trusted<a class="anchor" href="#nothing-it-says-can-be-trusted" aria-label="Link to this section">#</a></h2>
+<p>The player controls their own device, so they can modify anything a LocalScript computes. Exploiters routinely do.</p>
+<p>That means a LocalScript may <strong>ask</strong>, but the server must <strong>decide</strong>:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- Wrong: the client tells the server how much it earned</span>
+coinsEarned:<span class="t-fn">FireServer</span>(<span class="t-num">9999</span>)
+
+<span class="t-com">-- Right: the client reports what it did, the server works out the reward</span>
+coinPickedUp:<span class="t-fn">FireServer</span>(coinId)</code></pre></div>
+<p>Anything that affects currency, health, inventory, progress, or another player has to be validated on the server, every time, no exceptions.</p>
+<h2 id="what-it-is-good-at">What it is good at<a class="anchor" href="#what-it-is-good-at" aria-label="Link to this section">#</a></h2>
+<p>None of the above makes LocalScripts second-class. They are the right tool for everything that is about <em>this</em> player's experience:</p>
+<ul><li>reading input (<code>UserInputService</code>, <code>ContextActionService</code>)</li><li>driving the interface in <code>PlayerGui</code></li><li>camera work</li><li>immediate visual and audio feedback, so an action feels instant instead of</li></ul>
+<p>  waiting for a network round trip</p>
+<ul><li>anything running every frame via <code>RunService.RenderStepped</code></li></ul>
+<p>The usual shape of a responsive game is: the client shows the effect right away, fires a RemoteEvent, and the server decides what actually happened.</p>
+<h2 id="telling-whether-it-ran-at-all">Telling whether it ran at all<a class="anchor" href="#telling-whether-it-ran-at-all" aria-label="Link to this section">#</a></h2>
+<p>Before debugging the logic, confirm it started:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-glob">print</span>(<span class="t-str">"LocalScript alive:"</span>, <span class="t-glob">script</span>:<span class="t-fn">GetFullName</span>())</code></pre></div>
+<p>Client output does not appear in the Studio output window when you are testing a live game — open the <strong>Developer Console</strong> with <code>F9</code> in the running game to see it. A large share of "my LocalScript is broken" turns out to be "it never ran because it was in the wrong place."</p>
+  </div>
+  <section class="related"><h2>Guides that use this</h2><ul><li><a href="../guides/currency-the-client-cannot-edit.html">A currency system the client cannot edit</a></li><li><a href="../guides/developer-console-f9.html">The Developer Console (F9): finding the errors Studio never showed you</a></li><li><a href="../guides/remoteevent-vs-remotefunction.html">RemoteEvent vs RemoteFunction: which one to use, and when the difference bites</a></li><li><a href="../guides/x-is-not-a-valid-member.html">&#x27;X is not a valid member of Y&#x27;: every cause, in order of likelihood</a></li></ul></section>
+  <footer class="doc-foot">
+    <p>Something wrong or missing here?
+       <a href="../contribute.html">Send a correction</a>.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

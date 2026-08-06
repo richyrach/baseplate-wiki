@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A day and night cycle that looks good and stays in sync — Baseplate Wiki</title>
+<meta name="description" content="Driving Lighting.ClockTime from the server, blending ambient colour and fog through the cycle, and keeping every client on the same time.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../recipes.html">Recipes</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/building.html">Building</a>
+  </p>
+  <h1>A day and night cycle that looks good and stays in sync</h1>
+  <p class="lede">Driving Lighting.ClockTime from the server, blending ambient colour and fog through the cycle, and keeping every client on the same time.</p>
+  <p class="doc-meta"><span>Building</span><span>Intermediate</span><span>12 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-cycle-on-the-server">The cycle, on the server</a></li><li><a href="#why-task-wait-with-no-argument">Why `task.wait()` with no argument</a></li><li><a href="#making-it-actually-look-like-night">Making it actually look like night</a></li><li><a href="#street-lights-that-come-on-at-dusk">Street lights that come on at dusk</a></li><li><a href="#letting-players-see-the-time">Letting players see the time</a></li><li><a href="#pausing-and-skipping">Pausing and skipping</a></li><li><a href="#tuning-it">Tuning it</a></li></ul></aside>
+  <div class="prose">
+<p>A day/night cycle is one line of code and about forty lines of art direction. The one line:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Lighting"</span>).<span class="t-prop">ClockTime</span> = <span class="t-num">14</span>   <span class="t-com">-- 2pm</span></code></pre></div>
+<p><code><a class="term-link" href="../terms/clocktime.html" title="The hour of the in-game day, 0 to 24, on Lighting. Drives the sun and moon.">ClockTime</a></code> is hours as a number from 0 to 24. <code>6</code> is dawn, <code>12</code> is noon, <code>18</code> is dusk, <code>0</code> and <code>24</code> are midnight. There is also <code>TimeOfDay</code>, which is the same thing as a <code>"HH:MM:SS"</code> string, and <code>SetMinutesAfterMidnight()</code> if you prefer minutes.</p>
+<h2 id="the-cycle-on-the-server">The cycle, on the server<a class="anchor" href="#the-cycle-on-the-server" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService/DayNight.server.lua</span>
+<span class="t-key">local</span> Lighting = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Lighting"</span>)
+
+<span class="t-key">local</span> DAY_LENGTH = <span class="t-num">20</span> * <span class="t-num">60</span>      <span class="t-com">-- a full 24h cycle takes 20 real minutes</span>
+<span class="t-key">local</span> START_HOUR = <span class="t-num">7</span>
+
+<span class="t-glob">task</span>.<span class="t-fn">spawn</span>(<span class="t-key">function</span>()
+	<span class="t-key">local</span> hoursPerSecond = <span class="t-num">24</span> / DAY_LENGTH
+
+	Lighting.<span class="t-prop">ClockTime</span> = START_HOUR
+
+	<span class="t-key">while</span> <span class="t-key">true</span> <span class="t-key">do</span>
+		<span class="t-key">local</span> dt = <span class="t-glob">task</span>.<span class="t-fn">wait</span>()
+		Lighting.<span class="t-prop">ClockTime</span> = (Lighting.<span class="t-prop">ClockTime</span> + hoursPerSecond * dt) % <span class="t-num">24</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>Run this on the <strong>server</strong>, not in a <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a>. A client-side cycle gives every player their own private time of day, so one player's screenshot says noon and their friend's says midnight.</p>
+<aside class="note note-note"><p class="note-label">note</p><p><code>Lighting.ClockTime</code> is documented as <em>Not Replicated</em>, which sounds like it should not work from the server at all. In practice setting it server-side does drive every client, because it updates the underlying <code>TimeOfDay</code>. Verify this yourself with two clients from the <strong>Test</strong> tab before building on it — if you see them drift, drive <code>TimeOfDay</code> instead, which is the replicated property.</p></aside>
+<h2 id="why-task-wait-with-no-argument">Why <code>task.wait()</code> with no argument<a class="anchor" href="#why-task-wait-with-no-argument" aria-label="Link to this section">#</a></h2>
+<p><code>task.wait()</code> returns the time since the last frame and resumes next frame. Advancing by <code>hoursPerSecond * dt</code> means the cycle runs at the same real-world speed regardless of frame rate.</p>
+<p>The naive version — <code>ClockTime += 0.01</code> then <code>task.wait(0.1)</code> — runs at whatever speed the server happens to tick at, so the day is a different length on a busy server than an empty one.</p>
+<h2 id="making-it-actually-look-like-night">Making it actually look like night<a class="anchor" href="#making-it-actually-look-like-night" aria-label="Link to this section">#</a></h2>
+<p><code>ClockTime</code> alone moves the sun and gives you a dark blue night. It is functional and flat. The look comes from moving the other <code>Lighting</code> properties along with it.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> Lighting = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Lighting"</span>)
+
+<span class="t-com">-- keyframes at hours of the day</span>
+<span class="t-key">local</span> KEYS = {
+	{ hour = <span class="t-num">0</span>,  ambient = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">18</span>, <span class="t-num">20</span>, <span class="t-num">38</span>),   outdoor = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">28</span>, <span class="t-num">32</span>, <span class="t-num">58</span>),
+	  brightness = <span class="t-num">1.0</span>, fog = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">20</span>, <span class="t-num">24</span>, <span class="t-num">42</span>), fogEnd = <span class="t-num">400</span>,  exposure = <span class="t-num">0.15</span> },
+	{ hour = <span class="t-num">6</span>,  ambient = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">70</span>, <span class="t-num">58</span>, <span class="t-num">62</span>),   outdoor = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">120</span>, <span class="t-num">96</span>, <span class="t-num">92</span>),
+	  brightness = <span class="t-num">1.8</span>, fog = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">180</span>, <span class="t-num">140</span>, <span class="t-num">120</span>), fogEnd = <span class="t-num">800</span>, exposure = <span class="t-num">0.05</span> },
+	{ hour = <span class="t-num">12</span>, ambient = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">128</span>, <span class="t-num">128</span>, <span class="t-num">128</span>), outdoor = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">160</span>, <span class="t-num">160</span>, <span class="t-num">160</span>),
+	  brightness = <span class="t-num">3.0</span>, fog = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">190</span>, <span class="t-num">205</span>, <span class="t-num">220</span>), fogEnd = <span class="t-num">2500</span>, exposure = <span class="t-num">0</span> },
+	{ hour = <span class="t-num">18</span>, ambient = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">92</span>, <span class="t-num">62</span>, <span class="t-num">54</span>),   outdoor = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">140</span>, <span class="t-num">92</span>, <span class="t-num">74</span>),
+	  brightness = <span class="t-num">1.8</span>, fog = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">200</span>, <span class="t-num">130</span>, <span class="t-num">90</span>), fogEnd = <span class="t-num">900</span>,  exposure = <span class="t-num">0.05</span> },
+	{ hour = <span class="t-num">24</span>, ambient = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">18</span>, <span class="t-num">20</span>, <span class="t-num">38</span>),   outdoor = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">28</span>, <span class="t-num">32</span>, <span class="t-num">58</span>),
+	  brightness = <span class="t-num">1.0</span>, fog = <span class="t-glob">Color3</span>.<span class="t-fn">fromRGB</span>(<span class="t-num">20</span>, <span class="t-num">24</span>, <span class="t-num">42</span>), fogEnd = <span class="t-num">400</span>,  exposure = <span class="t-num">0.15</span> },
+}
+
+<span class="t-key">local</span> <span class="t-key">function</span> surrounding(hour)
+	<span class="t-key">for</span> i = <span class="t-num">1</span>, #KEYS - <span class="t-num">1</span> <span class="t-key">do</span>
+		<span class="t-key">if</span> hour &gt;= KEYS[i].<span class="t-prop">hour</span> <span class="t-key">and</span> hour &lt;= KEYS[i + <span class="t-num">1</span>].<span class="t-prop">hour</span> <span class="t-key">then</span>
+			<span class="t-key">local</span> a, b = KEYS[i], KEYS[i + <span class="t-num">1</span>]
+			<span class="t-key">local</span> span = b.<span class="t-prop">hour</span> - a.<span class="t-prop">hour</span>
+			<span class="t-key">local</span> alpha = span &gt; <span class="t-num">0</span> <span class="t-key">and</span> (hour - a.<span class="t-prop">hour</span>) / span <span class="t-key">or</span> <span class="t-num">0</span>
+			<span class="t-key">return</span> a, b, alpha
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+	<span class="t-key">return</span> KEYS[<span class="t-num">1</span>], KEYS[<span class="t-num">1</span>], <span class="t-num">0</span>
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> applyLighting(hour)
+	<span class="t-key">local</span> a, b, alpha = surrounding(hour)
+
+	Lighting.<span class="t-prop">Ambient</span> = a.<span class="t-prop">ambient</span>:<span class="t-fn">Lerp</span>(b.<span class="t-prop">ambient</span>, alpha)
+	Lighting.<span class="t-prop">OutdoorAmbient</span> = a.<span class="t-prop">outdoor</span>:<span class="t-fn">Lerp</span>(b.<span class="t-prop">outdoor</span>, alpha)
+	Lighting.<span class="t-prop">FogColor</span> = a.<span class="t-prop">fog</span>:<span class="t-fn">Lerp</span>(b.<span class="t-prop">fog</span>, alpha)
+	Lighting.<span class="t-prop">Brightness</span> = a.<span class="t-prop">brightness</span> + (b.<span class="t-prop">brightness</span> - a.<span class="t-prop">brightness</span>) * alpha
+	Lighting.<span class="t-prop">FogEnd</span> = a.<span class="t-prop">fogEnd</span> + (b.<span class="t-prop">fogEnd</span> - a.<span class="t-prop">fogEnd</span>) * alpha
+	Lighting.<span class="t-prop">ExposureCompensation</span> = a.<span class="t-prop">exposure</span> + (b.<span class="t-prop">exposure</span> - a.<span class="t-prop">exposure</span>) * alpha
+<span class="t-key">end</span></code></pre></div>
+<p>Then call it from the same loop:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">while</span> <span class="t-key">true</span> <span class="t-key">do</span>
+	<span class="t-key">local</span> dt = <span class="t-glob">task</span>.<span class="t-fn">wait</span>()
+	Lighting.<span class="t-prop">ClockTime</span> = (Lighting.<span class="t-prop">ClockTime</span> + hoursPerSecond * dt) % <span class="t-num">24</span>
+	applyLighting(Lighting.<span class="t-prop">ClockTime</span>)
+<span class="t-key">end</span></code></pre></div>
+<p>The keyframe-and-interpolate approach is worth the extra code because tuning becomes editing a table rather than rewriting logic. Want a longer golden hour? Add a keyframe at 17 and 19. <code>Color3:Lerp</code> handles the blending.</p>
+<p>Duplicating hour 0 as hour 24 makes the wrap seamless — without it, the cycle snaps at midnight.</p>
+<h2 id="street-lights-that-come-on-at-dusk">Street lights that come on at dusk<a class="anchor" href="#street-lights-that-come-on-at-dusk" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> lampFolder = <span class="t-glob">workspace</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"StreetLights"</span>)
+
+<span class="t-key">local</span> <span class="t-key">function</span> setLamps(on)
+	<span class="t-key">for</span> _, lamp <span class="t-key">in</span> <span class="t-glob">ipairs</span>(lampFolder:<span class="t-fn">GetDescendants</span>()) <span class="t-key">do</span>
+		<span class="t-key">if</span> lamp:<span class="t-fn">IsA</span>(<span class="t-str">"PointLight"</span>) <span class="t-key">or</span> lamp:<span class="t-fn">IsA</span>(<span class="t-str">"SpotLight"</span>) <span class="t-key">then</span>
+			lamp.<span class="t-prop">Enabled</span> = on
+		<span class="t-key">elseif</span> lamp:<span class="t-fn">IsA</span>(<span class="t-str">"BasePart"</span>) <span class="t-key">and</span> lamp.<span class="t-prop">Name</span> == <span class="t-str">"Bulb"</span> <span class="t-key">then</span>
+			lamp.<span class="t-prop">Material</span> = on <span class="t-key">and</span> <span class="t-glob">Enum</span>.<span class="t-prop">Material</span>.<span class="t-prop">Neon</span> <span class="t-key">or</span> <span class="t-glob">Enum</span>.<span class="t-prop">Material</span>.<span class="t-prop">Glass</span>
+		<span class="t-key">end</span>
+	<span class="t-key">end</span>
+<span class="t-key">end</span>
+
+<span class="t-key">local</span> lampsOn = <span class="t-key">nil</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> updateLamps(hour)
+	<span class="t-key">local</span> shouldBeOn = hour &lt; <span class="t-num">6.5</span> <span class="t-key">or</span> hour &gt; <span class="t-num">17.5</span>
+	<span class="t-key">if</span> shouldBeOn ~= lampsOn <span class="t-key">then</span>
+		lampsOn = shouldBeOn
+		setLamps(shouldBeOn)
+	<span class="t-key">end</span>
+<span class="t-key">end</span></code></pre></div>
+<p>The <code>lampsOn</code> comparison matters. Without it you are iterating every lamp in the map every frame, which is exactly the kind of per-frame loop that makes a game lag as it grows.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>Lights are expensive. Roblox limits how many can render at once, and past that they pop in and out as the camera moves. If a street needs a lit look, a Neon material on the bulb plus a handful of real lights beats one light per lamp post.</p></aside>
+<h2 id="letting-players-see-the-time">Letting players see the time<a class="anchor" href="#letting-players-see-the-time" aria-label="Link to this section">#</a></h2>
+<p>The cycle is on the server, so the client can just read it:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- LocalScript</span>
+<span class="t-key">local</span> Lighting = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Lighting"</span>)
+
+Lighting:<span class="t-fn">GetPropertyChangedSignal</span>(<span class="t-str">"ClockTime"</span>):<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
+	label.<span class="t-prop">Text</span> = formatTime(Lighting.<span class="t-prop">ClockTime</span>)
+<span class="t-key">end</span>)</code></pre></div>
+<p>That fires very often — every frame the cycle advances. See the clock UI guide for the version that only redraws when the displayed minute actually changes.</p>
+<h2 id="pausing-and-skipping">Pausing and skipping<a class="anchor" href="#pausing-and-skipping" aria-label="Link to this section">#</a></h2>
+<p>Expose the cycle so other systems can control it:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> paused = <span class="t-key">false</span>
+
+<span class="t-key">local</span> <span class="t-key">function</span> setTime(hour)
+	Lighting.<span class="t-prop">ClockTime</span> = hour % <span class="t-num">24</span>
+	applyLighting(Lighting.<span class="t-prop">ClockTime</span>)
+<span class="t-key">end</span>
+
+<span class="t-com">-- inside the loop</span>
+<span class="t-key">if</span> <span class="t-key">not</span> paused <span class="t-key">then</span>
+	Lighting.<span class="t-prop">ClockTime</span> = (Lighting.<span class="t-prop">ClockTime</span> + hoursPerSecond * dt) % <span class="t-num">24</span>
+	applyLighting(Lighting.<span class="t-prop">ClockTime</span>)
+<span class="t-key">end</span></code></pre></div>
+<p>A round-based game usually wants time frozen during a round and advanced between them, rather than a horror level drifting into daylight halfway through.</p>
+<h2 id="tuning-it">Tuning it<a class="anchor" href="#tuning-it" aria-label="Link to this section">#</a></h2>
+<ol><li>Set <code>DAY_LENGTH</code> short — 60 seconds — while you are adjusting the keyframes, so you</li></ol>
+<p>   see a full cycle quickly. Put it back afterwards.</p>
+<ol><li>Use the Command Bar to jump straight to a time you are working on:</li></ol>
+<p>   <code>game:GetService("Lighting").ClockTime = 18.5</code></p>
+<ol><li>Check it with <strong>two clients</strong> from the Test tab and confirm both show the same time.</li><li>Turn <code>Lighting.Technology</code> to <code>Future</code> if your game can afford it — the same</li></ol>
+<p>   keyframes look considerably better, and night in particular stops looking flat.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

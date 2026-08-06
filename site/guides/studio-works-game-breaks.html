@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your script works in Studio but breaks in the real game. Here&#x27;s why. — Baseplate Wiki</title>
+<meta name="description" content="Studio runs the server and client in one process, so client-server bugs stay invisible until you publish. The five that catch everyone, and how to catch them before players do.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/scripting.html">Scripting</a>
+  </p>
+  <h1>Your script works in Studio but breaks in the real game. Here&#x27;s why.</h1>
+  <p class="lede">Studio runs the server and client in one process, so client-server bugs stay invisible until you publish. The five that catch everyone, and how to catch them before players do.</p>
+  <p class="doc-meta"><span>Scripting</span><span>Beginner</span><span>9 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#why-studio-lies">Why Studio lies</a></li><li><a href="#1-localscripts-that-aren-t-running-at-all">1. LocalScripts that aren&#x27;t running at all</a></li><li><a href="#2-waiting-for-things-that-don-t-exist-yet">2. Waiting for things that don&#x27;t exist yet</a></li><li><a href="#3-trusting-the-client-with-anything-that-matters">3. Trusting the client with anything that matters</a></li><li><a href="#4-changes-on-the-client-that-never-reach-anyone-else">4. Changes on the client that never reach anyone else</a></li><li><a href="#5-remoteevents-connected-on-the-wrong-side">5. RemoteEvents connected on the wrong side</a></li><li><a href="#a-checklist-before-you-publish">A checklist before you publish</a></li><li><a href="#what-to-read-next">What to read next</a></li></ul></aside>
+  <div class="prose">
+<p>You test in Studio. Everything works. You publish, join the live game, and the thing you just spent two hours on does nothing at all — no error, no output, just silence.</p>
+<p>This is the single most common wall new Roblox developers hit, and it is almost never a bug in your logic. It is that <strong>Studio lies to you about where your code is running.</strong></p>
+<h2 id="why-studio-lies">Why Studio lies<a class="anchor" href="#why-studio-lies" aria-label="Link to this section">#</a></h2>
+<p>When you press Play in Studio, Roblox runs the server and your client in the same process on your machine. They share memory. They start at the same instant. A <code><a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a></code> and a <code>Script</code> in Studio are neighbours; in a live game they are on different computers, possibly in different countries, talking over a network with real latency.</p>
+<p>So in Studio, sloppy code that reaches across the client-server boundary appears to work — because there is no boundary to cross yet.</p>
+<aside class="note note-note"><p class="note-label">note</p><p>The fastest fix for this entire class of bug: in Studio, open the <strong>Test</strong> tab and set clients to 2, then click <strong>Start</strong>. That launches a real server process and two real client processes. Most of the bugs below surface immediately.</p></aside>
+<h2 id="1-localscripts-that-aren-t-running-at-all">1. LocalScripts that aren't running at all<a class="anchor" href="#1-localscripts-that-aren-t-running-at-all" aria-label="Link to this section">#</a></h2>
+<p>A <code>LocalScript</code> only runs in a handful of places:</p>
+<ul><li>inside a player's <code>Backpack</code> (tools)</li><li>inside <code>StarterPlayerScripts</code> or <code>StarterCharacterScripts</code></li><li>inside <code>PlayerGui</code></li><li>inside the player's <code>Character</code></li></ul>
+<p>Put a <code>LocalScript</code> in <code>Workspace</code>, <code>ServerScriptService</code>, or <code><a class="term-link" href="../terms/replicatedstorage.html" title="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code> and it will simply never execute. No error. No warning. Silence.</p>
+<p>In Studio's single-process Play mode you may have gotten away with a script in the wrong place because you <em>also</em> had a working copy somewhere else. In the live game, silence.</p>
+<p><strong>Check:</strong> put a <code>print("alive")</code> as line 1 of every script that "isn't working." If you don't see it in the output, the script never ran and nothing after line 1 matters.</p>
+<h2 id="2-waiting-for-things-that-don-t-exist-yet">2. Waiting for things that don't exist yet<a class="anchor" href="#2-waiting-for-things-that-don-t-exist-yet" aria-label="Link to this section">#</a></h2>
+<p>This is the big one. In Studio, everything loads instantly. In the live game, your client starts running scripts while assets are still streaming in.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- Breaks in the live game, works in Studio</span>
+<span class="t-key">local</span> gui = <span class="t-glob">game</span>.<span class="t-prop">Players</span>.<span class="t-prop">LocalPlayer</span>.<span class="t-prop">PlayerGui</span>.<span class="t-prop">MainMenu</span>
+<span class="t-key">local</span> button = gui.<span class="t-prop">PlayButton</span></code></pre></div>
+<p>If <code>MainMenu</code> hasn't replicated to the client yet, that first line throws <code>MainMenu is not a valid member of PlayerGui</code>. Written the safe way:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+<span class="t-key">local</span> player = Players.<span class="t-prop">LocalPlayer</span>
+
+<span class="t-key">local</span> gui = player:<span class="t-fn">WaitForChild</span>(<span class="t-str">"PlayerGui"</span>):<span class="t-fn">WaitForChild</span>(<span class="t-str">"MainMenu"</span>)
+<span class="t-key">local</span> button = gui:<span class="t-fn">WaitForChild</span>(<span class="t-str">"PlayButton"</span>)</code></pre></div>
+<p><code><a class="term-link" href="../terms/waitforchild.html" title="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a></code> yields until the child appears instead of erroring on a race.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p><code>WaitForChild</code> with no timeout waits forever, which turns a crash into a hang — harder to debug, not easier. Pass a timeout and handle the miss: <code>local gui = player:WaitForChild("MainMenu", 10) if not gui then warn("MainMenu never arrived") return end</code></p></aside>
+<p>Use <code>WaitForChild</code> on the <strong>client</strong> for things the server created. You generally do <em>not</em> need it on the server for things that exist in the published place file.</p>
+<h2 id="3-trusting-the-client-with-anything-that-matters">3. Trusting the client with anything that matters<a class="anchor" href="#3-trusting-the-client-with-anything-that-matters" aria-label="Link to this section">#</a></h2>
+<p>A <code>LocalScript</code> runs on the player's machine. The player controls that machine. Anything you calculate there, an exploiter can change.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- LocalScript: an exploiter can set this to whatever they want</span>
+<span class="t-key">local</span> coins = <span class="t-num">0</span>
+<span class="t-key">local</span> <span class="t-key">function</span> onCoinTouched()
+    coins += <span class="t-num">1</span>
+    coinsChanged:<span class="t-fn">FireServer</span>(coins)   <span class="t-com">-- server believes a number from the client</span>
+<span class="t-key">end</span></code></pre></div>
+<p>The server must own every value that matters — currency, health, inventory, scores. The client's job is to <em>ask</em>, and the server's job is to <em>decide</em>:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService</span>
+<span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
+<span class="t-key">local</span> collectCoin = ReplicatedStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"CollectCoin"</span>)
+
+<span class="t-key">local</span> balances = {}
+
+collectCoin.<span class="t-prop">OnServerEvent</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player, coinId)
+    <span class="t-key">local</span> coin = <span class="t-glob">workspace</span>.<span class="t-prop">Coins</span>:<span class="t-fn">FindFirstChild</span>(coinId)
+    <span class="t-key">if</span> <span class="t-key">not</span> coin <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-key">end</span>
+
+    <span class="t-com">-- the server checks the claim itself</span>
+    <span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
+    <span class="t-key">if</span> <span class="t-key">not</span> character <span class="t-key">or</span> <span class="t-key">not</span> character.<span class="t-prop">PrimaryPart</span> <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-key">end</span>
+    <span class="t-key">if</span> (character.<span class="t-prop">PrimaryPart</span>.<span class="t-prop">Position</span> - coin.<span class="t-prop">Position</span>).<span class="t-prop">Magnitude</span> &gt; <span class="t-num">12</span> <span class="t-key">then</span>
+        <span class="t-key">return</span>
+    <span class="t-key">end</span>
+
+    coin:<span class="t-fn">Destroy</span>()
+    balances[player.<span class="t-prop">UserId</span>] = (balances[player.<span class="t-prop">UserId</span>] <span class="t-key">or</span> <span class="t-num">0</span>) + <span class="t-num">1</span>
+<span class="t-key">end</span>)</code></pre></div>
+<p>Note the shape: the client sends <em>which coin</em>, never <em>how many coins I now have</em>. Every <code>OnServerEvent</code> handler receives <code>player</code> as its first argument automatically, and that argument is the one thing on the whole call you can actually trust — Roblox fills it in, not the client.</p>
+<h2 id="4-changes-on-the-client-that-never-reach-anyone-else">4. Changes on the client that never reach anyone else<a class="anchor" href="#4-changes-on-the-client-that-never-reach-anyone-else" aria-label="Link to this section">#</a></h2>
+<p>If a <code>LocalScript</code> moves a part, changes a colour, or deletes something in <code>Workspace</code>, only that one player sees it. It does not replicate upward. In Studio's shared process this distinction blurs and it can look like it worked.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- LocalScript: only this player ever sees the door open</span>
+<span class="t-glob">workspace</span>.<span class="t-prop">Door</span>.<span class="t-prop">CFrame</span> = <span class="t-glob">workspace</span>.<span class="t-prop">Door</span>.<span class="t-prop">CFrame</span> * <span class="t-glob">CFrame</span>.<span class="t-fn">Angles</span>(<span class="t-num">0</span>, <span class="t-glob">math</span>.<span class="t-fn">rad</span>(<span class="t-num">90</span>), <span class="t-num">0</span>)</code></pre></div>
+<p>If every player should see it, the <strong>server</strong> has to do it. Fire a <a class="term-link" href="../terms/remoteevent.html" title="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvent</a> to the server and let the server make the change.</p>
+<p>The reverse also holds and is genuinely useful: client-only changes are how you build things like a local preview or a per-player highlight without touching anyone else's game.</p>
+<h2 id="5-remoteevents-connected-on-the-wrong-side">5. RemoteEvents connected on the wrong side<a class="anchor" href="#5-remoteevents-connected-on-the-wrong-side" aria-label="Link to this section">#</a></h2>
+<p>The naming is symmetrical and easy to get backwards:</p>
+<div class="table-scroll"><table><thead><tr><th>You want</th><th>Client calls</th><th>Server listens</th></tr></thead><tbody><tr><td>client tells server</td><td><code>:FireServer(...)</code></td><td><code>.OnServerEvent</code></td></tr><tr><td>server tells client</td><td><code>.OnClientEvent</code></td><td><code>:FireClient(player, ...)</code></td></tr></tbody></table></div>
+<p>Connecting <code>OnServerEvent</code> inside a <code>LocalScript</code> produces no error. It just never fires. Same in reverse. If a remote "isn't working," check which script type each half lives in before you check anything else.</p>
+<h2 id="a-checklist-before-you-publish">A checklist before you publish<a class="anchor" href="#a-checklist-before-you-publish" aria-label="Link to this section">#</a></h2>
+<ol><li>Test with 2 clients from the <strong>Test</strong> tab, not single-player Play.</li><li>Add <code>print</code> at the top of each script — confirm it actually runs.</li><li>Every client-side reference to a server-made object uses <code>WaitForChild</code> with a</li></ol>
+<p>   timeout.</p>
+<ol><li>No <code>FireServer</code> sends a value the server could compute itself.</li><li>Open the <strong>Developer Console</strong> in the live game with <code>F9</code> — client errors show</li></ol>
+<p>   up there and <em>never</em> appear in your Studio output.</p>
+<p>That last one matters more than it sounds. Most "it works in Studio" reports are really "there is a red error in the live client console that I have never looked at."</p>
+<aside class="note note-note"><p class="note-label">note</p><p><strong>From my own build:</strong> on my traffic game the AI cars drove fine in Studio and spawned inside each other in the live game. Cause was #2 — the spawn script read <code>workspace.Nodes</code> before the node folder finished replicating, got <code>nil</code> for half the nodes, and defaulted every one of them to the origin. <code>WaitForChild</code> on the folder fixed it in one line.</p></aside>
+<h2 id="what-to-read-next">What to read next<a class="anchor" href="#what-to-read-next" aria-label="Link to this section">#</a></h2>
+<p>The client-server split is the foundation everything else sits on. Once it clicks, RemoteFunctions, DataStores, and anti-exploit work all get considerably less mysterious — they are all the same boundary seen from different angles.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-05">Published 2026-08-05</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

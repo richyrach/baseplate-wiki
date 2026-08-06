@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A leaderstats setup that shows the value you meant — Baseplate Wiki</title>
+<meta name="description" content="The exact folder name, the right value types, and why your stat shows 0 or nothing at all.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a href="../learn.html">Learn</a><a class="on" href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../recipes.html">Recipes</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/data.html">Data</a>
+  </p>
+  <h1>A leaderstats setup that shows the value you meant</h1>
+  <p class="lede">The exact folder name, the right value types, and why your stat shows 0 or nothing at all.</p>
+  <p class="doc-meta"><span>Data</span><span>Beginner</span><span>7 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#the-working-version">The working version</a></li><li><a href="#the-five-reasons-it-shows-nothing">The five reasons it shows nothing</a></li><li><a href="#the-playeradded-race">The PlayerAdded race</a></li><li><a href="#only-two-or-three-columns-fit">Only two or three columns fit</a></li><li><a href="#changing-values">Changing values</a></li><li><a href="#reading-it-on-the-client">Reading it on the client</a></li><li><a href="#formatting-big-numbers">Formatting big numbers</a></li><li><a href="#checking-it">Checking it</a></li></ul></aside>
+  <div class="prose">
+<p>The player list on the right of the screen can show your own stats. It works by convention, not configuration: Roblox looks for a folder with one exact name.</p>
+<h2 id="the-working-version">The working version<a class="anchor" href="#the-working-version" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService/Leaderstats.server.lua</span>
+<span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+
+Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
+	<span class="t-key">local</span> stats = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"Folder"</span>)
+	stats.<span class="t-prop">Name</span> = <span class="t-str">"leaderstats"</span>        <span class="t-com">-- this exact name, lowercase</span>
+	stats.<span class="t-prop">Parent</span> = player
+
+	<span class="t-key">local</span> coins = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"IntValue"</span>)
+	coins.<span class="t-prop">Name</span> = <span class="t-str">"Coins"</span>
+	coins.<span class="t-prop">Value</span> = <span class="t-num">0</span>
+	coins.<span class="t-prop">Parent</span> = stats
+
+	<span class="t-key">local</span> level = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"IntValue"</span>)
+	level.<span class="t-prop">Name</span> = <span class="t-str">"Level"</span>
+	level.<span class="t-prop">Value</span> = <span class="t-num">1</span>
+	level.<span class="t-prop">Parent</span> = stats
+<span class="t-key">end</span>)</code></pre></div>
+<p>That is the whole feature. The column heading is the value's <code>Name</code>; the cell is its <code>Value</code>.</p>
+<h2 id="the-five-reasons-it-shows-nothing">The five reasons it shows nothing<a class="anchor" href="#the-five-reasons-it-shows-nothing" aria-label="Link to this section">#</a></h2>
+<p><strong>The folder name is wrong.</strong> It must be exactly <code>leaderstats</code> — lowercase, one word, no space. <code>Leaderstats</code>, <code>LeaderStats</code> and <code>leaderStats</code> all produce a player list with no columns and no error.</p>
+<p><strong>It is parented to the character instead of the player.</strong> The folder goes in the <code>Player</code> object, not in their character model. The character is destroyed on death; the player object is not.</p>
+<p><strong>The script is a <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a>.</strong> Stats created on the client are visible to nobody, including the player list. This must be a server <code>Script</code> in <code>ServerScriptService</code>.</p>
+<p><strong>You are using the wrong value type.</strong> Only these show up:</p>
+<div class="table-scroll"><table><thead><tr><th>Type</th><th>Holds</th></tr></thead><tbody><tr><td><code>IntValue</code></td><td>whole numbers</td></tr><tr><td><code>NumberValue</code></td><td>decimals</td></tr><tr><td><code>StringValue</code></td><td>text</td></tr><tr><td><code>BoolValue</code></td><td>true/false</td></tr></tbody></table></div>
+<p>An <code>ObjectValue</code>, a <code>Folder</code>, or a <code>Vector3Value</code> will not display.</p>
+<p><strong><code>PlayerAdded</code> fired before your script ran.</strong> In Studio you are usually in the server before the script starts, so your own stats never get created. See the fix below.</p>
+<h2 id="the-playeradded-race">The PlayerAdded race<a class="anchor" href="#the-playeradded-race" aria-label="Link to this section">#</a></h2>
+<p>This bites in Studio almost every time and occasionally on a live server:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- misses anyone who joined before this line ran</span>
+Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(setupStats)</code></pre></div>
+<p>Handle both cases:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> setupStats(player)
+	<span class="t-key">if</span> player:<span class="t-fn">FindFirstChild</span>(<span class="t-str">"leaderstats"</span>) <span class="t-key">then</span>
+		<span class="t-key">return</span>                        <span class="t-com">-- already done</span>
+	<span class="t-key">end</span>
+	<span class="t-com">-- ...create the folder as above</span>
+<span class="t-key">end</span>
+
+Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span>(setupStats)
+
+<span class="t-key">for</span> _, player <span class="t-key">in</span> <span class="t-glob">ipairs</span>(Players:<span class="t-fn">GetPlayers</span>()) <span class="t-key">do</span>
+	<span class="t-glob">task</span>.<span class="t-fn">spawn</span>(setupStats, player)    <span class="t-com">-- anyone already here</span>
+<span class="t-key">end</span></code></pre></div>
+<p>The <code>FindFirstChild</code> guard makes the function safe to call twice, which matters because in a race both paths can fire.</p>
+<h2 id="only-two-or-three-columns-fit">Only two or three columns fit<a class="anchor" href="#only-two-or-three-columns-fit" aria-label="Link to this section">#</a></h2>
+<p>The default player list shows a limited number of stat columns — in practice two or three before it starts truncating, and fewer on a phone.</p>
+<p>Put the important one first (children are ordered by creation) and keep the rest in a custom GUI. A leaderstats folder with eight values is a player list nobody can read.</p>
+<h2 id="changing-values">Changing values<a class="anchor" href="#changing-values" aria-label="Link to this section">#</a></h2>
+<p>Just set them. Replication is automatic:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> <span class="t-key">function</span> addCoins(player, amount)
+	<span class="t-key">local</span> stats = player:<span class="t-fn">FindFirstChild</span>(<span class="t-str">"leaderstats"</span>)
+	<span class="t-key">if</span> <span class="t-key">not</span> stats <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-key">end</span>
+
+	<span class="t-key">local</span> coins = stats:<span class="t-fn">FindFirstChild</span>(<span class="t-str">"Coins"</span>)
+	<span class="t-key">if</span> <span class="t-key">not</span> coins <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-key">end</span>
+
+	coins.<span class="t-prop">Value</span> += amount
+<span class="t-key">end</span></code></pre></div>
+<p>Always on the server. A client can change its own local copy, but that change goes nowhere — and if your server later reads that value expecting the client's number, you have handed players a cheat.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>Do not use leaderstats as your source of truth for currency. It is a display layer. Keep the authoritative number in a server-side table and mirror it into leaderstats for display. Otherwise every piece of code that touches money is reaching into a UI element.</p></aside>
+<h2 id="reading-it-on-the-client">Reading it on the client<a class="anchor" href="#reading-it-on-the-client" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+<span class="t-key">local</span> player = Players.<span class="t-prop">LocalPlayer</span>
+
+<span class="t-key">local</span> stats = player:<span class="t-fn">WaitForChild</span>(<span class="t-str">"leaderstats"</span>)
+<span class="t-key">local</span> coins = stats:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Coins"</span>)
+
+<span class="t-key">local</span> label = <span class="t-glob">script</span>.<span class="t-prop">Parent</span>:<span class="t-fn">WaitForChild</span>(<span class="t-str">"CoinLabel"</span>)
+
+<span class="t-key">local</span> <span class="t-key">function</span> redraw()
+	label.<span class="t-prop">Text</span> = <span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"%d coins"</span>, coins.<span class="t-prop">Value</span>)
+<span class="t-key">end</span>
+
+coins.<span class="t-prop">Changed</span>:<span class="t-fn">Connect</span>(redraw)
+redraw()</code></pre></div>
+<p><code><a class="term-link" href="../terms/waitforchild.html" title="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a></code> on both, because the client may run before the server has created them. The final <code>redraw()</code> sets the initial text — without it the label stays at whatever you typed in Studio until the value first changes.</p>
+<h2 id="formatting-big-numbers">Formatting big numbers<a class="anchor" href="#formatting-big-numbers" aria-label="Link to this section">#</a></h2>
+<p><code>IntValue</code> shows raw digits, so a million coins reads as <code>1000000</code>. The player list cannot be formatted, but a <code>StringValue</code> can be:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-key">local</span> display = <span class="t-glob">Instance</span>.<span class="t-fn">new</span>(<span class="t-str">"StringValue"</span>)
+display.<span class="t-prop">Name</span> = <span class="t-str">"Coins"</span>
+display.<span class="t-prop">Parent</span> = stats
+
+<span class="t-key">local</span> <span class="t-key">function</span> format(n)
+	<span class="t-key">if</span> n &gt;= <span class="t-num">1e9</span> <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"%.1fB"</span>, n / <span class="t-num">1e9</span>) <span class="t-key">end</span>
+	<span class="t-key">if</span> n &gt;= <span class="t-num">1e6</span> <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"%.1fM"</span>, n / <span class="t-num">1e6</span>) <span class="t-key">end</span>
+	<span class="t-key">if</span> n &gt;= <span class="t-num">1e3</span> <span class="t-key">then</span> <span class="t-key">return</span> <span class="t-glob">string</span>.<span class="t-fn">format</span>(<span class="t-str">"%.1fK"</span>, n / <span class="t-num">1e3</span>) <span class="t-key">end</span>
+	<span class="t-key">return</span> <span class="t-glob">tostring</span>(n)
+<span class="t-key">end</span>
+
+<span class="t-com">-- keep the real number elsewhere; this one is only for display</span>
+display.<span class="t-prop">Value</span> = format(realCoins)</code></pre></div>
+<p>Note the trade-off: sorting by a <code>StringValue</code> sorts alphabetically, so <code>"9K"</code> sorts above <code>"10K"</code>. If sorting matters, keep the <code>IntValue</code>.</p>
+<h2 id="checking-it">Checking it<a class="anchor" href="#checking-it" aria-label="Link to this section">#</a></h2>
+<ol><li>Run the game and look in the Explorer under <code>Players &gt; YourName</code>. Is there a</li></ol>
+<p>   folder called exactly <code>leaderstats</code>?</p>
+<ol><li>Open it. Are the children <code>IntValue</code>/<code>StringValue</code> and named as you expect?</li><li>If both are true and the list is still empty, you are looking at a client-created</li></ol>
+<p>   copy — confirm the script is a <code>Script</code> in <code>ServerScriptService</code>, not a    <code>LocalScript</code>.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>

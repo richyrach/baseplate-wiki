@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Developer products and ProcessReceipt without double-granting — Baseplate Wiki</title>
+<meta name="description" content="Repeatable purchases need a receipt handler that records what it granted. Get this wrong and players either lose Robux or get free items forever.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>
+/* Runs before first paint: without this the page renders in the OS theme and
+   then snaps to the saved one, which is a visible flash on every navigation. */
+(function () {
+  try {
+    var saved = localStorage.getItem("bp-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body data-base="../" class="has-rail">
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  
+  <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
+  <nav class="tabs"><a class="on" href="../learn.html">Learn</a><a href="../recipes.html">Recipes</a><a href="../terms/index.html">Reference</a></nav>
+  <nav class="top-links">
+    <a href="../about.html">About</a>
+    <a href="../contribute.html">Contribute</a>
+  </nav>
+  <button class="theme" type="button" aria-label="Switch between light and dark"
+          title="Switch theme">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.4v2.4M12 19.2v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.4M19.2 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M20.1 14.3A8.4 8.4 0 0 1 9.6 3.9a8.4 8.4 0 1 0 10.5 10.4z"/>
+    </svg>
+  </button>
+</header>
+<div class="shell shell-wide">
+<main id="main">
+<article class="doc">
+  <p class="crumbs">
+    <a href="../learn.html">Learn</a>
+    <span aria-hidden="true">/</span>
+    <a href="../c/monetization.html">Monetization</a>
+  </p>
+  <h1>Developer products and ProcessReceipt without double-granting</h1>
+  <p class="lede">Repeatable purchases need a receipt handler that records what it granted. Get this wrong and players either lose Robux or get free items forever.</p>
+  <p class="doc-meta"><span>Monetization</span><span>Advanced</span><span>14 min read</span></p>
+  <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
+  <aside class="rail"><p class="rail-label">On this page</p><ul><li><a href="#how-the-callback-works">How the callback works</a></li><li><a href="#the-receipt">The receipt</a></li><li><a href="#the-implementation">The implementation</a></li><li><a href="#why-it-is-shaped-like-that">Why it is shaped like that</a></li><li><a href="#prompting-the-purchase">Prompting the purchase</a></li><li><a href="#do-not-grant-from-promptproductpurchasefinished">Do not grant from PromptProductPurchaseFinished</a></li><li><a href="#testing">Testing</a></li><li><a href="#a-note-on-bindreceipthandler">A note on BindReceiptHandler</a></li><li><a href="#the-audit">The audit</a></li></ul></aside>
+  <div class="prose">
+<p>A <strong>game pass</strong> is bought once and owned forever. A <strong>developer product</strong> can be bought repeatedly — 100 coins, a revive, a booster.</p>
+<p>That difference is the whole reason developer products are harder. There is no "owns it" flag to check, so the only record that a purchase happened is the receipt Roblox hands you, and you have to handle it correctly or one of two things happens:</p>
+<ul><li>You grant without recording, and Roblox re-sends the receipt → the player gets the</li></ul>
+<p>  item <strong>twice</strong> for one payment.</p>
+<ul><li>You return the wrong value, and Roblox thinks it failed → the player is **charged</li></ul>
+<p>  and gets nothing**.</p>
+<p>Both are real money. This is the one system in Roblox where "roughly right" is not acceptable.</p>
+<h2 id="how-the-callback-works">How the callback works<a class="anchor" href="#how-the-callback-works" aria-label="Link to this section">#</a></h2>
+<p><code><a class="term-link" href="../terms/marketplaceservice.html" title="Handles game passes, developer products and receipts. Several of its most-used methods are now deprecated in favour of Async versions.">MarketplaceService</a>.ProcessReceipt</code> is a <strong>callback</strong>, not an event. There is exactly one, it must be assigned (not connected), and it must live on the server.</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code>MarketplaceService.<span class="t-prop">ProcessReceipt</span> = processReceipt   <span class="t-com">-- assignment</span></code></pre></div>
+<p>Roblox calls it after taking the player's Robux. Your job is to grant the item and return a <code>Enum.ProductPurchaseDecision</code>:</p>
+<ul><li><strong><code>PurchaseGranted</code></strong> — done, do not call me again about this receipt.</li><li><strong><code>NotProcessedYet</code></strong> — I could not grant it. Roblox retries later, including on</li></ul>
+<p>  the player's next join.</p>
+<p>If your function errors, or returns nothing, Roblox treats it as not granted and will call again. That retry behaviour is a safety net for the player and the source of the double-grant bug for you.</p>
+<h2 id="the-receipt">The receipt<a class="anchor" href="#the-receipt" aria-label="Link to this section">#</a></h2>
+<p><code>receiptInfo</code> is a table containing, among other fields:</p>
+<div class="table-scroll"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>PurchaseId</code></td><td>unique ID for <strong>this transaction</strong></td></tr><tr><td><code>PlayerId</code></td><td>the buyer's <code>UserId</code></td></tr><tr><td><code>ProductId</code></td><td>which developer product</td></tr><tr><td><code>CurrencySpent</code></td><td>how much</td></tr><tr><td><code>CurrencyType</code></td><td>which currency</td></tr></tbody></table></div>
+<p><code>PurchaseId</code> is the important one. It is the only thing that lets you tell "a new purchase" from "the same purchase, sent again."</p>
+<h2 id="the-implementation">The implementation<a class="anchor" href="#the-implementation" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- ServerScriptService/Receipts.server.lua</span>
+<span class="t-key">local</span> MarketplaceService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"MarketplaceService"</span>)
+<span class="t-key">local</span> DataStoreService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"DataStoreService"</span>)
+<span class="t-key">local</span> Players = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Players"</span>)
+
+<span class="t-key">local</span> purchaseHistory = DataStoreService:<span class="t-fn">GetDataStore</span>(<span class="t-str">"PurchaseHistory_v1"</span>)
+
+<span class="t-com">-- what each product does. Each handler returns true only on success.</span>
+<span class="t-key">local</span> productHandlers = {
+	[<span class="t-num">111111111</span>] = <span class="t-key">function</span>(player)          <span class="t-com">-- 100 coins</span>
+		<span class="t-key">return</span> addBalance(player, <span class="t-num">100</span>)
+	<span class="t-key">end</span>,
+
+	[<span class="t-num">222222222</span>] = <span class="t-key">function</span>(player)          <span class="t-com">-- revive</span>
+		<span class="t-key">local</span> character = player.<span class="t-prop">Character</span>
+		<span class="t-key">if</span> <span class="t-key">not</span> character <span class="t-key">then</span>
+			<span class="t-key">return</span> <span class="t-key">false</span>                     <span class="t-com">-- cannot grant right now</span>
+		<span class="t-key">end</span>
+		<span class="t-key">local</span> humanoid = character:<span class="t-fn">FindFirstChildOfClass</span>(<span class="t-str">"Humanoid"</span>)
+		<span class="t-key">if</span> <span class="t-key">not</span> humanoid <span class="t-key">or</span> humanoid.<span class="t-prop">Health</span> &gt; <span class="t-num">0</span> <span class="t-key">then</span>
+			<span class="t-key">return</span> <span class="t-key">false</span>
+		<span class="t-key">end</span>
+		humanoid.<span class="t-prop">Health</span> = humanoid.<span class="t-prop">MaxHealth</span>
+		<span class="t-key">return</span> <span class="t-key">true</span>
+	<span class="t-key">end</span>,
+}
+
+<span class="t-key">local</span> <span class="t-key">function</span> processReceipt(receiptInfo)
+	<span class="t-key">local</span> playerId = receiptInfo.<span class="t-prop">PlayerId</span>
+	<span class="t-key">local</span> productId = receiptInfo.<span class="t-prop">ProductId</span>
+	<span class="t-key">local</span> purchaseKey = receiptInfo.<span class="t-prop">PurchaseId</span>
+
+	<span class="t-key">local</span> player = Players:<span class="t-fn">GetPlayerByUserId</span>(playerId)
+	<span class="t-key">if</span> <span class="t-key">not</span> player <span class="t-key">then</span>
+		<span class="t-com">-- They left. Do not grant to nobody, and do not mark it done.</span>
+		<span class="t-key">return</span> <span class="t-glob">Enum</span>.<span class="t-prop">ProductPurchaseDecision</span>.<span class="t-prop">NotProcessedYet</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> handler = productHandlers[productId]
+	<span class="t-key">if</span> <span class="t-key">not</span> handler <span class="t-key">then</span>
+		<span class="t-glob">warn</span>(<span class="t-str">"[Receipt] no handler for product"</span>, productId)
+		<span class="t-com">-- Deliberately NotProcessedYet: a missing handler is a bug on our side,</span>
+		<span class="t-com">-- and retrying means we can ship the fix and the player still gets it.</span>
+		<span class="t-key">return</span> <span class="t-glob">Enum</span>.<span class="t-prop">ProductPurchaseDecision</span>.<span class="t-prop">NotProcessedYet</span>
+	<span class="t-key">end</span>
+
+	<span class="t-com">-- has this exact transaction already been granted?</span>
+	<span class="t-key">local</span> alreadyGranted = <span class="t-key">false</span>
+	<span class="t-key">local</span> ok, err = <span class="t-glob">pcall</span>(<span class="t-key">function</span>()
+		purchaseHistory:<span class="t-fn">UpdateAsync</span>(purchaseKey, <span class="t-key">function</span>(existing)
+			<span class="t-key">if</span> existing <span class="t-key">then</span>
+				alreadyGranted = <span class="t-key">true</span>
+				<span class="t-key">return</span> existing              <span class="t-com">-- leave it alone</span>
+			<span class="t-key">end</span>
+			<span class="t-key">return</span> <span class="t-key">true</span>                       <span class="t-com">-- claim it</span>
+		<span class="t-key">end</span>)
+	<span class="t-key">end</span>)
+
+	<span class="t-key">if</span> <span class="t-key">not</span> ok <span class="t-key">then</span>
+		<span class="t-glob">warn</span>(<span class="t-str">"[Receipt] history check failed:"</span>, err)
+		<span class="t-key">return</span> <span class="t-glob">Enum</span>.<span class="t-prop">ProductPurchaseDecision</span>.<span class="t-prop">NotProcessedYet</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">if</span> alreadyGranted <span class="t-key">then</span>
+		<span class="t-com">-- A duplicate delivery of a receipt we already honoured.</span>
+		<span class="t-key">return</span> <span class="t-glob">Enum</span>.<span class="t-prop">ProductPurchaseDecision</span>.<span class="t-prop">PurchaseGranted</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">local</span> granted = <span class="t-key">false</span>
+	<span class="t-key">local</span> handlerOk, handlerErr = <span class="t-glob">pcall</span>(<span class="t-key">function</span>()
+		granted = handler(player)
+	<span class="t-key">end</span>)
+
+	<span class="t-key">if</span> <span class="t-key">not</span> handlerOk <span class="t-key">then</span>
+		<span class="t-glob">warn</span>(<span class="t-str">"[Receipt] handler errored:"</span>, handlerErr)
+	<span class="t-key">end</span>
+
+	<span class="t-key">if</span> <span class="t-key">not</span> granted <span class="t-key">then</span>
+		<span class="t-com">-- Release our claim so the retry can succeed.</span>
+		<span class="t-glob">pcall</span>(<span class="t-key">function</span>()
+			purchaseHistory:<span class="t-fn">RemoveAsync</span>(purchaseKey)
+		<span class="t-key">end</span>)
+		<span class="t-key">return</span> <span class="t-glob">Enum</span>.<span class="t-prop">ProductPurchaseDecision</span>.<span class="t-prop">NotProcessedYet</span>
+	<span class="t-key">end</span>
+
+	<span class="t-key">return</span> <span class="t-glob">Enum</span>.<span class="t-prop">ProductPurchaseDecision</span>.<span class="t-prop">PurchaseGranted</span>
+<span class="t-key">end</span>
+
+MarketplaceService.<span class="t-prop">ProcessReceipt</span> = processReceipt</code></pre></div>
+<h2 id="why-it-is-shaped-like-that">Why it is shaped like that<a class="anchor" href="#why-it-is-shaped-like-that" aria-label="Link to this section">#</a></h2>
+<p><strong><code>UpdateAsync</code> keyed on <code>PurchaseId</code>, not <code>SetAsync</code>.</strong> The check and the claim must be one atomic operation. With <code>GetAsync</code> then <code>SetAsync</code>, two servers processing the same retry can both read "not granted" and both grant.</p>
+<p><strong>Claim first, grant second.</strong> If you grant first and then record, a crash between the two loses the record and the retry grants again.</p>
+<p><strong>Release the claim if granting fails.</strong> This is the step almost every tutorial misses. If you claim the <code>PurchaseId</code> and then the handler fails, the claim makes every future retry look like a duplicate — and the player never gets their item. The <code>RemoveAsync</code> undoes the claim so the retry can work.</p>
+<p><strong>Return <code>PurchaseGranted</code> on a detected duplicate.</strong> The player has already been given the item. Saying <code>NotProcessedYet</code> asks Roblox to try forever.</p>
+<p><strong><code>NotProcessedYet</code> for a missing handler.</strong> Counter-intuitive, but right: it means you can ship the handler tomorrow and the player still receives what they paid for. Returning <code>PurchaseGranted</code> would discard their money silently.</p>
+<aside class="note note-warning"><p class="note-label">warning</p><p>Never return <code>PurchaseGranted</code> on a path where the item was not actually given. It is not a "close the transaction" value — it is a promise that the player has their goods, and it is the last time Roblox will ask you.</p></aside>
+<h2 id="prompting-the-purchase">Prompting the purchase<a class="anchor" href="#prompting-the-purchase" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- client</span>
+MarketplaceService:<span class="t-fn">PromptProductPurchase</span>(player, PRODUCT_ID)</code></pre></div>
+<p>The product ID comes from the Creator Dashboard, under Monetization → Developer Products. It is not the same kind of ID as a game pass.</p>
+<h2 id="do-not-grant-from-promptproductpurchasefinished">Do not grant from PromptProductPurchaseFinished<a class="anchor" href="#do-not-grant-from-promptproductpurchasefinished" aria-label="Link to this section">#</a></h2>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- for UI feedback only</span>
+MarketplaceService.<span class="t-prop">PromptProductPurchaseFinished</span>:<span class="t-fn">Connect</span>(
+	<span class="t-key">function</span>(userId, productId, isPurchased)
+		<span class="t-com">-- close a menu, play a sound. Grant NOTHING here.</span>
+	<span class="t-key">end</span>
+)</code></pre></div>
+<p>This event tells you the prompt closed. It is not the payment confirmation, it does not carry a <code>PurchaseId</code>, and it cannot be de-duplicated. <code>ProcessReceipt</code> is the only authoritative signal that money changed hands.</p>
+<h2 id="testing">Testing<a class="anchor" href="#testing" aria-label="Link to this section">#</a></h2>
+<p>Developer product purchases <strong>do not work in Studio</strong>. You must test in a published game, and real purchases cost real Robux — though purchases you make in your own game largely return to you, minus Roblox's cut.</p>
+<p>What you can test cheaply is the logic, by calling your handler directly:</p>
+<div class="code"><span class="code-lang">Luau</span><pre><code><span class="t-com">-- Studio only, temporary</span>
+<span class="t-key">local</span> fakeReceipt = {
+	PurchaseId = <span class="t-str">"test-"</span> .. <span class="t-prop">os</span>.<span class="t-fn">time</span>(),
+	PlayerId = <span class="t-glob">game</span>.<span class="t-prop">Players</span>:<span class="t-fn">GetPlayers</span>()[<span class="t-num">1</span>].<span class="t-prop">UserId</span>,
+	ProductId = <span class="t-num">111111111</span>,
+	CurrencySpent = <span class="t-num">25</span>,
+}
+<span class="t-glob">print</span>(processReceipt(fakeReceipt))</code></pre></div>
+<p>Run it twice with the <strong>same</strong> <code>PurchaseId</code> and confirm the second call returns <code>PurchaseGranted</code> without granting again. That is the duplicate path, which is the one that costs you money if it is wrong, and it is the one you can verify for free.</p>
+<p>Delete this before publishing.</p>
+<h2 id="a-note-on-bindreceipthandler">A note on BindReceiptHandler<a class="anchor" href="#a-note-on-bindreceipthandler" aria-label="Link to this section">#</a></h2>
+<p><code>MarketplaceService:BindReceiptHandler(transactionType, handler, filter)</code> is a newer addition that returns a connection and allows more than one handler, filtered by transaction type. It is the direction Roblox is heading, particularly for subscriptions and bulk purchases.</p>
+<p>I have not used it in a shipped game, so I am not going to present a pattern for it here as though I had. If you are starting fresh, it is worth reading the current reference page for it — but the <code>ProcessReceipt</code> logic above, especially the claim-and-release ordering, is the part that matters regardless of which entry point delivers the receipt.</p>
+<h2 id="the-audit">The audit<a class="anchor" href="#the-audit" aria-label="Link to this section">#</a></h2>
+<ol><li>Is the de-duplication keyed on <code>PurchaseId</code>?</li><li>Is the claim made with <code>UpdateAsync</code>, not <code>GetAsync</code> + <code>SetAsync</code>?</li><li>Is the claim <strong>released</strong> when granting fails?</li><li>Does a detected duplicate return <code>PurchaseGranted</code>?</li><li>Does every failure path return <code>NotProcessedYet</code> rather than erroring?</li><li>Is <code>ProcessReceipt</code> <strong>assigned</strong> once, on the server, and never in more than one</li></ol>
+<p>   script? A second assignment silently replaces the first, and the products in the    replaced table stop working.</p>
+  </div>
+  <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <footer class="doc-foot">
+    <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
+    <p>Found a mistake in this guide? <a href="../contribute.html">Send a
+       correction</a> &mdash; every page here is open to edits.</p>
+  </footer>
+</article>
+</main>
+</div>
+<footer class="foot">
+  <p>Baseplate Wiki &mdash; written and tested by hand in Roblox Studio.
+     Open to corrections: <a href="../contribute.html">contribute</a>.</p>
+  <p class="fine">&copy; 2026 Baseplate Wiki. Not affiliated with or
+     endorsed by Roblox Corporation.
+     <a href="../privacy.html">Privacy</a></p>
+</footer>
+<script src="../assets/search.js" defer></script>
+</body>
+</html>
