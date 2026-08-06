@@ -755,19 +755,47 @@ def build_search_index(guides, glossary=None):
 
 
 def build_sitemap(guides, glossary=None):
+    """Sitemap with lastmod dates.
+
+    The homepage is listed as the directory URL rather than /index.html so it
+    matches the canonical address readers and Search Console actually use.
+    """
     if not SITE_URL:
         return
-    urls = ["index.html", "learn.html", "recipes.html", "about.html",
-            "contribute.html", "privacy.html", "contact.html"]
-    urls += ["terms/index.html"]
-    urls += [f"c/{slugify(c)}.html" for c in CATEGORIES]
-    urls += [f"guides/{g['slug']}.html" for g in guides]
-    urls += [f"terms/{t2['slug']}.html" for t2 in (glossary or [])]
-    entries = "".join(f"  <url><loc>{SITE_URL}/{u}</loc></url>\n" for u in urls)
+
+    base = SITE_URL.rstrip("/")
+    today = date.today().isoformat()
+
+    entries = [(f"{base}/", today, "1.0")]
+
+    for name in ("learn.html", "recipes.html", "terms/index.html"):
+        entries.append((f"{base}/{name}", today, "0.8"))
+
+    for c in CATEGORIES:
+        entries.append((f"{base}/c/{slugify(c)}.html", today, "0.6"))
+
+    for g in guides:
+        when = g.get("updated") or g.get("date") or today
+        entries.append((f"{base}/guides/{g['slug']}.html", when, "0.9"))
+
+    for term in (glossary or []):
+        entries.append((f"{base}/terms/{term['slug']}.html", today, "0.7"))
+
+    for name in ("about.html", "contribute.html", "contact.html", "privacy.html"):
+        entries.append((f"{base}/{name}", today, "0.3"))
+
+    body = "".join(
+        f"  <url><loc>{loc}</loc><lastmod>{when}</lastmod>"
+        f"<priority>{pri}</priority></url>\n"
+        for loc, when, pri in entries
+    )
+
     (SITE / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        f"{entries}</urlset>\n", encoding="utf-8")
+        f"{body}</urlset>\n",
+        encoding="utf-8",
+    )
 
 
 def main():
