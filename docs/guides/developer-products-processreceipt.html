@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Developer products and ProcessReceipt without double-granting — Baseplate Wiki</title>
 <meta name="description" content="Repeatable purchases need a receipt handler that records what it granted. Get this wrong and players either lose Robux or get free items forever.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -83,7 +83,7 @@
 <p>  and gets nothing**.</p>
 <p>Both are real money. This is the one system in Roblox where "roughly right" is not acceptable.</p>
 <h2 id="how-the-callback-works">How the callback works<a class="anchor" href="#how-the-callback-works" aria-label="Link to this section">#</a></h2>
-<p><code><a class="term-link" href="../terms/marketplaceservice.html" title="Handles game passes, developer products and receipts. Several of its most-used methods are now deprecated in favour of Async versions.">MarketplaceService</a>.ProcessReceipt</code> is a <strong>callback</strong>, not an event. There is exactly one, it must be assigned (not connected), and it must live on the server.</p>
+<p><code><a class="term-link" href="../terms/marketplaceservice.html" data-term="MarketplaceService" data-summary="Handles game passes, developer products and receipts. Several of its most-used methods are now deprecated in favour of Async versions.">MarketplaceService</a>.ProcessReceipt</code> is a <strong>callback</strong>, not an event. There is exactly one, it must be assigned (not connected), and it must live on the server.</p>
 <div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>MarketplaceService.<span class="t-prop">ProcessReceipt</span> = processReceipt   <span class="t-com">-- assignment</span></code></pre></div>
 <p>Roblox calls it after taking the player's Robux. Your job is to grant the item and return a <code>Enum.ProductPurchaseDecision</code>:</p>
 <ul><li><strong><code>PurchaseGranted</code></strong> — done, do not call me again about this receipt.</li><li><strong><code>NotProcessedYet</code></strong> — I could not grant it. Roblox retries later, including on</li></ul>
@@ -238,6 +238,6 @@ MarketplaceService.<span class="t-prop">PromptProductPurchaseFinished</span>:<sp
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Developer Console (F9): finding the errors Studio never showed you — Baseplate Wiki</title>
 <meta name="description" content="Client errors in a live game do not appear in the Studio output window. This is where they go, and how to read them.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -83,7 +83,7 @@
 <p>It works in a live game and in Studio, and it is available to any player, not just the game's owner. That last part matters both ways: it is how a player can send you a useful bug report, and it is a reminder that anything you <code>print</code> is visible to anyone who looks.</p>
 <h2 id="the-part-people-miss-client-and-server-are-separate">The part people miss: client and server are separate<a class="anchor" href="#the-part-people-miss-client-and-server-are-separate" aria-label="Link to this section">#</a></h2>
 <p>At the top of the console there is a switch between <strong>Client</strong> and <strong>Server</strong>. They are different logs and neither shows the other's messages.</p>
-<ul><li><strong>Client</strong> — everything from <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScripts</a> on your own machine.</li><li><strong>Server</strong> — everything from server Scripts, for the whole server.</li></ul>
+<ul><li><strong>Client</strong> — everything from <a class="term-link" href="../terms/localscript.html" data-term="LocalScript" data-summary="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScripts</a> on your own machine.</li><li><strong>Server</strong> — everything from server Scripts, for the whole server.</li></ul>
 <p>If you are hunting a bug and the log looks empty, check that you are on the right side first. It is the single most common reason people conclude "there is no error."</p>
 <aside class="note note-note"><p class="note-label">note</p><p>In a live game you only see the <strong>server</strong> log for a game you have edit permissions on. Ordinary players see their own client log only. That is a privacy and security boundary, not a bug.</p></aside>
 <h2 id="reading-a-stack-trace">Reading a stack trace<a class="anchor" href="#reading-a-stack-trace" aria-label="Link to this section">#</a></h2>
@@ -117,7 +117,7 @@
 <p>The console has more than a log. Two are genuinely useful:</p>
 <ul><li><strong>Memory</strong> — memory use broken down by category. This is where you look when a</li></ul>
 <p>  game gets slower the longer a server stays up, which usually means something is   being created and never destroyed.</p>
-<ul><li><strong>Network</strong> — data being sent. Worth a look if you suspect a <a class="term-link" href="../terms/remoteevent.html" title="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvent</a> is</li></ul>
+<ul><li><strong>Network</strong> — data being sent. Worth a look if you suspect a <a class="term-link" href="../terms/remoteevent.html" data-term="RemoteEvent" data-summary="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvent</a> is</li></ul>
 <p>  firing far more often than you intended, which is a common cause of lag that   looks like a rendering problem.</p>
 <p>There is also the <strong>MicroProfiler</strong> (<code>Ctrl+F6</code>), which is a separate and much deeper tool for frame-time analysis.</p>
 <h2 id="before-you-ask-anyone-for-help">Before you ask anyone for help<a class="anchor" href="#before-you-ask-anyone-for-help" aria-label="Link to this section">#</a></h2>
@@ -145,6 +145,6 @@
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

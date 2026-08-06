@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Moving a model without it exploding: PrimaryPart and PivotTo — Baseplate Wiki</title>
 <meta name="description" content="Setting a model&#x27;s position part by part tears welded assemblies apart. Move the whole thing at once instead.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -133,13 +133,13 @@ slideModel(<span class="t-glob">workspace</span>.<span class="t-prop">Platform</
 <p><code>CFrame:Lerp</code> interpolates position and rotation together, so this works for rotating movement as well as straight lines.</p>
 <p>You cannot pass a <code>Model</code> to <code>TweenService</code> directly, because tweens animate <em>properties</em> and the pivot is not one. The usual workaround is to tween the <code>PrimaryPart</code>'s <code>CFrame</code> and weld everything else to it — the welds carry the rest of the model along. That is often simpler than the loop above, and it gets you TweenService's easing styles for free.</p>
 <h2 id="anchored-unanchored-and-which-to-use">Anchored, unanchored, and which to use<a class="anchor" href="#anchored-unanchored-and-which-to-use" aria-label="Link to this section">#</a></h2>
-<ul><li><strong><a class="term-link" href="../terms/anchored.html" title="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a> root, <code>PivotTo</code> each frame</strong> — full control, no physics interference.</li></ul>
+<ul><li><strong><a class="term-link" href="../terms/anchored.html" data-term="Anchored" data-summary="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a> root, <code>PivotTo</code> each frame</strong> — full control, no physics interference.</li></ul>
 <p>  Right for doors, lifts, moving platforms.</p>
 <ul><li><strong>Unanchored root, physics constraints</strong> — right for vehicles and anything that</li></ul>
 <p>  should collide and be pushed around.</p>
 <p>Calling <code>PivotTo</code> repeatedly on an <em>unanchored</em> assembly fights the physics solver: you set a position, physics moves it, you set it again. The result stutters. If you are driving movement from a script, anchor the root.</p>
 <h2 id="if-the-model-still-comes-apart">If the model still comes apart<a class="anchor" href="#if-the-model-still-comes-apart" aria-label="Link to this section">#</a></h2>
-<ol><li>Is <code>PrimaryPart</code> set, and is it one of the parts actually welded to the rest?</li><li>Are the welds <code><a class="term-link" href="../terms/weldconstraint.html" title="Locks two parts' relative positions so they move as one body. The modern way to hold an assembly together.">WeldConstraint</a></code>s created <strong>after</strong> all parts were positioned?</li><li>Is any part still <code>Anchored</code> while the root is not? That part will stay behind.</li><li>Are you calling <code>PivotTo</code> on the <code>Model</code> — not on a part inside it?</li></ol>
+<ol><li>Is <code>PrimaryPart</code> set, and is it one of the parts actually welded to the rest?</li><li>Are the welds <code><a class="term-link" href="../terms/weldconstraint.html" data-term="WeldConstraint" data-summary="Locks two parts' relative positions so they move as one body. The modern way to hold an assembly together.">WeldConstraint</a></code>s created <strong>after</strong> all parts were positioned?</li><li>Is any part still <code>Anchored</code> while the root is not? That part will stay behind.</li><li>Are you calling <code>PivotTo</code> on the <code>Model</code> — not on a part inside it?</li></ol>
   </div>
   <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
   <footer class="doc-foot">
@@ -157,6 +157,6 @@ slideModel(<span class="t-glob">workspace</span>.<span class="t-prop">Platform</
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

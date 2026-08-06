@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>&#x27;DataStore request was added to queue&#x27;: what throttling actually means — Baseplate Wiki</title>
 <meta name="description" content="This warning means you are over your request budget. Here is how the budget works and how to get back under it.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -168,7 +168,7 @@ store:<span class="t-fn">SetAsync</span>(userId .. <span class="t-str">"_items"<
 <span class="t-key">end</span>)</code></pre></div>
 <p>With <code>SetAsync</code>, two servers can both read 100, both add 50, and both write 150 — one increment vanishes. <code>UpdateAsync</code> cannot lose that way.</p>
 <p>It costs one request from a different budget, so it is not a free win, but for anything incremental it is the right tool.</p>
-<aside class="note note-warning"><p class="note-label">warning</p><p>The function you pass to <code>UpdateAsync</code> must not yield. No <code>task.wait</code>, no DataStore calls, no <code><a class="term-link" href="../terms/waitforchild.html" title="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a></code> inside it. Compute and return.</p></aside>
+<aside class="note note-warning"><p class="note-label">warning</p><p>The function you pass to <code>UpdateAsync</code> must not yield. No <code>task.wait</code>, no DataStore calls, no <code><a class="term-link" href="../terms/waitforchild.html" data-term="WaitForChild" data-summary="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a></code> inside it. Compute and return.</p></aside>
 <h2 id="reading-the-diagnosis">Reading the diagnosis<a class="anchor" href="#reading-the-diagnosis" aria-label="Link to this section">#</a></h2>
 <p>The warning tells you the request type. Match it to the table above and you know which side is over budget — reads or writes. Then:</p>
 <ul><li><strong>Writes over budget</strong> → you are saving too often, or per-stat instead of per-</li></ul>
@@ -194,6 +194,6 @@ store:<span class="t-fn">SetAsync</span>(userId .. <span class="t-str">"_items"<
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

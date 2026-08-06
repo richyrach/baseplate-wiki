@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Why your button works in Studio but does nothing on mobile — Baseplate Wiki</title>
 <meta name="description" content="The button is fine. It is usually the input code filtering for a mouse, or something invisible sitting on top of it.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -108,7 +108,7 @@ button.<span class="t-prop">Activated</span>:<span class="t-fn">Connect</span>(<
 	doTheThing()
 <span class="t-key">end</span>)</code></pre></div>
 <p><code>GuiButton.Activated</code> fires for mouse clicks, taps and gamepad activation, which is usually what you actually meant. <code>MouseButton1Click</code> also fires on tap despite the name, so existing code using it is not broken — but <code>Activated</code> states the intent better and covers gamepad too.</p>
-<p>For clicking objects in the world rather than a GUI, use a <code>ClickDetector</code> (its <code>MouseClick</code> event fires on tap) or a <code><a class="term-link" href="../terms/proximityprompt.html" title="The cross-platform way to make a world object interactive. Handles keyboard, gamepad and touch with no extra code.">ProximityPrompt</a></code>, which was designed for cross-platform interaction and gives you the button hint for free.</p>
+<p>For clicking objects in the world rather than a GUI, use a <code>ClickDetector</code> (its <code>MouseClick</code> event fires on tap) or a <code><a class="term-link" href="../terms/proximityprompt.html" data-term="ProximityPrompt" data-summary="The cross-platform way to make a world object interactive. Handles keyboard, gamepad and touch with no extra code.">ProximityPrompt</a></code>, which was designed for cross-platform interaction and gives you the button hint for free.</p>
 <h2 id="3-something-invisible-is-on-top-of-it">3. Something invisible is on top of it<a class="anchor" href="#3-something-invisible-is-on-top-of-it" aria-label="Link to this section">#</a></h2>
 <p>This one produces the most confusing version of the symptom, because the button looks completely normal.</p>
 <p>A <code>Frame</code> with <code>BackgroundTransparency = 1</code> is invisible but still absorbs input. If it overlaps your button and sits above it, taps hit the frame.</p>
@@ -132,7 +132,7 @@ button.<span class="t-prop">AnchorPoint</span> = <span class="t-glob">Vector2</s
 button.<span class="t-prop">Position</span> = <span class="t-glob">UDim2</span>.<span class="t-fn">fromScale</span>(<span class="t-num">0.5</span>, <span class="t-num">0.85</span>)</code></pre></div>
 <h2 id="testing-it-properly">Testing it properly<a class="anchor" href="#testing-it-properly" aria-label="Link to this section">#</a></h2>
 <p>Studio's device emulator (<strong>Test</strong> tab → <strong>Device</strong>) changes the viewport, so it catches causes 3 and 4. It does <strong>not</strong> faithfully emulate touch, so it will not reliably catch causes 1 and 2.</p>
-<p>To catch those, check the code rather than the behaviour: search your <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScripts</a> for <code>MouseButton1</code>, <code>GetMouse</code>, and <code>Button1Down</code>. Every hit is a place where touch was probably not considered.</p>
+<p>To catch those, check the code rather than the behaviour: search your <a class="term-link" href="../terms/localscript.html" data-term="LocalScript" data-summary="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScripts</a> for <code>MouseButton1</code>, <code>GetMouse</code>, and <code>Button1Down</code>. Every hit is a place where touch was probably not considered.</p>
 <p>You can also check the platform at runtime, which is useful for showing different hints:</p>
 <div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> UserInputService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"UserInputService"</span>)
 
@@ -164,6 +164,6 @@ button.<span class="t-prop">Position</span> = <span class="t-glob">UDim2</span>.
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

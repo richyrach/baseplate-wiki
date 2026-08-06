@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Giving Premium players benefits, and the Roblox Plus problem — Baseplate Wiki</title>
 <meta name="description" content="How to detect Premium in 2026 — including why the usual MembershipType check now also returns true for Roblox Plus subscribers.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -140,7 +140,7 @@ Players.<span class="t-prop">PlayerRemoving</span>:<span class="t-fn">Connect</s
 <span class="t-key">end</span>)</code></pre></div>
 <p>This event has a significant limitation worth knowing: in practice it fires when the player's membership changes <strong>during the session after being prompted</strong>, not as a general-purpose subscription watcher. Do not rely on it to catch every possible change. The join-time check is what carries the weight.</p>
 <h2 id="prompting-for-premium">Prompting for Premium<a class="anchor" href="#prompting-for-premium" aria-label="Link to this section">#</a></h2>
-<p><code><a class="term-link" href="../terms/marketplaceservice.html" title="Handles game passes, developer products and receipts. Several of its most-used methods are now deprecated in favour of Async versions.">MarketplaceService</a>:PromptPremiumPurchase(player)</code> is <strong>deprecated</strong>.</p>
+<p><code><a class="term-link" href="../terms/marketplaceservice.html" data-term="MarketplaceService" data-summary="Handles game passes, developer products and receipts. Several of its most-used methods are now deprecated in favour of Async versions.">MarketplaceService</a>:PromptPremiumPurchase(player)</code> is <strong>deprecated</strong>.</p>
 <p>I do not have a verified current replacement to give you. If you want to advertise Premium, the reliable approach today is a normal in-game UI panel explaining the benefit, rather than an engine-provided prompt — and check the current MarketplaceService reference before building around any prompt method, because this area of the API has changed more than once.</p>
 <h2 id="do-not-gate-core-gameplay-behind-it">Do not gate core gameplay behind it<a class="anchor" href="#do-not-gate-core-gameplay-behind-it" aria-label="Link to this section">#</a></h2>
 <p>Worth saying because it is a design mistake more than a coding one: perks that make the game <em>unplayable</em> without Premium read badly and lose you non-Premium players, who are the overwhelming majority.</p>
@@ -184,6 +184,6 @@ refreshBadge()</code></pre></div>
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

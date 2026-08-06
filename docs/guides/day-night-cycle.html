@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>A day and night cycle that looks good and stays in sync — Baseplate Wiki</title>
 <meta name="description" content="Driving Lighting.ClockTime from the server, blending ambient colour and fog through the cycle, and keeping every client on the same time.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -77,7 +77,7 @@
   <div class="prose">
 <p>A day/night cycle is one line of code and about forty lines of art direction. The one line:</p>
 <div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Lighting"</span>).<span class="t-prop">ClockTime</span> = <span class="t-num">14</span>   <span class="t-com">-- 2pm</span></code></pre></div>
-<p><code><a class="term-link" href="../terms/clocktime.html" title="The hour of the in-game day, 0 to 24, on Lighting. Drives the sun and moon.">ClockTime</a></code> is hours as a number from 0 to 24. <code>6</code> is dawn, <code>12</code> is noon, <code>18</code> is dusk, <code>0</code> and <code>24</code> are midnight. There is also <code>TimeOfDay</code>, which is the same thing as a <code>"HH:MM:SS"</code> string, and <code>SetMinutesAfterMidnight()</code> if you prefer minutes.</p>
+<p><code><a class="term-link" href="../terms/clocktime.html" data-term="ClockTime" data-summary="The hour of the in-game day, 0 to 24, on Lighting. Drives the sun and moon.">ClockTime</a></code> is hours as a number from 0 to 24. <code>6</code> is dawn, <code>12</code> is noon, <code>18</code> is dusk, <code>0</code> and <code>24</code> are midnight. There is also <code>TimeOfDay</code>, which is the same thing as a <code>"HH:MM:SS"</code> string, and <code>SetMinutesAfterMidnight()</code> if you prefer minutes.</p>
 <h2 id="the-cycle-on-the-server">The cycle, on the server<a class="anchor" href="#the-cycle-on-the-server" aria-label="Link to this section">#</a></h2>
 <div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- ServerScriptService/DayNight.server.lua</span>
 <span class="t-key">local</span> Lighting = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"Lighting"</span>)
@@ -95,7 +95,7 @@
 		Lighting.<span class="t-prop">ClockTime</span> = (Lighting.<span class="t-prop">ClockTime</span> + hoursPerSecond * dt) % <span class="t-num">24</span>
 	<span class="t-key">end</span>
 <span class="t-key">end</span>)</code></pre></div>
-<p>Run this on the <strong>server</strong>, not in a <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a>. A client-side cycle gives every player their own private time of day, so one player's screenshot says noon and their friend's says midnight.</p>
+<p>Run this on the <strong>server</strong>, not in a <a class="term-link" href="../terms/localscript.html" data-term="LocalScript" data-summary="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a>. A client-side cycle gives every player their own private time of day, so one player's screenshot says noon and their friend's says midnight.</p>
 <aside class="note note-note"><p class="note-label">note</p><p><code>Lighting.ClockTime</code> is documented as <em>Not Replicated</em>, which sounds like it should not work from the server at all. In practice setting it server-side does drive every client, because it updates the underlying <code>TimeOfDay</code>. Verify this yourself with two clients from the <strong>Test</strong> tab before building on it — if you see them drift, drive <code>TimeOfDay</code> instead, which is the replicated property.</p></aside>
 <h2 id="why-task-wait-with-no-argument">Why <code>task.wait()</code> with no argument<a class="anchor" href="#why-task-wait-with-no-argument" aria-label="Link to this section">#</a></h2>
 <p><code>task.wait()</code> returns the time since the last frame and resumes next frame. Advancing by <code>hoursPerSecond * dt</code> means the cycle runs at the same real-world speed regardless of frame rate.</p>
@@ -220,6 +220,6 @@ Lighting:<span class="t-fn">GetPropertyChangedSignal</span>(<span class="t-str">
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>A clock UI that shows in-game time without redrawing every frame — Baseplate Wiki</title>
 <meta name="description" content="Reading Lighting.ClockTime into a HUD label, formatting it as 12- or 24-hour, and only updating when the visible text actually changes.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -176,7 +176,7 @@ corner.<span class="t-prop">Parent</span> = label</code></pre></div>
 <p>Twenty seconds is a reasonable poll for a minute-resolution clock; there is no point checking more often.</p>
 <h2 id="checking-it">Checking it<a class="anchor" href="#checking-it" aria-label="Link to this section">#</a></h2>
 <ol><li>Jump the time from the Command Bar and confirm the label follows:</li></ol>
-<p>   <code>game:GetService("Lighting").<a class="term-link" href="../terms/clocktime.html" title="The hour of the in-game day, 0 to 24, on Lighting. Drives the sun and moon.">ClockTime</a> = 23.98</code></p>
+<p>   <code>game:GetService("Lighting").<a class="term-link" href="../terms/clocktime.html" data-term="ClockTime" data-summary="The hour of the in-game day, 0 to 24, on Lighting. Drives the sun and moon.">ClockTime</a> = 23.98</code></p>
 <ol><li>Watch it roll past midnight. <code>23:59 → 00:00</code> in 24-hour mode,</li></ol>
 <p>   <code>11:59 PM → 12:00 AM</code> in 12-hour.</p>
 <ol><li>Add a temporary <code>print</code> inside the <code>if text ~= lastText</code> block and confirm it fires</li></ol>
@@ -198,6 +198,6 @@ corner.<span class="t-prop">Parent</span> = label</code></pre></div>
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

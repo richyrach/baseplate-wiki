@@ -105,9 +105,14 @@ def link_terms(html_text, terms, current_slug=None, depth=1):
             return word
         used.add(term["slug"])
         budget[0] -= 1
-        title = term["summary"].replace('"', "&quot;")
+
+        # data-* rather than title=: the native tooltip is slow, unstyleable,
+        # and would show on top of our own card.
+        summary = (term["summary"].replace("&", "&amp;")
+                   .replace('"', "&quot;").replace("<", "&lt;"))
+        name = term["term"].replace('"', "&quot;")
         return (f'<a class="term-link" href="{up}terms/{term["slug"]}.html" '
-                f'title="{title}">{word}</a>')
+                f'data-term="{name}" data-summary="{summary}">{word}</a>')
 
     # Walk the HTML, only rewriting text that sits outside protected elements.
     for chunk in re.split(r"(<[^>]+>)", html_text):

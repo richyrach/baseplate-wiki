@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Awarding badges without spamming the API — Baseplate Wiki</title>
 <meta name="description" content="AwardBadgeAsync, checking first so you do not re-award, and why this must be server-side and wrapped in pcall.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -155,7 +155,7 @@ Players.<span class="t-prop">PlayerRemoving</span>:<span class="t-fn">Connect</s
 <p><code>hasBadge</code> returns three values: <code>true</code>, <code>false</code>, and <code>nil</code> for "the check failed."</p>
 <p><code>not owns</code> would treat <code>nil</code> as "does not own" and attempt an award on an unknown state — exactly the case where you are most likely to be hitting an API problem already. <code>owns ~= false</code> only proceeds when we positively know they do not have it.</p>
 <h2 id="it-must-be-server-side">It must be server-side<a class="anchor" href="#it-must-be-server-side" aria-label="Link to this section">#</a></h2>
-<p><code>AwardBadgeAsync</code> only works from a server script. Calling it from a <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a> fails.</p>
+<p><code>AwardBadgeAsync</code> only works from a server script. Calling it from a <a class="term-link" href="../terms/localscript.html" data-term="LocalScript" data-summary="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a> fails.</p>
 <p>That is the correct design: badges are permanent profile changes, and a client should never be able to decide it has earned one. The client can <em>ask</em> — "I finished the level" — and the server verifies and awards, the same pattern as currency.</p>
 <h2 id="the-badge-must-belong-to-this-game">The badge must belong to this game<a class="anchor" href="#the-badge-must-belong-to-this-game" aria-label="Link to this section">#</a></h2>
 <p>A badge can only be awarded by the experience it was created under. Badges from another game, or ones you created under a different place, silently fail to award.</p>
@@ -218,6 +218,6 @@ Players.<span class="t-prop">PlayerRemoving</span>:<span class="t-fn">Connect</s
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

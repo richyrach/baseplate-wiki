@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DataStoreService — Baseplate Wiki reference</title>
 <meta name="description" content="Persistent storage across sessions. Every call is a network request that can fail, and there is a per-minute budget.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -99,7 +99,7 @@ store:<span class="t-fn">UpdateAsync</span>(userId, <span class="t-key">function
 	<span class="t-key">return</span> d
 <span class="t-key">end</span>)</code></pre></div>
 <p>Use <code>UpdateAsync</code> whenever the new value depends on the old one. With <code>SetAsync</code>, two servers can both read 100, both add 50, and both write 150 — losing one increment. <code>UpdateAsync</code> cannot lose that way.</p>
-<aside class="note note-warning"><p class="note-label">warning</p><p>The callback you pass to <code>UpdateAsync</code> must not yield. No <code>task.wait</code>, no nested DataStore calls, no <code><a class="term-link" href="../terms/waitforchild.html" title="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a></code>. Compute and return.</p></aside>
+<aside class="note note-warning"><p class="note-label">warning</p><p>The callback you pass to <code>UpdateAsync</code> must not yield. No <code>task.wait</code>, no nested DataStore calls, no <code><a class="term-link" href="../terms/waitforchild.html" data-term="WaitForChild" data-summary="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a></code>. Compute and return.</p></aside>
 <h2 id="the-request-budget">The request budget<a class="anchor" href="#the-request-budget" aria-label="Link to this section">#</a></h2>
 <p>Each server has an allowance per minute, scaling with player count. Exceeding it <strong>queues</strong> requests rather than failing them, which presents as the game hanging:</p>
 <p><code>DataStore request was added to queue.</code></p>
@@ -139,6 +139,6 @@ store:<span class="t-fn">UpdateAsync</span>(userId, <span class="t-key">function
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

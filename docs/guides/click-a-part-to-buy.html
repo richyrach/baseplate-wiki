@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Click a part to buy a game pass, with ProximityPrompt or ClickDetector — Baseplate Wiki</title>
 <meta name="description" content="Turning a world object into a shop. Two ways to do it, why ProximityPrompt is usually the better one, and the server checks that make it safe.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -123,7 +123,7 @@ detector.<span class="t-prop">MouseClick</span>:<span class="t-fn">Connect</span
 <p>Use a <code>ClickDetector</code> when the object is obviously interactive on its own (a big labelled button model) and a prompt would look wrong.</p>
 <aside class="note note-note"><p class="note-label">note</p><p><code>ClickDetector</code> also has <code>MouseHoverEnter</code> and <code>MouseHoverLeave</code>, which are handy for a highlight on desktop. They never fire on touch devices, so treat any highlight they drive as decoration, not as the thing that tells players an object is usable.</p></aside>
 <h2 id="both-must-be-created-or-handled-on-the-server">Both must be created or handled on the server<a class="anchor" href="#both-must-be-created-or-handled-on-the-server" aria-label="Link to this section">#</a></h2>
-<p>If the <code>Triggered</code> or <code>MouseClick</code> handler is in a <strong><a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a></strong>, it still works — but then only that client knows, and anything you do in response is client-side and private.</p>
+<p>If the <code>Triggered</code> or <code>MouseClick</code> handler is in a <strong><a class="term-link" href="../terms/localscript.html" data-term="LocalScript" data-summary="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a></strong>, it still works — but then only that client knows, and anything you do in response is client-side and private.</p>
 <p>For a purchase prompt specifically, <code>PromptGamePassPurchase</code> can be called from either side. Calling it from the server is simpler because you already have the <code>player</code> argument.</p>
 <p>For anything that changes game state, the handler must be server-side, and it must still validate:</p>
 <div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>prompt.<span class="t-prop">Triggered</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>(player)
@@ -139,7 +139,7 @@ detector.<span class="t-prop">MouseClick</span>:<span class="t-fn">Connect</span
 
 	grantSomething(player)
 <span class="t-key">end</span>)</code></pre></div>
-<p>A <code><a class="term-link" href="../terms/proximityprompt.html" title="The cross-platform way to make a world object interactive. Handles keyboard, gamepad and touch with no extra code.">ProximityPrompt</a></code>'s distance is enforced, which is genuinely useful — but nothing else about the player's state is.</p>
+<p>A <code><a class="term-link" href="../terms/proximityprompt.html" data-term="ProximityPrompt" data-summary="The cross-platform way to make a world object interactive. Handles keyboard, gamepad and touch with no extra code.">ProximityPrompt</a></code>'s distance is enforced, which is genuinely useful — but nothing else about the player's state is.</p>
 <h2 id="making-the-vendor-show-ownership">Making the vendor show ownership<a class="anchor" href="#making-the-vendor-show-ownership" aria-label="Link to this section">#</a></h2>
 <p>A vendor that still says "Buy" after you have bought it looks broken. Update the prompt per player using <code>Enabled</code>:</p>
 <div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> MarketplaceService = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"MarketplaceService"</span>)
@@ -169,7 +169,7 @@ prompt.<span class="t-prop">Triggered</span>:<span class="t-fn">Connect</span>(<
 <div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>part.<span class="t-prop">Anchored</span> = <span class="t-key">true</span></code></pre></div>
 <p>Obvious in hindsight, and it happens constantly.</p>
 <h2 id="checklist">Checklist<a class="anchor" href="#checklist" aria-label="Link to this section">#</a></h2>
-<ol><li>Vendor part is <code><a class="term-link" href="../terms/anchored.html" title="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a></code>.</li><li><code>ProximityPrompt</code> with clear <code>ActionText</code>, and <code>RequiresLineOfSight = false</code></li></ol>
+<ol><li>Vendor part is <code><a class="term-link" href="../terms/anchored.html" data-term="Anchored" data-summary="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a></code>.</li><li><code>ProximityPrompt</code> with clear <code>ActionText</code>, and <code>RequiresLineOfSight = false</code></li></ol>
 <p>   unless you specifically want occlusion.</p>
 <ol><li><code>Triggered</code> handler is on the <strong>server</strong>.</li><li>Ownership checked with <code>pcall</code>, and the owned path does something sensible rather</li></ol>
 <p>   than re-prompting.</p>
@@ -192,6 +192,6 @@ prompt.<span class="t-prop">Triggered</span>:<span class="t-fn">Connect</span>(<
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

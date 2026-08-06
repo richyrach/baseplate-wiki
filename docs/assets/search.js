@@ -96,6 +96,100 @@
     });
   });
 
+  /* ------------------------------------------------------- term previews */
+
+  /* Hover card for auto-linked glossary terms. Hover only -- on touch there is
+     no hover state, and tapping should just follow the link, so this quietly
+     does nothing there. Keyboard focus opens it too, so it is not mouse-only. */
+  (function () {
+    var links = document.querySelectorAll(".term-link[data-summary]");
+    if (!links.length) return;
+    if (!window.matchMedia("(hover: hover)").matches) return;
+
+    var card = document.createElement("div");
+    card.className = "term-pop";
+    card.setAttribute("role", "tooltip");
+    card.hidden = true;
+    document.body.appendChild(card);
+
+    var showTimer = null, hideTimer = null, current = null;
+
+    function place(link) {
+      var r = link.getBoundingClientRect();
+      var margin = 10;
+
+      card.hidden = false;
+      card.style.left = "0px";
+      card.style.top = "0px";
+      var cw = card.offsetWidth, ch = card.offsetHeight;
+
+      /* prefer above; flip below when there is not room */
+      var top = r.top - ch - 8;
+      var below = false;
+      if (top < margin) {
+        top = r.bottom + 8;
+        below = true;
+      }
+
+      /* centre on the link, then clamp inside the viewport */
+      var left = r.left + r.width / 2 - cw / 2;
+      left = Math.max(margin, Math.min(left, window.innerWidth - cw - margin));
+
+      card.style.left = Math.round(left + window.scrollX) + "px";
+      card.style.top = Math.round(top + window.scrollY) + "px";
+      card.classList.toggle("below", below);
+    }
+
+    function show(link) {
+      current = link;
+      card.innerHTML =
+        '<strong></strong><span></span><em>Read the full entry &rarr;</em>';
+      card.querySelector("strong").textContent = link.dataset.term || "";
+      card.querySelector("span").textContent = link.dataset.summary || "";
+      place(link);
+      /* Force a reflow rather than waiting on requestAnimationFrame: rAF is
+         throttled in background/hidden tabs, which left the card populated and
+         positioned but permanently invisible. */
+      void card.offsetWidth;
+      card.classList.add("on");
+    }
+
+    function hide() {
+      current = null;
+      card.classList.remove("on");
+      hideTimer = setTimeout(function () { card.hidden = true; }, 140);
+    }
+
+    links.forEach(function (link) {
+      function open() {
+        clearTimeout(hideTimer);
+        clearTimeout(showTimer);
+        showTimer = setTimeout(function () { show(link); }, 180);
+      }
+      function close() {
+        clearTimeout(showTimer);
+        hideTimer = setTimeout(hide, 120);
+      }
+
+      link.addEventListener("mouseenter", open);
+      link.addEventListener("mouseleave", close);
+      link.addEventListener("focus", open);
+      link.addEventListener("blur", close);
+    });
+
+    /* keep it open while the pointer is on the card itself */
+    card.addEventListener("mouseenter", function () { clearTimeout(hideTimer); });
+    card.addEventListener("mouseleave", hide);
+
+    window.addEventListener("scroll", function () {
+      if (current) place(current);
+    }, { passive: true });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && current) hide();
+    });
+  })();
+
   /* ------------------------------------------------------------- search */
 
   var input = document.getElementById("q");

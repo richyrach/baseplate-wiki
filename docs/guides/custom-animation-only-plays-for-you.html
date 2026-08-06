@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Why your custom animation only plays for you — Baseplate Wiki</title>
 <meta name="description" content="Animation permissions, the Animator object, and which side has to play a track for everyone to see it.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -100,7 +100,7 @@ animation.<span class="t-prop">AnimationId</span> = <span class="t-str">"rbxasse
 <span class="t-key">local</span> track = animator:<span class="t-fn">LoadAnimation</span>(animation)
 track:<span class="t-fn">Play</span>()</code></pre></div>
 <p>Deprecated functions still work for a while, so this rarely causes an immediate failure — but it does produce warnings, and it is the kind of thing that eventually stops working without notice.</p>
-<p>Note <code><a class="term-link" href="../terms/waitforchild.html" title="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a>("Animator")</code>. The <code>Animator</code> is created by the engine and may not exist the instant a character spawns. Indexing it directly is a race, and it is a common cause of intermittent failures.</p>
+<p>Note <code><a class="term-link" href="../terms/waitforchild.html" data-term="WaitForChild" data-summary="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a>("Animator")</code>. The <code>Animator</code> is created by the engine and may not exist the instant a character spawns. Indexing it directly is a race, and it is a common cause of intermittent failures.</p>
 <h2 id="3-it-is-being-played-on-the-wrong-side">3. It is being played on the wrong side<a class="anchor" href="#3-it-is-being-played-on-the-wrong-side" aria-label="Link to this section">#</a></h2>
 <p>This is the one that produces "only I can see it."</p>
 <p>The rules, as they behave in practice:</p>
@@ -110,7 +110,7 @@ track:<span class="t-fn">Play</span>()</code></pre></div>
 <p>  replicates to everyone. Roblox replicates the local player's own animations   outward, which is why local input handling works.</p>
 <ul><li>An animation played on the <strong>client</strong>, on <strong>someone else's</strong> character or on an</li></ul>
 <p>  arbitrary rig, does <strong>not</strong> replicate. Only that client sees it.</p>
-<p>That third case is the bug. Code like this, in a <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a>, looks reasonable and is visible only to the person running it:</p>
+<p>That third case is the bug. Code like this, in a <a class="term-link" href="../terms/localscript.html" data-term="LocalScript" data-summary="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a>, looks reasonable and is visible only to the person running it:</p>
 <div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- LocalScript: only this client sees the NPC wave</span>
 <span class="t-key">local</span> npc = <span class="t-glob">workspace</span>.<span class="t-prop">Shopkeeper</span>
 <span class="t-key">local</span> animator = npc.<span class="t-prop">Humanoid</span>.<span class="t-prop">Animator</span>
@@ -180,6 +180,6 @@ track.<span class="t-prop">Looped</span> = <span class="t-key">true</span></code
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

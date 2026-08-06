@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>&#x27;X is not a valid member of Y&#x27;: every cause, in order of likelihood — Baseplate Wiki</title>
 <meta name="description" content="The most common error in Roblox scripting has about six causes. Here they are ordered by how often they are actually the problem.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -107,8 +107,8 @@
 <p><code>%q</code> wraps the name in quotes, so a trailing space becomes visible as <code>"MainMenu "</code> instead of looking identical to the correct name.</p>
 <h2 id="3-it-is-on-the-other-side-of-the-client-server-boundary">3. It is on the other side of the client-server boundary<a class="anchor" href="#3-it-is-on-the-other-side-of-the-client-server-boundary" aria-label="Link to this section">#</a></h2>
 <p>Some containers never replicate to clients:</p>
-<div class="table-scroll"><table><thead><tr><th>Container</th><th>Server</th><th>Client</th></tr></thead><tbody><tr><td><code><a class="term-link" href="../terms/replicatedstorage.html" title="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code></td><td>yes</td><td>yes</td></tr><tr><td><code>Workspace</code></td><td>yes</td><td>yes</td></tr><tr><td><code>ServerStorage</code></td><td>yes</td><td><strong>no</strong></td></tr><tr><td><code>ServerScriptService</code></td><td>yes</td><td><strong>no</strong></td></tr></tbody></table></div>
-<p>If a <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a> tries to read something out of <code>ServerStorage</code>, it will always error, on every run, with total consistency. That consistency is the tell: cause 1 is intermittent, cause 3 never works at all.</p>
+<div class="table-scroll"><table><thead><tr><th>Container</th><th>Server</th><th>Client</th></tr></thead><tbody><tr><td><code><a class="term-link" href="../terms/replicatedstorage.html" data-term="ReplicatedStorage" data-summary="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code></td><td>yes</td><td>yes</td></tr><tr><td><code>Workspace</code></td><td>yes</td><td>yes</td></tr><tr><td><code>ServerStorage</code></td><td>yes</td><td><strong>no</strong></td></tr><tr><td><code>ServerScriptService</code></td><td>yes</td><td><strong>no</strong></td></tr></tbody></table></div>
+<p>If a <a class="term-link" href="../terms/localscript.html" data-term="LocalScript" data-summary="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a> tries to read something out of <code>ServerStorage</code>, it will always error, on every run, with total consistency. That consistency is the tell: cause 1 is intermittent, cause 3 never works at all.</p>
 <p>Move whatever both sides need into <code>ReplicatedStorage</code>.</p>
 <h2 id="4-something-destroyed-it">4. Something destroyed it<a class="anchor" href="#4-something-destroyed-it" aria-label="Link to this section">#</a></h2>
 <p>If a variable holds a reference to an instance that has since been destroyed, reading a property of it errors — and the message names the <em>parent</em> as <code>nil</code>, which is confusing the first time you see it.</p>
@@ -172,6 +172,6 @@ part:<span class="t-fn">Destroy</span>()
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>A currency system the client cannot edit — Baseplate Wiki</title>
 <meta name="description" content="Where the number lives, who is allowed to change it, and the request shape that stops players awarding themselves money.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -255,7 +255,7 @@ coinsValue.<span class="t-prop">Changed</span>:<span class="t-fn">Connect</span>
 	redraw()
 <span class="t-key">end</span>)</code></pre></div>
 <p>The client displays; the server decides. When they disagree, the server is right.</p>
-<aside class="note note-warning"><p class="note-label">warning</p><p>Do not put your price table in <code><a class="term-link" href="../terms/replicatedstorage.html" title="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code> if the prices are meant to be authoritative. Clients can read everything in there. The client can have a copy for display; the server must use its own.</p></aside>
+<aside class="note note-warning"><p class="note-label">warning</p><p>Do not put your price table in <code><a class="term-link" href="../terms/replicatedstorage.html" data-term="ReplicatedStorage" data-summary="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code> if the prices are meant to be authoritative. Clients can read everything in there. The client can have a copy for display; the server must use its own.</p></aside>
 <h2 id="the-audit">The audit<a class="anchor" href="#the-audit" aria-label="Link to this section">#</a></h2>
 <p>Go through every remote in your game and ask:</p>
 <ol><li>Does the client send an <strong>amount</strong>, a <strong>price</strong>, or a <strong>total</strong>? If yes, that is</li></ol>
@@ -279,6 +279,6 @@ coinsValue.<span class="t-prop">Changed</span>:<span class="t-fn">Connect</span>
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

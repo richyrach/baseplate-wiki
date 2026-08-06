@@ -1091,3 +1091,80 @@ main {
 
 /* theme toggle icons at the shared size */
 .theme svg { width: 16px; height: 16px; }
+
+/* ------------------------------------------------------- term hover card */
+
+.term-pop {
+  position: absolute;
+  z-index: 60;
+  width: min(21rem, calc(100vw - 2rem));
+  padding: 0.7rem 0.85rem 0.75rem;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--fg-2);
+
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 0.13s ease, transform 0.13s ease;
+  pointer-events: none;
+}
+
+.term-pop.on {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;   /* so the pointer can move onto it */
+}
+
+.term-pop strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.term-pop span { display: block; }
+
+.term-pop em {
+  display: block;
+  margin-top: 0.5rem;
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+/* little pointer, flipped when the card sits below the link */
+.term-pop::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  background: var(--bg-2);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  transform: rotate(45deg);
+}
+
+.term-pop.below::after {
+  bottom: auto;
+  top: -5px;
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .term-pop { transition: none; transform: none; }
+}

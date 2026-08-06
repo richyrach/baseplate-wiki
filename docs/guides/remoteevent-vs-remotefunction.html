@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RemoteEvent vs RemoteFunction: which one to use, and when the difference bites — Baseplate Wiki</title>
 <meta name="description" content="Choosing between the two without freezing scripts, trusting the client, or making networking harder than it needs to be.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -75,7 +75,7 @@
   <!-- ad slot 'article-top': paste AdSense code here AFTER approval -->
   <aside class="rail"><p class="rail-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 6.6h14.8"/><path d="M4.6 12h14.8"/><path d="M4.6 17.4h8.9"/></svg>On this page</p><ul><li><a href="#the-rule-i-actually-use">The rule I actually use</a></li><li><a href="#remoteevent-send-it-and-keep-going">RemoteEvent: send it and keep going</a></li><li><a href="#sending-an-event-back-to-the-client">Sending an event back to the client</a></li><li><a href="#remotefunction-send-a-request-and-wait-for-the-result">RemoteFunction: send a request and wait for the result</a></li><li><a href="#protecting-an-invocation-with-pcall">Protecting an invocation with pcall</a></li><li><a href="#when-remotefunction-is-the-correct-choice">When RemoteFunction is the correct choice</a></li><li><a href="#when-remotefunction-is-the-wrong-choice">When RemoteFunction is the wrong choice</a></li><li><a href="#the-difference-bites-when-everything-works-in-studio">The difference bites when everything works in Studio</a></li><li><a href="#long-work-should-not-hold-a-remotefunction-open">Long work should not hold a RemoteFunction open</a></li><li><a href="#be-careful-with-invokeclient">Be careful with InvokeClient</a></li><li><a href="#neither-remote-type-makes-client-data-trustworthy">Neither remote type makes client data trustworthy</a></li><li><a href="#common-mistakes">Common mistakes</a></li><li><a href="#a-simple-decision-checklist">A simple decision checklist</a></li><li><a href="#final-pattern">Final pattern</a></li></ul></aside>
   <div class="prose">
-<p><code><a class="term-link" href="../terms/remoteevent.html" title="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvent</a></code> and <code>RemoteFunction</code> both move information between the client and server, so they can look interchangeable at first.</p>
+<p><code><a class="term-link" href="../terms/remoteevent.html" data-term="RemoteEvent" data-summary="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvent</a></code> and <code>RemoteFunction</code> both move information between the client and server, so they can look interchangeable at first.</p>
 <p>They are not.</p>
 <p>The important difference is not that one is for "events" and the other is for "functions." The real difference is whether the script sending the request has to stop and wait for a response.</p>
 <p>A <code>RemoteEvent</code> sends information and continues immediately. A <code>RemoteFunction</code> sends information and yields until the other side returns something. Roblox describes RemoteEvents as asynchronous, one-way communication and RemoteFunctions as synchronous, two-way communication.</p>
@@ -86,7 +86,7 @@
 <div class="table-scroll"><table><thead><tr><th>Situation</th><th>Use</th></tr></thead><tbody><tr><td>The player clicked an attack button</td><td><code>RemoteEvent</code></td></tr><tr><td>The player touched an interaction prompt</td><td><code>RemoteEvent</code></td></tr><tr><td>The server tells the client to show an effect</td><td><code>RemoteEvent</code></td></tr><tr><td>The server updates a player's quest UI</td><td><code>RemoteEvent</code></td></tr><tr><td>The client requests its current inventory</td><td><code>RemoteFunction</code></td></tr><tr><td>The client asks whether a purchase succeeded</td><td><code>RemoteFunction</code></td></tr><tr><td>The client needs data before opening a menu</td><td>Usually <code>RemoteFunction</code></td></tr><tr><td>The server asks the client for an important answer</td><td>Usually neither; redesign it</td></tr></tbody></table></div>
 <p>The last row matters more than it looks. The server should not depend on a client returning an important result.</p>
 <h2 id="remoteevent-send-it-and-keep-going">RemoteEvent: send it and keep going<a class="anchor" href="#remoteevent-send-it-and-keep-going" aria-label="Link to this section">#</a></h2>
-<p>A <code>RemoteEvent</code> does not return a value. From a <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a>, you use <code>FireServer()</code>:</p>
+<p>A <code>RemoteEvent</code> does not return a value. From a <a class="term-link" href="../terms/localscript.html" data-term="LocalScript" data-summary="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a>, you use <code>FireServer()</code>:</p>
 <div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> ReplicatedStorage = <span class="t-glob">game</span>:<span class="t-fn">GetService</span>(<span class="t-str">"ReplicatedStorage"</span>)
 <span class="t-key">local</span> remotes = ReplicatedStorage:<span class="t-fn">WaitForChild</span>(<span class="t-str">"Remotes"</span>)
 <span class="t-key">local</span> equipItem = remotes:<span class="t-fn">WaitForChild</span>(<span class="t-str">"EquipItem"</span>)
@@ -357,7 +357,7 @@ getData.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">functio
 <span class="t-key">end</span></code></pre></div>
 <p>Organise the logic inside one callback, or call functions from a ModuleScript.</p>
 <h3 id="putting-remotes-somewhere-only-one-side-can-access">Putting remotes somewhere only one side can access<a class="anchor" href="#putting-remotes-somewhere-only-one-side-can-access" aria-label="Link to this section">#</a></h3>
-<p>Both sides must be able to find the remote. <code><a class="term-link" href="../terms/replicatedstorage.html" title="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code> is the normal location:</p>
+<p>Both sides must be able to find the remote. <code><a class="term-link" href="../terms/replicatedstorage.html" data-term="ReplicatedStorage" data-summary="The container both the server and every client can see. Where shared assets and RemoteEvents live.">ReplicatedStorage</a></code> is the normal location:</p>
 <div class="code"><div class="code-bar"><span class="code-lang">Tree</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code>ReplicatedStorage
 └── Remotes
     ├── EquipItem
@@ -405,6 +405,6 @@ remoteFunction.<span class="t-prop">OnServerInvoke</span> = <span class="t-key">
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

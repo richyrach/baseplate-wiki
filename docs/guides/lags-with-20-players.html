@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Why your game lags with 20 players when it was fine with 2 — Baseplate Wiki</title>
 <meta name="description" content="Most Roblox performance problems scale with player count for one of five reasons. How to find which one you have instead of guessing.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -140,7 +140,7 @@ Players.<span class="t-prop">PlayerAdded</span>:<span class="t-fn">Connect</span
 <span class="t-key">end</span>)</code></pre></div>
 <p>To confirm you have this problem, watch <strong>Memory</strong> in the Developer Console over fifteen minutes on a populated server. A number that only ever climbs is a leak.</p>
 <h2 id="3-remoteevent-traffic">3. RemoteEvent traffic<a class="anchor" href="#3-remoteevent-traffic" aria-label="Link to this section">#</a></h2>
-<p>Every <a class="term-link" href="../terms/remoteevent.html" title="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvent</a> call is network traffic, and <code>FireAllClients</code> multiplies by player count.</p>
+<p>Every <a class="term-link" href="../terms/remoteevent.html" data-term="RemoteEvent" data-summary="One-way messaging across the client-server boundary. Fires and returns immediately without waiting for a reply.">RemoteEvent</a> call is network traffic, and <code>FireAllClients</code> multiplies by player count.</p>
 <div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-com">-- 60 fps x 20 players = 1200 messages a second</span>
 RunService.<span class="t-prop">Heartbeat</span>:<span class="t-fn">Connect</span>(<span class="t-key">function</span>()
 	updatePosition:<span class="t-fn">FireAllClients</span>(vehicle.<span class="t-prop">Position</span>)
@@ -204,6 +204,6 @@ npc.<span class="t-prop">Humanoid</span>:<span class="t-fn">Destroy</span>()</co
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Welds, WeldConstraints and Anchored: why your build falls apart on Play — Baseplate Wiki</title>
 <meta name="description" content="Your model looks perfect in Studio and collapses the instant you press Play. There are three ways to hold parts together and they behave very differently.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -79,7 +79,7 @@
 <p>Nothing is broken. Studio's edit mode does not run physics, so nothing was holding those parts together in the first place — you were looking at forty separate objects that happened to be sitting in the right positions.</p>
 <p>The instant physics starts, gravity applies to each one independently.</p>
 <h2 id="the-three-options-and-when-each-is-right">The three options, and when each is right<a class="anchor" href="#the-three-options-and-when-each-is-right" aria-label="Link to this section">#</a></h2>
-<div class="table-scroll"><table><thead><tr><th>Option</th><th>Parts can move</th><th>Held together</th><th>Use it for</th></tr></thead><tbody><tr><td><code><a class="term-link" href="../terms/anchored.html" title="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a> = true</code></td><td>no</td><td>n/a — frozen in place</td><td>walls, floors, scenery, anything static</td></tr><tr><td><code><a class="term-link" href="../terms/weldconstraint.html" title="Locks two parts' relative positions so they move as one body. The modern way to hold an assembly together.">WeldConstraint</a></code></td><td>yes, as one body</td><td>yes</td><td>doors, vehicles, anything that moves</td></tr><tr><td>Grouping into a Model</td><td>yes</td><td><strong>no</strong></td><td>organisation only</td></tr></tbody></table></div>
+<div class="table-scroll"><table><thead><tr><th>Option</th><th>Parts can move</th><th>Held together</th><th>Use it for</th></tr></thead><tbody><tr><td><code><a class="term-link" href="../terms/anchored.html" data-term="Anchored" data-summary="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a> = true</code></td><td>no</td><td>n/a — frozen in place</td><td>walls, floors, scenery, anything static</td></tr><tr><td><code><a class="term-link" href="../terms/weldconstraint.html" data-term="WeldConstraint" data-summary="Locks two parts' relative positions so they move as one body. The modern way to hold an assembly together.">WeldConstraint</a></code></td><td>yes, as one body</td><td>yes</td><td>doors, vehicles, anything that moves</td></tr><tr><td>Grouping into a Model</td><td>yes</td><td><strong>no</strong></td><td>organisation only</td></tr></tbody></table></div>
 <p>That last row is the trap. Grouping parts into a Model organises your Explorer and does absolutely nothing physically. A Model is a folder, not glue.</p>
 <h2 id="anchored-for-anything-that-should-never-move">Anchored: for anything that should never move<a class="anchor" href="#anchored-for-anything-that-should-never-move" aria-label="Link to this section">#</a></h2>
 <p>If a part is scenery, anchor it. That is the whole answer.</p>
@@ -158,6 +158,6 @@ model:<span class="t-fn">PivotTo</span>(model:<span class="t-fn">GetPivot</span>
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

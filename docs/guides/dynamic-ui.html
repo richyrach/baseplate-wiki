@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dynamic UI: one function that draws your interface from state — Baseplate Wiki</title>
 <meta name="description" content="Stop scattering Visible and Text assignments through twenty event handlers. Keep the state in one table and redraw from it.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -221,7 +221,7 @@ setState({ coins = coinsValue.<span class="t-prop">Value</span> })     <span cla
 <p>Add a <code>UIListLayout</code> to <code>container</code> and it handles positioning; <code>LayoutOrder</code> controls the sequence. Keep the template inside the GUI with <code>Visible = false</code> so you can style it in Studio and see your changes.</p>
 <aside class="note note-warning"><p class="note-label">warning</p><p>Destroying and rebuilding every row on each render is fine for tens of rows and wasteful for hundreds — and it drops scroll position and loses which row was selected. For long lists, update existing rows in place and only create or destroy when the count changes.</p></aside>
 <h2 id="keeping-render-cheap">Keeping render cheap<a class="anchor" href="#keeping-render-cheap" aria-label="Link to this section">#</a></h2>
-<p><code>render()</code> runs on every state change, so it must not do anything expensive: no <code><a class="term-link" href="../terms/waitforchild.html" title="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a></code>, no DataStore calls, no <code>FindFirstChild</code> walking the tree. Resolve all your references once at the top of the script.</p>
+<p><code>render()</code> runs on every state change, so it must not do anything expensive: no <code><a class="term-link" href="../terms/waitforchild.html" data-term="WaitForChild" data-summary="Pauses until a named child exists, instead of erroring because it has not replicated yet.">WaitForChild</a></code>, no DataStore calls, no <code>FindFirstChild</code> walking the tree. Resolve all your references once at the top of the script.</p>
 <p>If you find yourself calling <code>setState</code> many times per frame, batch instead:</p>
 <div class="code"><div class="code-bar"><span class="code-lang">Luau</span><button class="copy" type="button" aria-label="Copy code"><svg class="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5.2 15H4.3A1.3 1.3 0 0 1 3 13.7V4.3A1.3 1.3 0 0 1 4.3 3h9.4A1.3 1.3 0 0 1 15 4.3v.9"/></svg><svg class="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></svg><span class="copy-text">Copy</span></button></div><pre><code><span class="t-key">local</span> dirty = <span class="t-key">false</span>
 
@@ -255,6 +255,6 @@ setState({ coins = coinsValue.<span class="t-prop">Value</span> })     <span cla
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WeldConstraint — Baseplate Wiki reference</title>
 <meta name="description" content="Locks two parts&#x27; relative positions so they move as one body. The modern way to hold an assembly together.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -91,7 +91,7 @@ weld.<span class="t-prop">Parent</span> = chassis</code></pre></div>
 <p>Chains work but are harder to reason about, and a single broken link splits the assembly in two.</p>
 <h2 id="the-three-things-that-break-it">The three things that break it<a class="anchor" href="#the-three-things-that-break-it" aria-label="Link to this section">#</a></h2>
 <p><strong>Welding before positioning.</strong> The offset is captured at creation. Create the weld, then move a part, and it snaps back or drags its partner along. Position everything first.</p>
-<p><strong>A part left anchored.</strong> If any part in the assembly is <code><a class="term-link" href="../terms/anchored.html" title="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a></code>, the whole assembly is effectively immovable — the weld ties it to something that cannot move. This is the most common cause of a welded vehicle that will not budge.</p>
+<p><strong>A part left anchored.</strong> If any part in the assembly is <code><a class="term-link" href="../terms/anchored.html" data-term="Anchored" data-summary="Freezes a part in place. Physics ignores it entirely, which makes it both correct and cheap for scenery.">Anchored</a></code>, the whole assembly is effectively immovable — the weld ties it to something that cannot move. This is the most common cause of a welded vehicle that will not budge.</p>
 <p><strong>Moving individual parts afterwards.</strong> Once welded, move the model as a unit with <code>PivotTo</code>, not by setting one part's <code>CFrame</code>.</p>
 <h2 id="weldconstraint-vs-weld">WeldConstraint vs Weld<a class="anchor" href="#weldconstraint-vs-weld" aria-label="Link to this section">#</a></h2>
 <ul><li><strong><code>WeldConstraint</code></strong> — <code>Part0</code>, <code>Part1</code>, offset computed automatically. Use this.</li><li><strong><code>Weld</code></strong> — <code>Part0</code>, <code>Part1</code>, plus explicit <code>C0</code> and <code>C1</code> CFrame offsets you set</li></ul>
@@ -124,6 +124,6 @@ weld.<span class="t-prop">Parent</span> = chassis</code></pre></div>
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>

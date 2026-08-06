@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ProximityPrompt — Baseplate Wiki reference</title>
 <meta name="description" content="The cross-platform way to make a world object interactive. Handles keyboard, gamepad and touch with no extra code.">
-<link rel="stylesheet" href="../assets/style.css?v=41d4bd8c">
+<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -122,7 +122,7 @@ prompt.<span class="t-prop">PromptHidden</span>:<span class="t-fn">Connect</span
 <p>Rate limiting is worth adding too. <code>HoldDuration = 0</code> with a key held down can fire repeatedly.</p>
 <h2 id="one-prompt-many-players">One prompt, many players<a class="anchor" href="#one-prompt-many-players" aria-label="Link to this section">#</a></h2>
 <p>A <code>ProximityPrompt</code> is a single instance shared by everyone in the server. You cannot show different <code>ActionText</code> to different players from a server script.</p>
-<p>If you need per-player text — "Buy" versus "Owned" — create the prompt from a <a class="term-link" href="../terms/localscript.html" title="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a> so each client has its own, and keep a server-side handler for anything that changes state.</p>
+<p>If you need per-player text — "Buy" versus "Owned" — create the prompt from a <a class="term-link" href="../terms/localscript.html" data-term="LocalScript" data-summary="A script that runs on one player's own device, not on the server. Only runs in a few specific places.">LocalScript</a> so each client has its own, and keep a server-side handler for anything that changes state.</p>
 <h2 id="styling-it">Styling it<a class="anchor" href="#styling-it" aria-label="Link to this section">#</a></h2>
 <p>Set <code>Style</code> to <code>Enum.ProximityPromptStyle.Custom</code> and the default UI is suppressed, so you can draw your own from <code>PromptShown</code> and <code>PromptHidden</code> on the client. Worth doing for a game with a strong visual identity; unnecessary otherwise, since the default prompt is clear and already familiar to players.</p>
   </div>
@@ -141,6 +141,6 @@ prompt.<span class="t-prop">PromptHidden</span>:<span class="t-fn">Connect</span
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=7bf74429" defer></script>
+<script src="../assets/search.js?v=b62605c3" defer></script>
 </body>
 </html>
