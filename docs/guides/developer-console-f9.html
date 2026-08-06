@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Developer Console (F9): finding the errors Studio never showed you — Baseplate Wiki</title>
 <meta name="description" content="Client errors in a live game do not appear in the Studio output window. This is where they go, and how to read them.">
-<link rel="stylesheet" href="../assets/style.css?v=b46143a6">
+<link rel="stylesheet" href="../assets/style.css?v=677af02e">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
@@ -24,7 +24,7 @@
 })();
 </script>
 </head>
-<body data-base="../" class="has-rail">
+<body data-base="../" data-feedback="" class="has-rail">
 <a class="skip" href="#main">Skip to content</a>
 <header class="top">
   <button class="menu" aria-expanded="false" aria-controls="side" aria-label="Menu">
@@ -33,6 +33,7 @@
   <a class="brand" href="../index.html">Baseplate<span>Wiki</span></a>
   <nav class="tabs"><a class="tab on" href="../learn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.9 4.9h6.1c1.1 0 1.9.8 1.9 1.9v12.3c0-.9-.8-1.5-1.8-1.5H3.9z"/><path d="M20.1 4.9H14c-1.1 0-1.9.8-1.9 1.9v12.3c0-.9.8-1.5 1.8-1.5h6.2z"/></svg><span>Learn</span></a><a class="tab" href="../recipes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 6.4h11.1"/><path d="M9.2 12h11.1"/><path d="M9.2 17.6h11.1"/><path d="M3.7 6.1 4.9 7.3 7.1 4.9"/><path d="M3.7 11.7 4.9 12.9 7.1 10.5"/><path d="M3.7 17.3 4.9 18.5 7.1 16.1"/></svg><span>Recipes</span></a><a class="tab" href="../terms/index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.6 3.9h10.8v16.2l-5.4-3.9-5.4 3.9z"/></svg><span>Reference</span></a></nav>
   <nav class="top-links">
+    <a class="saved-link" href="../saved.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.6 3.9h10.8v16.2l-5.4-3.9-5.4 3.9z"/></svg><span>Saved</span><em class="saved-count" hidden>0</em></a>
     <a href="../about.html">About</a>
     <a href="../contribute.html">Contribute</a>
   </nav>
@@ -55,6 +56,7 @@
     <div class="side-more">
       <p class="side-label">More</p>
       <ul class="side-list">
+        <li><a href="../saved.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.6 3.9h10.8v16.2l-5.4-3.9-5.4 3.9z"/></svg><span>Saved</span></a></li>
         <li><a href="../about.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 11.2v5.3"/><path d="M12 7.7v.9"/></svg><span>About</span></a></li>
         <li><a href="../contribute.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.3 4.5 19.5 7.7 9.2 18H6v-3.2z"/><path d="M14.3 6.5l3.2 3.2"/></svg><span>Contribute</span></a></li>
         <li><a href="../contact.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.7" width="17" height="12.6" rx="1.9"/><path d="M3.9 6.7 12 12.6l8.1-5.9"/></svg><span>Contact</span></a></li>
@@ -130,6 +132,20 @@
 <p>   single-player Play. If it only breaks live, the cause is usually a client-server    or replication-timing issue rather than your logic.</p>
   </div>
   <!-- ad slot 'article-end': paste AdSense code here AFTER approval -->
+  <section class="feedback" data-page="guides/developer-console-f9.html"
+         data-issue="https://github.com/richyrach/baseplate-wiki/issues/new?title=Problem+with%3A+The+Developer+Console+%28F9%29%3A+finding+the+errors+Studio+never+showed+you&amp;labels=correction&amp;body=%2A%2APage%3A%2A%2A+https%3A%2F%2Frichyrach.github.io%2Fbaseplate-wiki%2Fguides%2Fdeveloper-console-f9.html%0A%0A%2A%2AWhat+went+wrong%2A%2A%0A%0A%0A%2A%2AWhat+I+expected%2A%2A%0A%0A%0A%2A%2AExact+error+text%2C+if+any%2A%2A%0A%0A%60%60%60%0A%0A%60%60%60%0A"
+         data-mail="mailto:richyrachfansgmial@gmail.com?subject=Baseplate%20Wiki%3A%20problem%20with%20The%20Developer%20Console%20%28F9%29%3A%20finding%20the%20errors%20Studio%20never%20showed%20you&amp;body=Page%3A%20https%3A%2F%2Frichyrach.github.io%2Fbaseplate-wiki%2Fguides%2Fdeveloper-console-f9.html%0A%0AWhat%20went%20wrong%3A%0A%0AWhat%20I%20expected%3A%0A%0AExact%20error%20text%2C%20if%20any%3A%0A">
+  <div class="fb-ask">
+    <span class="fb-q">Was this helpful?</span>
+    <button class="fb-btn" data-vote="up" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.4 20.2V9.8l4.4-6a1.7 1.7 0 0 1 3 1.3l-.8 4.2h4.6a1.9 1.9 0 0 1 1.8 2.4l-1.6 6.2a2.4 2.4 0 0 1-2.3 1.8H7.4z"/><path d="M7.4 9.8H4.2a.9.9 0 0 0-.9.9v8.6c0 .5.4.9.9.9h3.2"/></svg><span>Yes</span></button>
+    <button class="fb-btn" data-vote="down" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.6 3.8v10.4l-4.4 6a1.7 1.7 0 0 1-3-1.3l.8-4.2H5.4a1.9 1.9 0 0 1-1.8-2.4l1.6-6.2a2.4 2.4 0 0 1 2.3-1.8h9.1z"/><path d="M16.6 14.2h3.2a.9.9 0 0 0 .9-.9V4.7a.9.9 0 0 0-.9-.9h-3.2"/></svg><span>No</span></button>
+    <button class="fb-save" type="button" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.9l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/></svg><svg class="star-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.9l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z" fill="currentColor"/></svg><span class="fb-save-text">Save</span></button>
+  </div>
+  <div class="fb-done" hidden></div>
+</section>
   <footer class="doc-foot">
     <p class="edited"><time datetime="2026-08-06">Published 2026-08-06</time> &middot; <a href="../contribute.html">suggest an edit</a></p>
     <p>Found a mistake in this guide? <a href="../contribute.html">Send a
@@ -145,6 +161,6 @@
      endorsed by Roblox Corporation.
      <a href="../privacy.html">Privacy</a></p>
 </footer>
-<script src="../assets/search.js?v=b62605c3" defer></script>
+<script src="../assets/search.js?v=0ef681bb" defer></script>
 </body>
 </html>

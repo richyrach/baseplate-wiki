@@ -1168,3 +1168,114 @@ main {
 @media (prefers-reduced-motion: reduce) {
   .term-pop { transition: none; transform: none; }
 }
+
+/* ==================================================================== */
+/*  Feedback + saved pages                                              */
+/* ==================================================================== */
+
+.feedback {
+  margin: 2.75rem 0 0;
+  padding: 1rem 1.15rem;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.fb-ask {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.7rem;
+}
+
+.fb-q {
+  margin-right: 0.2rem;
+  font-size: 0.92rem;
+  color: var(--fg-2);
+}
+
+.fb-btn, .fb-save, .fb-reason {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--fg-2);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.32rem 0.7rem;
+  cursor: pointer;
+  transition: color 0.14s, border-color 0.14s, background 0.14s;
+}
+
+.fb-btn svg, .fb-save svg { width: 15px; height: 15px; flex: none; }
+
+.fb-btn:hover, .fb-reason:hover { color: var(--fg); border-color: var(--accent); }
+.fb-btn[data-vote="down"]:hover { border-color: var(--accent-2); }
+
+/* save sits apart from the two vote buttons */
+.fb-save { margin-left: auto; }
+.fb-save .star-on { display: none; }
+.fb-save.on { color: var(--accent); border-color: var(--accent); }
+.fb-save.on .star { display: none; }
+.fb-save.on .star-on { display: block; }
+.fb-save:hover { color: var(--fg); border-color: var(--accent); }
+
+.fb-done p { margin: 0 0 0.5rem; font-size: 0.92rem; color: var(--fg-2); }
+.fb-done p:last-child { margin-bottom: 0; }
+
+.fb-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.15rem;
+}
+
+.fb-links { font-size: 0.88rem !important; }
+
+/* --------------------------------------------------------- saved page */
+
+.saved-wrap .row { position: relative; }
+.saved-wrap .row a { padding-right: 6rem; }
+
+.saved-remove {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0.22rem 0.5rem;
+  cursor: pointer;
+  transition: color 0.14s, border-color 0.14s;
+}
+.saved-remove:hover { color: var(--accent-2); border-color: var(--accent-2); }
+
+/* saved link + count in the top bar */
+.saved-link { display: inline-flex; align-items: center; gap: 0.35rem; }
+.saved-link svg { width: 14px; height: 14px; }
+
+.saved-count {
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  line-height: 1;
+  padding: 0.15rem 0.3rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+}
+
+@media (max-width: 34rem) {
+  .fb-save { margin-left: 0; }
+  .feedback { padding: 0.85rem 0.95rem; }
+  .fb-q { width: 100%; }
+}

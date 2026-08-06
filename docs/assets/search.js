@@ -96,6 +96,212 @@
     });
   });
 
+  /* ------------------------------------------------- saved pages (local) */
+
+  /* localStorage, not cookies: this never needs to reach a server, and cookies
+     would be sent on every request for no reason. */
+  var SAVED_KEY = "bp-saved";
+
+  function readSaved() {
+    try {
+      var raw = localStorage.getItem(SAVED_KEY);
+      var v = raw ? JSON.parse(raw) : [];
+      return Array.isArray(v) ? v : [];
+    } catch (e) { return []; }
+  }
+
+  function writeSaved(list) {
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify(list)); } catch (e) {}
+    paintSavedCount();
+  }
+
+  function paintSavedCount() {
+    var n = readSaved().length;
+    document.querySelectorAll(".saved-count").forEach(function (el) {
+      el.textContent = n;
+      el.hidden = n === 0;
+    });
+  }
+
+  paintSavedCount();
+
+  /* ------------------------------------------------------------- feedback */
+
+  document.querySelectorAll(".feedback").forEach(function (box) {
+    var pageId = box.dataset.page;
+    var done = box.querySelector(".fb-done");
+    var ask = box.querySelector(".fb-ask");
+    var endpoint = document.body.dataset.feedback || "";
+    var voteKey = "bp-vote:" + pageId;
+
+    /* ---- save button */
+    var saveBtn = box.querySelector(".fb-save");
+    var saveText = box.querySelector(".fb-save-text");
+
+    function paintSave() {
+      var on = readSaved().some(function (i) { return i.u === pageId; });
+      saveBtn.classList.toggle("on", on);
+      saveBtn.setAttribute("aria-pressed", on ? "true" : "false");
+      if (saveText) saveText.textContent = on ? "Saved" : "Save";
+    }
+
+    saveBtn.addEventListener("click", function () {
+      var list = readSaved();
+      var i = list.findIndex(function (x) { return x.u === pageId; });
+      if (i >= 0) {
+        list.splice(i, 1);
+      } else {
+        var h1 = document.querySelector(".doc h1");
+        var lede = document.querySelector(".doc .lede");
+        list.unshift({
+          u: pageId,
+          t: h1 ? h1.textContent.trim() : document.title,
+          d: lede ? lede.textContent.trim() : "",
+          at: Date.now()
+        });
+        list = list.slice(0, 200);
+      }
+      writeSaved(list);
+      paintSave();
+    });
+
+    paintSave();
+
+    /* ---- helpful / not helpful */
+    function record(vote, reason) {
+      if (!endpoint) return;              // static site: nowhere to send it
+      try {
+        var body = new FormData();
+        body.append("page", pageId);
+        body.append("vote", vote);
+        if (reason) body.append("reason", reason);
+        fetch(endpoint, { method: "POST", body: body, mode: "no-cors" });
+      } catch (e) {}
+    }
+
+    function thanks(msg) {
+      ask.hidden = true;
+      done.hidden = false;
+      done.innerHTML = "";
+      var p = document.createElement("p");
+      p.textContent = msg;
+      done.appendChild(p);
+      return done;
+    }
+
+    function showReport() {
+      var wrap = thanks("Sorry about that. What went wrong?");
+
+      var reasons = [
+        ["code", "The code didn't work"],
+        ["outdated", "It's out of date"],
+        ["unclear", "I couldn't follow it"],
+        ["missing", "It didn't cover my case"]
+      ];
+
+      var row = document.createElement("div");
+      row.className = "fb-reasons";
+      reasons.forEach(function (r) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "fb-reason";
+        b.textContent = r[1];
+        b.addEventListener("click", function () {
+          record("down", r[0]);
+          var out = thanks("Thanks \u2014 that helps.");
+          var links = document.createElement("p");
+          links.className = "fb-links";
+          links.innerHTML =
+            '<a href="' + box.dataset.issue + '" target="_blank" rel="noopener">' +
+            "Report it on GitHub</a> or <a href=\"" + box.dataset.mail +
+            '">send an email</a>. Including the exact error text makes it fixable.';
+          out.appendChild(links);
+        });
+        row.appendChild(b);
+      });
+      wrap.appendChild(row);
+    }
+
+    box.querySelectorAll(".fb-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var vote = btn.dataset.vote;
+        try { localStorage.setItem(voteKey, vote); } catch (e) {}
+
+        if (vote === "up") {
+          record("up");
+          thanks("Thanks \u2014 glad it helped.");
+        } else {
+          showReport();
+        }
+      });
+    });
+
+    /* already voted on this page before: don't ask again */
+    try {
+      var prev = localStorage.getItem(voteKey);
+      if (prev === "up") thanks("You marked this helpful.");
+      else if (prev === "down") thanks("You reported a problem with this page.");
+    } catch (e) {}
+  });
+
+  /* --------------------------------------------------------- saved page */
+
+  (function () {
+    var host = document.getElementById("saved-list");
+    if (!host) return;
+
+    var list = readSaved();
+
+    function render() {
+      list = readSaved();
+      if (!list.length) {
+        host.innerHTML =
+          '<p class="empty-note">Nothing saved yet. Open any guide and press ' +
+          "<strong>Save</strong> at the bottom to keep it here.</p>";
+        return;
+      }
+
+      var ul = document.createElement("ul");
+      ul.className = "rows";
+
+      list.forEach(function (item) {
+        var li = document.createElement("li");
+        li.className = "row";
+
+        var a = document.createElement("a");
+        a.href = base + item.u;
+
+        var h3 = document.createElement("h3");
+        h3.textContent = item.t;
+        a.appendChild(h3);
+
+        if (item.d) {
+          var p = document.createElement("p");
+          p.textContent = item.d;
+          a.appendChild(p);
+        }
+        li.appendChild(a);
+
+        var rm = document.createElement("button");
+        rm.type = "button";
+        rm.className = "saved-remove";
+        rm.textContent = "Remove";
+        rm.addEventListener("click", function () {
+          writeSaved(readSaved().filter(function (x) { return x.u !== item.u; }));
+          render();
+        });
+        li.appendChild(rm);
+
+        ul.appendChild(li);
+      });
+
+      host.innerHTML = "";
+      host.appendChild(ul);
+    }
+
+    render();
+  })();
+
   /* ------------------------------------------------------- term previews */
 
   /* Hover card for auto-linked glossary terms. Hover only -- on touch there is

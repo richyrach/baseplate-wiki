@@ -29,6 +29,16 @@ SITE_SHORT = "Baseplate"
 SITE_TAGLINE = ("An open reference for Roblox game development. Written and "
                 "tested by hand, corrections welcome.")
 SITE_URL = "https://richyrach.github.io/baseplate-wiki"
+REPO_URL = "https://github.com/richyrach/baseplate-wiki"
+CONTACT_EMAIL = "richyrachfansgmial@gmail.com"
+
+# Optional POST target for aggregate helpful/not-helpful counts.
+# The site is static, so with this empty a vote is only remembered in the
+# reader's own browser and no total exists anywhere. Set it to a Google Form
+# "formResponse" URL (or any endpoint accepting a POST) to start collecting
+# real numbers. See FEEDBACK.md.
+FEEDBACK_ENDPOINT = ""
+FEEDBACK_FIELDS = {"page": "", "vote": "", "reason": ""}
 
 # Ad slots stay as HTML comments until AdSense approves the site. Empty ad
 # containers on an unapproved site is literally the "Google-served ads on
@@ -169,6 +179,13 @@ UI_ICONS = {
            '<path d="M18 18 19.6 19.6"/><path d="M2.6 12h2.3"/><path d="M19.1 12h2.3"/>'
            '<path d="M4.4 19.6 6 18"/><path d="M18 6 19.6 4.4"/>',
     "moon": '<path d="M20 14.2A8.3 8.3 0 0 1 9.8 4a8.3 8.3 0 1 0 10.2 10.2z"/>',
+    "thumb-up": '<path d="M7.4 20.2V9.8l4.4-6a1.7 1.7 0 0 1 3 1.3l-.8 4.2h4.6a1.9 1.9 0 0 1 1.8 2.4l-1.6 6.2a2.4 2.4 0 0 1-2.3 1.8H7.4z"/>'
+                '<path d="M7.4 9.8H4.2a.9.9 0 0 0-.9.9v8.6c0 .5.4.9.9.9h3.2"/>',
+    "thumb-down": '<path d="M16.6 3.8v10.4l-4.4 6a1.7 1.7 0 0 1-3-1.3l.8-4.2H5.4a1.9 1.9 0 0 1-1.8-2.4l1.6-6.2a2.4 2.4 0 0 1 2.3-1.8h9.1z"/>'
+                  '<path d="M16.6 14.2h3.2a.9.9 0 0 0 .9-.9V4.7a.9.9 0 0 0-.9-.9h-3.2"/>',
+    "star": '<path d="M12 3.9l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>',
+    "star-filled": '<path d="M12 3.9l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z" fill="currentColor"/>',
+    "saved": '<path d="M6.6 3.9h10.8v16.2l-5.4-3.9-5.4 3.9z"/>',
 }
 
 
@@ -180,6 +197,48 @@ def ui_icon(name, cls=""):
     return (f'<svg{c} viewBox="0 0 24 24" fill="none" stroke="currentColor" '
             f'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" '
             f'aria-hidden="true">{paths}</svg>')
+
+
+def feedback_block(page_id, title, up="../"):
+    """Helpful/not-helpful plus a save button.
+
+    The vote is stored locally; the useful half is the report path, which is a
+    prefilled GitHub issue or email so a 'this is broken' actually reaches
+    someone.
+    """
+    import urllib.parse as _u
+    issue = (f"{REPO_URL}/issues/new?"
+             + _u.urlencode({
+                 "title": f"Problem with: {title}"[:120],
+                 "labels": "correction",
+                 "body": (f"**Page:** {SITE_URL}/{page_id}\n\n"
+                          "**What went wrong**\n\n\n"
+                          "**What I expected**\n\n\n"
+                          "**Exact error text, if any**\n\n```\n\n```\n"),
+             }))
+    mail = (f"mailto:{CONTACT_EMAIL}?"
+            + _u.urlencode({
+                "subject": f"Baseplate Wiki: problem with {title}"[:120],
+                "body": (f"Page: {SITE_URL}/{page_id}\n\n"
+                         "What went wrong:\n\n"
+                         "What I expected:\n\n"
+                         "Exact error text, if any:\n"),
+            }).replace("+", "%20"))
+
+    return f"""<section class="feedback" data-page="{page_id}"
+         data-issue="{html.escape(issue, quote=True)}"
+         data-mail="{html.escape(mail, quote=True)}">
+  <div class="fb-ask">
+    <span class="fb-q">Was this helpful?</span>
+    <button class="fb-btn" data-vote="up" type="button">
+      {ui_icon("thumb-up")}<span>Yes</span></button>
+    <button class="fb-btn" data-vote="down" type="button">
+      {ui_icon("thumb-down")}<span>No</span></button>
+    <button class="fb-save" type="button" aria-pressed="false">
+      {ui_icon("star")}{ui_icon("star-filled", "star-on")}<span class="fb-save-text">Save</span></button>
+  </div>
+  <div class="fb-done" hidden></div>
+</section>"""
 
 
 def favicon_links(up):
@@ -400,6 +459,7 @@ def sidebar(depth, active_url="", active_cat="", guides=None):
     <div class="side-more">
       <p class="side-label">More</p>
       <ul class="side-list">
+        <li><a href="{up}saved.html">{ui_icon("saved")}<span>Saved</span></a></li>
         <li><a href="{up}about.html">{ui_icon("info")}<span>About</span></a></li>
         <li><a href="{up}contribute.html">{ui_icon("pencil")}<span>Contribute</span></a></li>
         <li><a href="{up}contact.html">{ui_icon("mail")}<span>Contact</span></a></li>
@@ -443,7 +503,7 @@ def page(title, description, body, depth=0, active_url="", active_cat="",
 }})();
 </script>
 </head>
-<body data-base="{up}" class="{extra_class}">
+<body data-base="{up}" data-feedback="{FEEDBACK_ENDPOINT}" class="{extra_class}">
 <a class="skip" href="#main">Skip to content</a>
 <header class="top">
   <button class="menu" aria-expanded="false" aria-controls="side" aria-label="Menu">
@@ -452,6 +512,7 @@ def page(title, description, body, depth=0, active_url="", active_cat="",
   <a class="brand" href="{up}index.html">{SITE_SHORT}<span>Wiki</span></a>
   {tabs(depth, active_tab)}
   <nav class="top-links">
+    <a class="saved-link" href="{up}saved.html">{ui_icon("saved")}<span>Saved</span><em class="saved-count" hidden>0</em></a>
     <a href="{up}about.html">About</a>
     <a href="{up}contribute.html">Contribute</a>
   </nav>
@@ -577,6 +638,7 @@ def build_guide(g, guides):
 {g['body']}
   </div>
   {ad('article-end')}
+  {feedback_block(f"guides/{g['slug']}.html", g['title'])}
   <footer class="doc-foot">
     {edited}
     <p>Found a mistake in this guide? <a href="../contribute.html">Send a
@@ -622,6 +684,7 @@ def build_terms(glossary, guides):
 {body_html}
   </div>
   {rel}
+  {feedback_block(f"terms/{term['slug']}.html", term['term'])}
   <footer class="doc-foot">
     <p>Something wrong or missing here?
        <a href="../contribute.html">Send a correction</a>.</p>
@@ -779,6 +842,24 @@ def build_pages(guides):
                  guides=guides), encoding="utf-8")
 
 
+def build_saved_page(guides):
+    """Client-rendered list of whatever the reader has saved locally."""
+    body = """<div class="page-head">
+  <h1>Saved pages</h1>
+  <p class="lede">Pages you have saved on this device. Nothing is sent anywhere
+     &mdash; this list lives in your browser only, so it will not follow you to
+     another device.</p>
+</div>
+<div id="saved-list" class="saved-wrap">
+  <p class="empty-note">Loading&hellip;</p>
+</div>"""
+    (SITE / "saved.html").write_text(
+        page(f"Saved — {SITE_NAME}",
+             "Pages you have saved on this device.",
+             body, guides=guides, active_url="saved.html"),
+        encoding="utf-8")
+
+
 def build_search_index(guides, glossary=None):
     """Small JSON index; search runs client-side, no backend."""
     items = []
@@ -877,6 +958,7 @@ def main():
     build_sections(guides)
     build_categories(guides)
     build_terms(glossary, guides)
+    build_saved_page(guides)
     build_pages(guides)
     indexed = build_search_index(guides, glossary)
     build_sitemap(guides, glossary)
