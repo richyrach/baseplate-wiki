@@ -26,7 +26,7 @@ SITE_NAME = "Baseplate Wiki"
 SITE_SHORT = "Baseplate"
 SITE_TAGLINE = ("An open reference for Roblox game development. Written and "
                 "tested by hand, corrections welcome.")
-SITE_URL = ""  # fill in once the domain is live
+SITE_URL = "https://richyrach.github.io/baseplate-wiki"
 
 # Ad slots stay as HTML comments until AdSense approves the site. Empty ad
 # containers on an unapproved site is literally the "Google-served ads on
