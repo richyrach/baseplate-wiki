@@ -175,8 +175,6 @@ display.Value = format(realCoins)
 Note the trade-off: sorting by a `StringValue` sorts alphabetically, so `"9K"` sorts
 above `"10K"`. If sorting matters, keep the `IntValue`.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Checking it
 
 1. Run the game and look in the Explorer under `Players > YourName`. Is there a

@@ -172,8 +172,6 @@ end)
 > If you do not want that grouping, you need a custom player list rather than a
 > Teams setting.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Checklist
 
 1. Every team has a **unique** `TeamColor`.

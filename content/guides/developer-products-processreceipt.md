@@ -241,8 +241,6 @@ reference page for it — but the `ProcessReceipt` logic above, especially the
 claim-and-release ordering, is the part that matters regardless of which entry point
 delivers the receipt.
 
-<!-- OWN_EXPERIENCE -->
-
 ## The audit
 
 1. Is the de-duplication keyed on `PurchaseId`?

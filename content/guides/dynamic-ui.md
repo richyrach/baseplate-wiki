@@ -246,8 +246,6 @@ end
 produce one redraw. Worth it only once you have measured a problem — start with the
 simple version.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Converting existing UI
 
 You do not need to rewrite everything at once:

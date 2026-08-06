@@ -217,8 +217,6 @@ Set `container.Active = false` and `BackgroundTransparency = 1` so the invisible
 container does not swallow taps meant for buttons behind it. That is a real bug and an
 easy one to miss, because it only shows up on touch.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Testing it
 
 Fire ten at once from the Command Bar and watch what happens:

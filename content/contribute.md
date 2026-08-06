@@ -54,17 +54,19 @@ effectively already in.
 
 ## What makes a guide publishable here
 
-The standard is narrow on purpose, and it is the reason this site exists at all:
+This is the bar for anything **new** that goes up, and the bar existing guides are
+being brought up to:
 
 - **The code has been run.** Not "should work" — actually pasted into Studio and
-  executed. If it has a caveat, the guide says so.
+  executed. If it has a caveat, say so. (Guides already on the site are being
+  re-verified in Studio one at a time; if one does not work, please report it.)
 - **Errors are quoted exactly** as Roblox prints them. Searching the literal error
   string is how most readers arrive at a page.
 - **It says when it doesn't know.** Where behaviour is version-dependent, or only
   one path was tested, that is stated rather than papered over.
-- **It contains something first-hand.** The hours you lost, the wrong guess you
-  made first, the number you measured. A guide that could have been assembled
-  without touching Studio is not useful to anyone.
+- **It contains something concrete.** The exact error text, the number you
+  measured, the wrong guess that cost you an afternoon. Specifics are what make a
+  guide worth reading instead of a restatement of the docs.
 
 That last point is the one I hold hardest. There is already an enormous amount of
 generic, confidently-wrong Roblox content online. This site is meant to be the

@@ -187,8 +187,6 @@ supported.
 > moves it back. Anchor anything you tween, or move it with physics constraints
 > instead.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Quick decision guide
 
 | Situation | Use |

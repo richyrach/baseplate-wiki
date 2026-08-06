@@ -237,8 +237,6 @@ end)
 Note the `pcall` around `InvokeServer`. A `RemoteFunction` that errors on the server
 throws on the client, and without the `pcall` the button stays disabled forever.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Testing it without waiting a day
 
 Temporarily override the day function in Studio:

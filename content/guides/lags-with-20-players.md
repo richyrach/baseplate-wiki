@@ -214,8 +214,6 @@ loads of things and it is still slow" is such a common outcome.
 > appear with real player counts, and two of them — connection leaks and memory
 > growth — only appear over time. Test in a live server with people in it.
 
-<!-- OWN_EXPERIENCE -->
-
 ## The order to work in
 
 1. `Shift+F5` and split server versus client. Do not skip this.

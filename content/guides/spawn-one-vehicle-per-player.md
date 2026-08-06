@@ -246,8 +246,6 @@ task.spawn(function()
 end)
 ```
 
-<!-- OWN_EXPERIENCE -->
-
 ## Testing it
 
 1. Two clients from the **Test** tab. Spawn from both, confirm two vehicles exist.

@@ -197,8 +197,6 @@ end
 A round-based game usually wants time frozen during a round and advanced between them,
 rather than a horror level drifting into daylight halfway through.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Tuning it
 
 1. Set `DAY_LENGTH` short — 60 seconds — while you are adjusting the keyframes, so you

@@ -168,8 +168,6 @@ result depends on which ran last.
 > value names moved between 6.x and later releases, and a guide written for the
 > wrong version will have you editing values that do not exist.
 
-<!-- OWN_EXPERIENCE -->
-
 ## The diagnostic order
 
 1. Print the mass of every part. Anything unexpectedly near zero is suspect.

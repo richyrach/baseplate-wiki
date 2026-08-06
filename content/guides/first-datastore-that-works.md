@@ -245,8 +245,6 @@ Tables with non-string, non-sequential keys also serialise badly. If a save come
 back with keys missing, that is usually why — keep keys as strings or a clean
 array.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Verifying it actually works
 
 1. Enable Studio API access and publish the place.

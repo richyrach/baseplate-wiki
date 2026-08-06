@@ -171,8 +171,6 @@ button.Size = UDim2.new(0.4, 0, 0, 48)   -- flexible width, fixed tappable heigh
 This is why the mixed Scale/Offset pattern earns its keep: the width adapts, the
 height stays usable.
 
-<!-- OWN_EXPERIENCE -->
-
 ## The audit
 
 Open your GUI and check each object:

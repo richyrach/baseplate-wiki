@@ -252,8 +252,6 @@ The client displays; the server decides. When they disagree, the server is right
 > authoritative. Clients can read everything in there. The client can have a copy for
 > display; the server must use its own.
 
-<!-- OWN_EXPERIENCE -->
-
 ## The audit
 
 Go through every remote in your game and ask:

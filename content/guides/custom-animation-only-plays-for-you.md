@@ -169,8 +169,6 @@ Check **Game Settings → Avatar → Animation** for which rig type your game us
 author animations against the same one. A "nothing happens, no errors" symptom on a
 correctly-owned animation is often this.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Diagnosis in order
 
 1. **Does anyone see it, including you?** No → ownership (cause 1). Check who

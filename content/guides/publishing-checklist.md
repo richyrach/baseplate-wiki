@@ -150,8 +150,6 @@ history.
 > live game, that is usually normal propagation rather than a failed publish. Check
 > the version in the dashboard before re-publishing repeatedly.
 
-<!-- OWN_EXPERIENCE -->
-
 ## The short version
 
 1. API Services on, if you want DataStores working in Studio.

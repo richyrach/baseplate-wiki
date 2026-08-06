@@ -161,8 +161,6 @@ part.Anchored = true
 
 Obvious in hindsight, and it happens constantly.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Checklist
 
 1. Vendor part is `Anchored`.

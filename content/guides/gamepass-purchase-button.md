@@ -211,8 +211,6 @@ before it does not.
 
 `PriceInRobux` can be `nil` if the pass is offsale, hence the `or 0`.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Testing purchases without spending Robux
 
 You cannot properly test a real purchase without buying it. What you can do:

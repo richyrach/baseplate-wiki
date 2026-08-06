@@ -362,8 +362,6 @@ When an interface sometimes feels dead, search your LocalScripts for:
 
 Then check what the server callback does before it returns.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Long work should not hold a RemoteFunction open
 
 A RemoteFunction callback should return quickly. Avoid using one for work such as:

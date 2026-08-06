@@ -165,8 +165,6 @@ shared timestamp use `workspace:GetServerTimeNow()`.
 Twenty seconds is a reasonable poll for a minute-resolution clock; there is no point
 checking more often.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Checking it
 
 1. Jump the time from the Command Bar and confirm the label follows:

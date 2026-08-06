@@ -147,8 +147,6 @@ end
 Checking both flags matters: some devices report `TouchEnabled` **and** have a
 keyboard, so testing touch alone will misclassify laptops with touchscreens.
 
-<!-- OWN_EXPERIENCE -->
-
 ## The order to check things
 
 1. Does the button's handler use `Activated` or `MouseButton1Click`? If it uses

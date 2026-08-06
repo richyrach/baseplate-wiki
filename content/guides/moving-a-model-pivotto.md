@@ -139,8 +139,6 @@ Calling `PivotTo` repeatedly on an *unanchored* assembly fights the physics solv
 you set a position, physics moves it, you set it again. The result stutters. If you
 are driving movement from a script, anchor the root.
 
-<!-- OWN_EXPERIENCE -->
-
 ## If the model still comes apart
 
 1. Is `PrimaryPart` set, and is it one of the parts actually welded to the rest?

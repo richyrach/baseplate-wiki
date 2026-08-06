@@ -185,8 +185,6 @@ end)
 The `player.Parent` check stops you making a web request for someone who joined and
 immediately left, which on a popular game is a meaningful share of joins.
 
-<!-- OWN_EXPERIENCE -->
-
 ## When an award silently fails
 
 In order of likelihood:

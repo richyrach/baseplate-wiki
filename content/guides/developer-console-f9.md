@@ -119,8 +119,6 @@ The console has more than a log. Two are genuinely useful:
 There is also the **MicroProfiler** (`Ctrl+F6`), which is a separate and much
 deeper tool for frame-time analysis.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Before you ask anyone for help
 
 If you are about to post in a forum or a Discord asking why something is broken,

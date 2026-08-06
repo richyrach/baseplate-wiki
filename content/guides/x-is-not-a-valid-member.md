@@ -172,8 +172,6 @@ Three outcomes, and each one points at a different cause:
 That covers nearly every instance of this error. It is a boring error with a
 boring cause, which is genuinely good news: the fix is almost always one line.
 
-<!-- OWN_EXPERIENCE -->
-
 ## What to check if it still happens
 
 - Is the error from the client or the server? Client errors appear in the

@@ -240,8 +240,6 @@ local coinBoard = DataStoreService:GetOrderedDataStore("CoinLeaderboard_v2")
 The old data stays untouched, so you can still read last season's board if you want an
 archive.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Testing it
 
 1. Enable Studio API access and publish the place.

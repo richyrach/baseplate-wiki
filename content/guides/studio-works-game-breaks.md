@@ -175,11 +175,12 @@ really "there is a red error in the live client console that I have never
 looked at."
 
 > [!note]
-> **From my own build:** on my traffic game the AI cars drove fine in Studio and
-> spawned inside each other in the live game. Cause was #2 — the spawn script read
-> `workspace.Nodes` before the node folder finished replicating, got `nil` for
-> half the nodes, and defaulted every one of them to the origin. `WaitForChild`
-> on the folder fixed it in one line.
+> A worked example of cause #2, because it is the one that produces the
+> strangest symptoms: a vehicle spawner reads `workspace.Nodes` to place AI cars
+> along a road. In Studio the folder is always there. In the live game the script
+> sometimes runs before the folder has replicated, gets `nil` for half the nodes,
+> and defaults every one of them to the origin — so the cars all spawn stacked
+> inside each other at 0,0,0. A `WaitForChild` on the folder fixes it in one line.
 
 ## What to read next
 

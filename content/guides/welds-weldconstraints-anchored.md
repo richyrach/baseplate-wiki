@@ -146,8 +146,6 @@ unhelpful when you want an exact position.
 5. Are you moving the model with `PivotTo`, rather than setting one part's
    position?
 
-<!-- OWN_EXPERIENCE -->
-
 ## Checking your work without publishing
 
 Press Play, then immediately switch to the **Explorer** and watch the model while

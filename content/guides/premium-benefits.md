@@ -172,8 +172,6 @@ refreshBadge()
 The client reads and displays; the server decides and writes. Same rule as every other
 system — see the guide on a currency the client cannot edit.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Where this stands
 
 1. `MembershipType` works, is deprecated, and currently includes Roblox Plus.

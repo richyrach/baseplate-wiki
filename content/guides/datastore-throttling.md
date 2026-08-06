@@ -187,8 +187,6 @@ which side is over budget — reads or writes. Then:
 Add a budget print to your autosave loop and watch it for a few minutes on a busy
 server. If it trends toward zero, the fix is fewer calls, not longer retries.
 
-<!-- OWN_EXPERIENCE -->
-
 ## The short checklist
 
 1. One `SetAsync` per player per save, carrying one table.

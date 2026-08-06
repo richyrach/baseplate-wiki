@@ -218,8 +218,6 @@ end
 Because the loop checks a flag rather than sleeping through the whole duration, it
 can exit within a tenth of a second of the condition being met.
 
-<!-- OWN_EXPERIENCE -->
-
 ## Verifying it does not drift
 
 Print the real duration at the end of each round:
