@@ -15,6 +15,8 @@ import shutil
 from datetime import date
 from pathlib import Path
 
+import hashlib
+
 from luau import highlight_block
 from terms import link_terms, load_terms
 
@@ -107,6 +109,22 @@ CATEGORY_ICONS = {
                    '<path d="M12 17.1 15.7 11.6"/><path d="M6.4 11.3l.9.9"/>'
                    '<path d="M12 8.6v1.3"/><path d="M17.6 11.3l-.9.9"/>',
 }
+
+
+def asset_version(name):
+    """Short content hash for cache-busting.
+
+    GitHub Pages serves CSS and JS with caching headers, so without this a
+    reader who has visited before keeps the OLD stylesheet after an update --
+    which looks exactly like the site being broken again.
+    """
+    src = ROOT / "templates" / name
+    if not src.exists():
+        return "0"
+    return hashlib.sha1(src.read_bytes()).hexdigest()[:8]
+
+
+ASSET_V = {}
 
 
 def icon(name, cls="ico"):
@@ -339,7 +357,7 @@ def page(title, description, body, depth=0, active_url="", active_cat="",
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(description)}">
-<link rel="stylesheet" href="{up}assets/style.css">
+<link rel="stylesheet" href="{up}assets/style.css?v={ASSET_V.get('style.css', '0')}">
 <script>
 /* Runs before first paint: without this the page renders in the OS theme and
    then snaps to the saved one, which is a visible flash on every navigation. */
@@ -389,7 +407,7 @@ def page(title, description, body, depth=0, active_url="", active_cat="",
      endorsed by Roblox Corporation.
      <a href="{up}privacy.html">Privacy</a></p>
 </footer>
-<script src="{up}assets/search.js" defer></script>
+<script src="{up}assets/search.js?v={ASSET_V.get('search.js', '0')}" defer></script>
 </body>
 </html>
 """
@@ -754,6 +772,9 @@ def build_sitemap(guides, glossary=None):
 
 def main():
     (SITE / "assets").mkdir(parents=True, exist_ok=True)
+
+    for asset in ("style.css", "search.js"):
+        ASSET_V[asset] = asset_version(asset)
     glossary = load_terms(CONTENT, parse_front_matter, render)
     guides = read_guides(glossary)
 
